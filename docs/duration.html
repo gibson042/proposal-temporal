@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Temporal documentation</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/kognise/water.css@latest/dist/light.min.css">
+    <script type="application/javascript" src="./playground.js"></script>
+    <link rel="stylesheet" type="text/css" href="./prism.css">
+    <script>
+      Temporal = { ...temporal.Temporal };
+      Object.assign(Intl, temporal.Intl);
+
+      // Customize output of Temporal objects for Chrome DevTools
+      if (!window.devtoolsFormatters)
+        window.devtoolsFormatters = [];
+      window.devtoolsFormatters.push({
+        header(x) {
+          for (const type of [
+            Temporal.Instant,
+            Temporal.Calendar,
+            Temporal.Date,
+            Temporal.DateTime,
+            Temporal.Duration,
+            Temporal.MonthDay,
+            Temporal.Time,
+            Temporal.TimeZone,
+            Temporal.YearMonth
+          ]) {
+            if (x instanceof type) return ['span', {}, `${x[Symbol.toStringTag]} <${x}>`];
+          }
+          return null;
+        },
+        hasBody(x) {
+          return x instanceof Temporal.Duration;
+        },
+        body(x) {
+          const out = ['ol', { style: 'list-style-type: none;' }];
+          for (const prop of [
+            'years',
+            'months',
+            'weeks',
+            'days',
+            'hours',
+            'minutes',
+            'seconds',
+            'milliseconds',
+            'microseconds',
+            'nanoseconds'
+          ]) {
+            if (x[prop] !== 0) out.push([
+              'li',
+              {},
+              ['span', { style: 'color: purple;' }, prop],
+              `: `,
+              ['span', { style: 'color: blue;' }, x[prop]]
+            ]);
+          }
+          return out;
+        }
+      });
+    </script>
+    <style>
+      /* https://github.com/kognise/water.css/blob/master/src/variables-light.css */
+      :root {
+        --background: #efefef;
+        --text-muted: #999999;
+        --text-bright: #000000;
+        --text-width: 900px;
+        --variable: #39a33c;
+      }
+      body {
+        font-size: 18px;
+        max-width: var(--text-width);
+        padding-top: 40px;  /* extra padding for banner */
+        line-height: 1.5;
+      }
+      pre { border-left: 4px solid var(--variable); }
+      code {
+        padding: 1px 5px 2px 5px;
+        line-height: 1.1;
+        display: inline-block;
+      }
+      pre code { line-height: 1.4; }
+      pre code[class*="language-"] { font-size: 0.85em; }
+      pre[class*="language-"] { padding: 0.5em; }
+      h1 { margin-top: 13px; }
+      h2 { border-bottom: 2px solid var(--text-muted); margin-top: 2em; }
+      h3 {
+        border-bottom: 1px solid var(--text-muted);
+        color: var(--text-muted);
+        font-weight: normal;
+      }
+      h3 em { font-weight: bold; }
+      h3 strong { color: var(--text-bright); }
+      :not(h2) + h3 { margin-top: 2em; }
+      footer {
+        border-top: 1px solid var(--background);
+        color: var(--text-muted);
+        font-size: 0.8em;
+        margin-top: 2em;
+        padding-top: 10px;
+      }
+      .heading-link {
+        left: calc((100vw - var(--text-width)) / 2 - 1.5em);
+        opacity: 0;
+        position: absolute;
+        transition: opacity 150ms;
+      }
+      .heading-link:hover { text-decoration: none; }
+      .heading-link::before { content: '¶'; }
+      h3:hover .heading-link { opacity: 1; }
+      .banner {
+        /* Gradient from https://joshnh.com/weblog/how-to-make-an-alert-bar/ */
+        background-color: #fce94f;
+        background-image: linear-gradient(135deg,
+                                          transparent,
+                                          transparent 25%,
+                                          rgba(0, 0, 0, .05) 25%,
+                                          rgba(0, 0, 0, .05) 50%,
+                                          transparent 50%,
+                                          transparent 75%,
+                                          rgba(0, 0, 0, .05) 75%,
+                                          rgba(0, 0, 0, .05));
+        background-size: 20px 20px;
+        box-shadow: 0 5px 0 rgba(0, 0, 0, .1);
+        left: 0;
+        padding: 0.4em 0;
+        position: absolute;
+        text-align: center;
+        top: 0;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="banner">
+      This proposal is <strong><a href="https://blogs.igalia.com/compilers/2020/06/23/dates-and-times-in-javascript/">experimental.</a></strong>
+      The API will change based on feedback that we get.
+      <strong>Do</strong> <a href="https://forms.gle/iL9iZg7Y9LvH41Nv8">give feedback</a> and open <a href="https://github.com/tc39/proposal-temporal/issues">issues</a>; <strong>don't</strong> use it in production!
+    </div>
+<h1 id="temporalduration">Temporal.Duration</h1>
+<details>
+  <summary><strong>Table of Contents</strong></summary>
+<ul>
+<li><a href="#constructor">Constructor</a>
+<ul>
+<li><a href="#new-Temporal-Duration">new Temporal.Duration</a>
+</li>
+</ul>
+</li>
+<li><a href="#static-methods">Static methods</a>
+<ul>
+<li><a href="#from">from</a>
+</li>
+</ul>
+</li>
+<li><a href="#properties">Properties</a>
+<ul>
+<li><a href="#years">years</a>
+</li>
+<li><a href="#months">months</a>
+</li>
+<li><a href="#weeks">weeks</a>
+</li>
+<li><a href="#days">days</a>
+</li>
+<li><a href="#hours">hours</a>
+</li>
+<li><a href="#minutes">minutes</a>
+</li>
+<li><a href="#seconds">seconds</a>
+</li>
+<li><a href="#milliseconds">milliseconds</a>
+</li>
+<li><a href="#microseconds">microseconds</a>
+</li>
+<li><a href="#nanoseconds">nanoseconds</a>
+</li>
+<li><a href="#sign">sign</a>
+</li>
+<li><a href="#blank">blank</a>
+</li>
+</ul>
+</li>
+<li><a href="#methods">Methods</a>
+<ul>
+<li><a href="#with">with</a>
+</li>
+<li><a href="#add">add</a>
+</li>
+<li><a href="#subtract">subtract</a>
+</li>
+<li><a href="#negated">negated</a>
+</li>
+<li><a href="#abs">abs</a>
+</li>
+<li><a href="#round">round</a>
+</li>
+<li><a href="#total">total</a>
+</li>
+<li><a href="#getFields">getFields</a>
+</li>
+<li><a href="#toString">toString</a>
+</li>
+<li><a href="#toJSON">toJSON</a>
+</li>
+<li><a href="#toLocaleString">toLocaleString</a>
+</li>
+<li><a href="#valueOf">valueOf</a>
+</li>
+</ul>
+</li>
+</ul>
+</details>
+
+<p>A <code>Temporal.Duration</code> represents an immutable duration of time which can be used in date/time arithmetic.</p>
+<p><code>Temporal.Duration</code> can be constructed directly or returned from <code>Temporal.Duration.from()</code>.
+It can also be obtained from the <code>since()</code> method of any other <code>Temporal</code> type that supports arithmetic, and is used in those types&#39; <code>add()</code> and <code>subtract()</code> methods.</p>
+<p>When printed, a <code>Temporal.Duration</code> produces a string according to the ISO 8601 notation for durations.
+The examples in this page use this notation extensively.</p>
+<p>Briefly, the ISO 8601 notation consists of a <code>P</code> character, followed by years, months, weeks, and days, followed by a <code>T</code> character, followed by hours, minutes, and seconds with a decimal part, each with a single-letter suffix that indicates the unit.
+Any zero components may be omitted.
+For more detailed information, see the ISO 8601 standard or the <a href="https://en.wikipedia.org/wiki/ISO_8601#Durations">Wikipedia page</a>.</p>
+<table>
+<thead>
+<tr>
+<th>ISO 8601</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>P1Y1M1DT1H1M1.1S</strong></td>
+<td>One year, one month, one day, one hour, one minute, one second, and 100 milliseconds</td>
+</tr>
+<tr>
+<td><strong>P40D</strong></td>
+<td>Forty days</td>
+</tr>
+<tr>
+<td><strong>P1Y1D</strong></td>
+<td>A year and a day</td>
+</tr>
+<tr>
+<td><strong>P3DT4H59M</strong></td>
+<td>Three days, four hours and 59 minutes</td>
+</tr>
+<tr>
+<td><strong>PT2H30M</strong></td>
+<td>Two and a half hours</td>
+</tr>
+<tr>
+<td><strong>P1M</strong></td>
+<td>One month</td>
+</tr>
+<tr>
+<td><strong>PT1M</strong></td>
+<td>One minute</td>
+</tr>
+<tr>
+<td><strong>PT0.0021S</strong></td>
+<td>2.1 milliseconds (two milliseconds and 100 microseconds)</td>
+</tr>
+<tr>
+<td><strong>PT0S</strong></td>
+<td>Zero</td>
+</tr>
+<tr>
+<td><strong>P0D</strong></td>
+<td>Zero</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p><strong>NOTE:</strong> According to the ISO 8601-1 standard, weeks are not allowed to appear together with any other units, and durations can only be positive.
+As extensions to the standard, ISO 8601-2 allows a sign character at the start of the string, and allows combining weeks with other units.
+If you intend to use a string such as <strong>P3W1D</strong>, <strong>+P1M</strong>, or <strong>-P1M</strong> for interoperability, note that other programs may not accept it.</p>
+</blockquote>
+<h2 id="constructor">Constructor</h2>
+<h3 id="new-Temporal-Duration"><a class="heading-link" href="#new-Temporal-Duration"></a><strong>new Temporal.Duration</strong>(<em>years</em>?: number, <em>months</em>?: number, <em>days</em>?: number, <em>hours</em>?: number, <em>minutes</em>?: number, <em>seconds</em>?: number, <em>milliseconds</em>?: number, <em>microseconds</em>?: number, <em>nanoseconds</em>?: number) : Temporal.Duration</h3><p><strong>Parameters:</strong></p>
+<ul>
+<li><code>years</code> (optional number): A number of years.</li>
+<li><code>months</code> (optional number): A number of months.</li>
+<li><code>weeks</code> (optional number): A number of weeks.</li>
+<li><code>days</code> (optional number): A number of days.</li>
+<li><code>hours</code> (optional number): A number of hours.</li>
+<li><code>minutes</code> (optional number): A number of minutes.</li>
+<li><code>seconds</code> (optional number): A number of seconds.</li>
+<li><code>milliseconds</code> (optional number): A number of milliseconds.</li>
+<li><code>microseconds</code> (optional number): A number of microseconds.</li>
+<li><code>nanoseconds</code> (optional number): A number of nanoseconds.</li>
+</ul>
+<p><strong>Returns:</strong> a new <code>Temporal.Duration</code> object.</p>
+<p>All of the arguments are optional.
+Any missing or <code>undefined</code> numerical arguments are taken to be zero, and all non-integer numerical arguments are rounded to the nearest integer, towards zero.
+Any non-zero arguments must all have the same sign.</p>
+<p>Use this constructor directly if you have the correct parameters already as numerical values.
+Otherwise <code>Temporal.Duration.from()</code> is probably more convenient because it accepts more kinds of input and allows controlling the overflow behaviour.</p>
+<p>Usage examples:</p>
+<pre class="language-javascript"><code class="language-javascript"><span class="token keyword">new</span> <span class="token class-name">Temporal<span class="token punctuation">.</span>Duration</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">,</span> <span class="token number">4</span><span class="token punctuation">,</span> <span class="token number">5</span><span class="token punctuation">,</span> <span class="token number">6</span><span class="token punctuation">,</span> <span class="token number">7</span><span class="token punctuation">,</span> <span class="token number">987</span><span class="token punctuation">,</span> <span class="token number">654</span><span class="token punctuation">,</span> <span class="token number">321</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => P1Y2M3W4DT5H6M7.987654321S</span>
+<span class="token keyword">new</span> <span class="token class-name">Temporal<span class="token punctuation">.</span>Duration</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">40</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => P40D</span>
+<span class="token keyword">new</span> <span class="token class-name">Temporal<span class="token punctuation">.</span>Duration</span><span class="token punctuation">(</span><span class="token keyword">undefined</span><span class="token punctuation">,</span> <span class="token keyword">undefined</span><span class="token punctuation">,</span> <span class="token keyword">undefined</span><span class="token punctuation">,</span> <span class="token number">40</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => P40D</span>
+<span class="token keyword">new</span> <span class="token class-name">Temporal<span class="token punctuation">.</span>Duration</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => PT0S</span></code></pre><h2 id="static-methods">Static methods</h2>
+<h3 id="from"><a class="heading-link" href="#from"></a>Temporal.Duration.<strong>from</strong>(<em>thing</em>: any, <em>options</em>?: object) : Temporal.Duration</h3><p><strong>Parameters:</strong></p>
+<ul>
+<li><code>thing</code>: A <code>Duration</code>-like object or a string from which to create a <code>Temporal.Duration</code>.</li>
+</ul>
+<p><strong>Returns:</strong> a new <code>Temporal.Duration</code> object.</p>
+<p>This static method creates a new <code>Temporal.Duration</code> from another value.
+If the value is another <code>Temporal.Duration</code> object, a new object representing the same duration is returned.
+If the value is any other object, a <code>Temporal.Duration</code> will be constructed from the values of any <code>years</code>, <code>months</code>, <code>weeks</code>, <code>days</code>, <code>hours</code>, <code>minutes</code>, <code>seconds</code>, <code>milliseconds</code>, <code>microseconds</code>, and <code>nanoseconds</code> properties that are present.
+Any missing ones will be assumed to be 0.</p>
+<p>All non-zero values must have the same sign, and must not be infinite.
+Otherwise, the function will throw a <code>RangeError</code>.</p>
+<p>Any non-object value is converted to a string, which is expected to be in ISO 8601 format.</p>
+<blockquote>
+<p><strong>NOTE:</strong> This function understands strings where weeks and other units are combined, and strings with a single sign character at the start, which are extensions to the ISO 8601 standard described in ISO 8601-2.
+(For example, <code>P3W1D</code> is understood to mean three weeks and one day, <code>-P1Y1M</code> is a negative duration of one year and one month, and <code>+P1Y1M</code> is one year and one month.)
+If no sign character is present, then the sign is assumed to be positive.</p>
+</blockquote>
+<p>Usage examples:</p>
+<pre class="language-javascript"><code class="language-javascript">d <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token punctuation">{</span> years<span class="token operator">:</span> <span class="token number">1</span><span class="token punctuation">,</span> days<span class="token operator">:</span> <span class="token number">1</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => P1Y1D</span>
+d <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token punctuation">{</span> days<span class="token operator">:</span> <span class="token operator">-</span><span class="token number">2</span><span class="token punctuation">,</span> hours<span class="token operator">:</span> <span class="token operator">-</span><span class="token number">12</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => -P2DT12H</span>
+
+Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span>d<span class="token punctuation">)</span> <span class="token operator">===</span> d<span class="token punctuation">;</span> <span class="token comment">// => true</span>
+
+d <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'P1Y1D'</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => P1Y1D</span>
+d <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'-P2DT12H'</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => -P2DT12H</span>
+d <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'P0D'</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => PT0S</span>
+
+<span class="token comment">// Mixed-sign values are never allowed, even if overall positive:</span>
+d <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token punctuation">{</span> hours<span class="token operator">:</span> <span class="token number">1</span><span class="token punctuation">,</span> minutes<span class="token operator">:</span> <span class="token operator">-</span><span class="token number">30</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// throws</span></code></pre><h2 id="properties">Properties</h2>
+<h3 id="years"><a class="heading-link" href="#years"></a>duration.<strong>years</strong> : number</h3><h3 id="months"><a class="heading-link" href="#months"></a>duration.<strong>months</strong> : number</h3><h3 id="weeks"><a class="heading-link" href="#weeks"></a>duration.<strong>weeks</strong> : number</h3><h3 id="days"><a class="heading-link" href="#days"></a>duration.<strong>days</strong> : number</h3><h3 id="hours"><a class="heading-link" href="#hours"></a>duration.<strong>hours</strong> : number</h3><h3 id="minutes"><a class="heading-link" href="#minutes"></a>duration.<strong>minutes</strong> : number</h3><h3 id="seconds"><a class="heading-link" href="#seconds"></a>duration.<strong>seconds</strong> : number</h3><h3 id="milliseconds"><a class="heading-link" href="#milliseconds"></a>duration.<strong>milliseconds</strong> : number</h3><h3 id="microseconds"><a class="heading-link" href="#microseconds"></a>duration.<strong>microseconds</strong> : number</h3><h3 id="nanoseconds"><a class="heading-link" href="#nanoseconds"></a>duration.<strong>nanoseconds</strong> : number</h3><p>The above read-only properties allow accessing each component of the duration individually.</p>
+<p>Usage examples:</p>
+<!-- prettier-ignore-start -->
+<pre class="language-javascript"><code class="language-javascript">d <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'P1Y2M3W4DT5H6M7.987654321S'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+d<span class="token punctuation">.</span>years         <span class="token comment">// => 1</span>
+d<span class="token punctuation">.</span>months        <span class="token comment">// => 2</span>
+d<span class="token punctuation">.</span>weeks         <span class="token comment">// => 3</span>
+d<span class="token punctuation">.</span>days          <span class="token comment">// => 4</span>
+d<span class="token punctuation">.</span>hours         <span class="token comment">// => 5</span>
+d<span class="token punctuation">.</span>minutes       <span class="token comment">// => 6</span>
+d<span class="token punctuation">.</span>seconds       <span class="token comment">// => 7</span>
+d<span class="token punctuation">.</span>milliseconds  <span class="token comment">// => 987</span>
+d<span class="token punctuation">.</span>microseconds  <span class="token comment">// => 654</span>
+d<span class="token punctuation">.</span>nanoseconds   <span class="token comment">// => 321</span></code></pre><!-- prettier-ignore-end -->
+
+<h3 id="sign"><a class="heading-link" href="#sign"></a>duration.<strong>sign</strong> : number</h3><p>The read-only <code>sign</code> property has the value –1, 0, or 1, depending on whether the duration is negative, zero, or positive.</p>
+<h3 id="blank"><a class="heading-link" href="#blank"></a>duration.<strong>blank</strong> : boolean</h3><p>The read-only <code>blank</code> property is a convenience property that tells whether <code>duration</code> represents a zero length of time.
+In other words, <code>duration.blank === (duration.sign === 0)</code>.</p>
+<p>Usage example:</p>
+<pre class="language-javascript"><code class="language-javascript">d <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'PT0S'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+d<span class="token punctuation">.</span>blank<span class="token punctuation">;</span> <span class="token comment">// => true</span>
+
+d <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token punctuation">{</span> days<span class="token operator">:</span> <span class="token number">0</span><span class="token punctuation">,</span> hours<span class="token operator">:</span> <span class="token number">0</span><span class="token punctuation">,</span> minutes<span class="token operator">:</span> <span class="token number">0</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+d<span class="token punctuation">.</span>blank<span class="token punctuation">;</span> <span class="token comment">// => true</span></code></pre><h2 id="methods">Methods</h2>
+<h3 id="with"><a class="heading-link" href="#with"></a>duration.<strong>with</strong>(<em>durationLike</em>: object, <em>options</em>?: object) : Temporal.Duration</h3><p><strong>Parameters:</strong></p>
+<ul>
+<li><code>durationLike</code> (object): an object with some or all of the properties of a <code>Temporal.Duration</code>.</li>
+</ul>
+<p><strong>Returns:</strong> a new <code>Temporal.Duration</code> object.</p>
+<p>This method creates a new <code>Temporal.Duration</code> which is a copy of <code>duration</code>, but any properties present on <code>durationLike</code> override the ones already present on <code>duration</code>.</p>
+<p>Since <code>Temporal.Duration</code> objects are immutable, use this method instead of modifying one.</p>
+<p>All non-zero properties of <code>durationLike</code> must have the same sign, and they must additionally have the same sign as the non-zero properties of <code>duration</code>, unless they override all of these non-zero properties.
+If a property of <code>durationLike</code> is infinity, then this function will throw a <code>RangeError</code>.</p>
+<p>Usage example:</p>
+<!-- prettier-ignore-start -->
+<pre class="language-javascript"><code class="language-javascript">duration <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token punctuation">{</span> months<span class="token operator">:</span> <span class="token number">50</span><span class="token punctuation">,</span> days<span class="token operator">:</span> <span class="token number">50</span><span class="token punctuation">,</span> hours<span class="token operator">:</span> <span class="token number">50</span><span class="token punctuation">,</span> minutes<span class="token operator">:</span> <span class="token number">100</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token comment">// Perform a balance operation using additional ISO calendar rules:</span>
+<span class="token keyword">let</span> <span class="token punctuation">{</span> years<span class="token punctuation">,</span> months <span class="token punctuation">}</span> <span class="token operator">=</span> duration<span class="token punctuation">;</span>
+years <span class="token operator">+=</span> Math<span class="token punctuation">.</span><span class="token function">floor</span><span class="token punctuation">(</span>months <span class="token operator">/</span> <span class="token number">12</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+months <span class="token operator">%=</span> <span class="token number">12</span><span class="token punctuation">;</span>
+duration <span class="token operator">=</span> duration<span class="token punctuation">.</span><span class="token function">with</span><span class="token punctuation">(</span><span class="token punctuation">{</span> years<span class="token punctuation">,</span> months <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token comment">// => P4Y2M50DT50H100M</span></code></pre><!-- prettier-ignore-end -->
+
+<h3 id="add"><a class="heading-link" href="#add"></a>duration.<strong>add</strong>(<em>other</em>: Temporal.Duration | object | string, <em>options</em>?: object) : Temporal.Duration</h3><p><strong>Parameters:</strong></p>
+<ul>
+<li><code>other</code> (<code>Temporal.Duration</code> or value convertible to one): The duration to add.</li>
+<li><code>options</code> (optional object): An object with properties representing options for the addition.
+The following options are recognized:<ul>
+<li>(TODO)</li>
+</ul>
+</li>
+</ul>
+<p><strong>Returns:</strong> a new <code>Temporal.Duration</code> object which represents the sum of the durations of <code>duration</code> and <code>other</code>.</p>
+<p>This method adds <code>other</code> to <code>duration</code>, resulting in a longer duration.</p>
+<p>The <code>other</code> argument is an object with properties denoting a duration, such as <code>{ hours: 5, minutes: 30 }</code>, or a string such as <code>PT5H30M</code>, or a <code>Temporal.Duration</code> object.
+If <code>other</code> is not a <code>Temporal.Duration</code> object, then it will be converted to one as if it were passed to <code>Temporal.Duration.from()</code>.</p>
+<p>In order to be valid, the resulting duration must not have fields with mixed signs, and so the result is balanced.
+For usage examples and a more complete explanation of how balancing works and why it is necessary, see <a href="./balancing.html">Duration balancing</a>.</p>
+<p>No conversion is ever performed between years, months, days, and other units, as that could be ambiguous depending on the start date.
+If you need such a conversion, use the <code>round()</code> method, and provide the start date using the <code>relativeTo</code> option.</p>
+<p>Adding a negative duration is equivalent to subtracting the absolute value of that duration.</p>
+<p>Usage example:</p>
+<!-- prettier-ignore-start -->
+
+<pre class="language-javascript"><code class="language-javascript">hour <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'PT1H'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+hour<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span><span class="token punctuation">{</span> minutes<span class="token operator">:</span> <span class="token number">30</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => PT1H30M</span>
+
+<span class="token comment">// Examples of balancing:</span>
+one <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token punctuation">{</span> hours<span class="token operator">:</span> <span class="token number">1</span><span class="token punctuation">,</span> minutes<span class="token operator">:</span> <span class="token number">30</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+two <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token punctuation">{</span> hours<span class="token operator">:</span> <span class="token number">2</span><span class="token punctuation">,</span> minutes<span class="token operator">:</span> <span class="token number">45</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+result <span class="token operator">=</span> one<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>two<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => PT3H75M</span>
+result<span class="token punctuation">.</span><span class="token function">with</span><span class="token punctuation">(</span>result<span class="token punctuation">,</span> <span class="token punctuation">{</span> overflow<span class="token operator">:</span> <span class="token string">'balance'</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => PT4H15M</span>
+
+fifty <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'P50Y50M50DT50H50M50.500500500S'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+result <span class="token operator">=</span> fifty<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>fifty<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => P100Y100M100DT100H100M101.001001S'</span>
+Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span>result<span class="token punctuation">,</span> <span class="token punctuation">{</span> overflow<span class="token operator">:</span> <span class="token string">'balance'</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token comment">// => P100Y100M104DT5H41M41.001001S</span>
+
+<span class="token comment">// Example of not balancing:</span>
+oneAndAHalfYear <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token punctuation">{</span> years<span class="token operator">:</span> <span class="token number">1</span><span class="token punctuation">,</span> months<span class="token operator">:</span> <span class="token number">6</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+result <span class="token operator">=</span> oneAndAHalfYear<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>oneAndAHalfYear<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => P2Y12M</span>
+Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span>result<span class="token punctuation">,</span> <span class="token punctuation">{</span> overflow<span class="token operator">:</span> <span class="token string">'balance'</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => P2Y12M</span>
+<span class="token comment">// Example of custom conversion using ISO calendar rules:</span>
+<span class="token keyword">function</span> <span class="token function">monthsToYears</span><span class="token punctuation">(</span><span class="token parameter">duration</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">let</span> <span class="token punctuation">{</span> years<span class="token punctuation">,</span> months <span class="token punctuation">}</span> <span class="token operator">=</span> duration<span class="token punctuation">;</span>
+  years <span class="token operator">+=</span> Math<span class="token punctuation">.</span><span class="token function">floor</span><span class="token punctuation">(</span>months <span class="token operator">/</span> <span class="token number">12</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  months <span class="token operator">%=</span> <span class="token number">12</span><span class="token punctuation">;</span>
+  <span class="token keyword">return</span> duration<span class="token punctuation">.</span><span class="token function">with</span><span class="token punctuation">(</span><span class="token punctuation">{</span> years<span class="token punctuation">,</span> months <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span class="token function">monthsToYears</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => P3Y</span></code></pre><!-- prettier-ignore-start -->
+
+<h3 id="subtract"><a class="heading-link" href="#subtract"></a>duration.<strong>subtract</strong>(<em>other</em>: Temporal.Duration | object | string, <em>options</em>?: object) : Temporal.Duration</h3><p><strong>Parameters:</strong></p>
+<ul>
+<li><code>other</code> (<code>Temporal.Duration</code> or value convertible to one): The duration to subtract.</li>
+<li><code>options</code> (optional object): An object with properties representing options for the subtraction.
+The following options are recognized:<ul>
+<li>(TODO)</li>
+</ul>
+</li>
+</ul>
+<p><strong>Returns:</strong> a new <code>Temporal.Duration</code> object which represents the duration of <code>duration</code> less the duration of <code>other</code>.</p>
+<p>This method subtracts <code>other</code> from <code>duration</code>, resulting in a shorter duration.</p>
+<p>The <code>other</code> argument is an object with properties denoting a duration, such as <code>{ hours: 5, minutes: 30 }</code>, or a string such as <code>PT5H30M</code>, or a <code>Temporal.Duration</code> object.
+If <code>duration</code> is not a <code>Temporal.Duration</code> object, then it will be converted to one as if it were passed to <code>Temporal.Duration.from()</code>.</p>
+<p>If <code>other</code> is larger than <code>duration</code> and the subtraction would result in a negative duration, the method will throw a <code>RangeError</code>.</p>
+<p>In order to be valid, the resulting duration must not have fields with mixed signs, and so the result is balanced.
+For usage examples and a more complete explanation of how balancing works and why it is necessary, see <a href="./balancing.html#duration-arithmetic">Duration balancing</a>.</p>
+<p>Subtracting a negative duration is equivalent to adding the absolute value of that duration.</p>
+<p>Usage example:</p>
+<pre class="language-javascript"><code class="language-javascript">hourAndAHalf <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'PT1H30M'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+hourAndAHalf<span class="token punctuation">.</span><span class="token function">subtract</span><span class="token punctuation">(</span><span class="token punctuation">{</span> hours<span class="token operator">:</span> <span class="token number">1</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => PT30M</span>
+
+one <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token punctuation">{</span> minutes<span class="token operator">:</span> <span class="token number">180</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+two <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token punctuation">{</span> seconds<span class="token operator">:</span> <span class="token number">30</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+one<span class="token punctuation">.</span><span class="token function">subtract</span><span class="token punctuation">(</span>two<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => PT179M30S</span>
+one<span class="token punctuation">.</span><span class="token function">subtract</span><span class="token punctuation">(</span>two<span class="token punctuation">,</span> <span class="token punctuation">{</span> overflow<span class="token operator">:</span> <span class="token string">'balance'</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => PT2H59M30S</span>
+
+<span class="token comment">// Example of not balancing:</span>
+threeYears <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token punctuation">{</span> years<span class="token operator">:</span> <span class="token number">3</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+oneAndAHalfYear <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token punctuation">{</span> years<span class="token operator">:</span> <span class="token number">1</span><span class="token punctuation">,</span> months<span class="token operator">:</span> <span class="token number">6</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+threeYears<span class="token punctuation">.</span><span class="token function">subtract</span><span class="token punctuation">(</span>oneAndAHalfYear<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// throws; mixed months and years signs cannot be balanced</span>
+<span class="token comment">// Example of a custom conversion using ISO calendar rules:</span>
+<span class="token keyword">function</span> <span class="token function">yearsToMonths</span><span class="token punctuation">(</span><span class="token parameter">duration</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">let</span> <span class="token punctuation">{</span> years<span class="token punctuation">,</span> months <span class="token punctuation">}</span> <span class="token operator">=</span> duration<span class="token punctuation">;</span>
+  months <span class="token operator">+=</span> years <span class="token operator">*</span> <span class="token number">12</span><span class="token punctuation">;</span>
+  <span class="token keyword">return</span> duration<span class="token punctuation">.</span><span class="token function">with</span><span class="token punctuation">(</span><span class="token punctuation">{</span> years<span class="token operator">:</span> <span class="token number">0</span><span class="token punctuation">,</span> months <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span class="token function">yearsToMonths</span><span class="token punctuation">(</span>threeYears<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">subtract</span><span class="token punctuation">(</span><span class="token function">yearsToMonths</span><span class="token punctuation">(</span>oneAndAHalfYear<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => P18M</span></code></pre><h3 id="negated"><a class="heading-link" href="#negated"></a>duration.<strong>negated</strong>() : Temporal.Duration</h3><p><strong>Returns:</strong> a new <code>Temporal.Duration</code> object with the opposite sign.</p>
+<p>This method gives the negation of <code>duration</code>.
+It returns a newly constructed <code>Temporal.Duration</code> with all the fields having the opposite sign (positive if negative, and vice versa.)
+If <code>duration</code> is zero, then the returned object is a copy of <code>duration</code>.</p>
+<p>Usage example:</p>
+<pre class="language-javascript"><code class="language-javascript">d <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'P1Y2M3DT4H5M6.987654321S'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+d<span class="token punctuation">.</span>sign<span class="token punctuation">;</span> <span class="token comment">// 1</span>
+d<span class="token punctuation">.</span><span class="token function">negated</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// -P1Y2M3DT4H5M6.987654321S</span>
+d<span class="token punctuation">.</span><span class="token function">negated</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span>sign<span class="token punctuation">;</span> <span class="token comment">// -1</span></code></pre><h3 id="abs"><a class="heading-link" href="#abs"></a>duration.<strong>abs</strong>() : Temporal.Duration</h3><p><strong>Returns:</strong> a new <code>Temporal.Duration</code> object that is always positive.</p>
+<p>This method gives the absolute value of <code>duration</code>.
+It returns a newly constructed <code>Temporal.Duration</code> with all the fields having the same magnitude as those of <code>duration</code>, but positive.
+If <code>duration</code> is already positive or zero, then the returned object is a copy of <code>duration</code>.</p>
+<p>Usage example:</p>
+<pre class="language-javascript"><code class="language-javascript">d <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'-PT8H30M'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+d<span class="token punctuation">.</span><span class="token function">abs</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// PT8H30M</span></code></pre><h3 id="round"><a class="heading-link" href="#round"></a>duration.<strong>round</strong>(<em>options</em>: object) : Temporal.Duration</h3><p><strong>Parameters:</strong></p>
+<ul>
+<li><code>options</code> (object): An object with properties representing options for the operation.
+The following options are recognized:<ul>
+<li><code>largestUnit</code> (string): The largest unit of time to allow in the resulting <code>Temporal.Duration</code> object.
+Valid values are <code>&#39;auto&#39;</code>, <code>&#39;years&#39;</code>, <code>&#39;months&#39;</code>, <code>&#39;weeks&#39;</code>, <code>&#39;days&#39;</code>, <code>&#39;hours&#39;</code>, <code>&#39;minutes&#39;</code>, <code>&#39;seconds&#39;</code>, <code>&#39;milliseconds&#39;</code>, <code>&#39;microseconds&#39;</code>, and <code>&#39;nanoseconds&#39;</code>.
+The default is <code>&#39;auto&#39;</code>.</li>
+<li><code>smallestUnit</code> (string): The smallest unit of time to round to in the resulting <code>Temporal.Duration</code> object.
+Valid values are <code>&#39;years&#39;</code>, <code>&#39;months&#39;</code>, <code>&#39;weeks&#39;</code>, <code>&#39;days&#39;</code>, <code>&#39;hours&#39;</code>, <code>&#39;minutes&#39;</code>, <code>&#39;seconds&#39;</code>, <code>&#39;milliseconds&#39;</code>, <code>&#39;microseconds&#39;</code>, and <code>&#39;nanoseconds&#39;</code>.
+The default is <code>&#39;nanoseconds&#39;</code>, i.e. no rounding.</li>
+<li><code>roundingIncrement</code> (number): The granularity to round to, of the unit given by <code>smallestUnit</code>.
+The default is 1.</li>
+<li><code>roundingMode</code> (string): How to handle the remainder, if rounding.
+Valid values are <code>&#39;nearest&#39;</code>, <code>&#39;ceil&#39;</code>, <code>&#39;trunc&#39;</code>, and <code>&#39;floor&#39;</code>.
+The default is <code>&#39;nearest&#39;</code>.</li>
+<li><code>relativeTo</code> (<code>Temporal.DateTime</code>): The starting point to use when converting between years, months, weeks, and days.
+It must be a <code>Temporal.DateTime</code>, or a value that can be passed to <code>Temporal.DateTime.from()</code>.</li>
+</ul>
+</li>
+</ul>
+<p><strong>Returns:</strong> a new <code>Temporal.Duration</code> object which is <code>duration</code>, rounded and/or balanced.</p>
+<p>Rounds and/or balances <code>duration</code> to the given largest and smallest units and rounding increment, and returns the result as a new <code>Temporal.DateTime</code> object.</p>
+<p>The <code>largestUnit</code> determines the largest unit allowed in the result.
+It will cause units larger than <code>largestUnit</code> to be converted into smaller units, and units smaller than <code>largestUnit</code> to be converted into larger units as much as possible.
+For example, with <code>largestUnit: &#39;minutes&#39;</code>, a duration of 1 hour and 125 seconds will be converted into a duration of 62 minutes and 5 seconds.
+These durations are equally long, so no rounding takes place, but they are expressed differently.
+This operation is called &quot;balancing.&quot;</p>
+<p>For usage examples and a more complete explanation of how balancing works, see <a href="./balancing.html">Duration balancing</a>.</p>
+<p>A <code>largestUnit</code> value of <code>&#39;auto&#39;</code>, which is the default if only <code>smallestUnit</code> is given, means that <code>largestUnit</code> should be the largest nonzero unit in the duration that is larger than <code>smallestUnit</code>.
+(For example, in a duration of 3 days and 12 hours, <code>largestUnit: &#39;auto&#39;</code> would mean the same as <code>largestUnit: &#39;days&#39;</code>.)
+This means that the default is for the balancing behaviour of this method to not &#39;grow&#39; the duration beyond its current largest unit unless needed for rounding.</p>
+<p>The <code>smallestUnit</code> option determines the unit to round to.
+For example, to round to the nearest minute, use <code>smallestUnit: &#39;minutes&#39;</code>.
+The default, if only <code>largestUnit</code> is given, is to do no rounding.</p>
+<p>At least one of <code>largestUnit</code> or <code>smallestUnit</code> is required.</p>
+<p>Converting between years, months, weeks, and other units requires a reference point.
+If <code>largestUnit</code> or <code>smallestUnit</code> is years, months, or weeks, or the duration has nonzero years, months, or weeks, then the <code>relativeTo</code> option is required.</p>
+<p>The <code>roundingIncrement</code> option allows rounding to an integer number of units.
+For example, to round to increments of a half hour, use <code>smallestUnit: &#39;minutes&#39;, roundingIncrement: 30</code>.</p>
+<p>Unless <code>smallestUnit</code> is years, months, weeks, or days, the value given as <code>roundingIncrement</code> must divide evenly into the next highest unit after <code>smallestUnit</code>, and must not be equal to it.
+(For example, if <code>smallestUnit</code> is <code>&#39;minutes&#39;</code>, then the number of minutes given by <code>roundingIncrement</code> must divide evenly into 60 minutes, which is one hour.
+The valid values in this case are 1 (default), 2, 3, 4, 5, 6, 10, 12, 15, 20, and 30.
+Instead of 60 minutes, use 1 hour.)</p>
+<p>The <code>roundingMode</code> option controls how the rounding is performed.</p>
+<ul>
+<li><code>nearest</code>: Round to the nearest of the values allowed by <code>roundingIncrement</code> and <code>smallestUnit</code>.
+When there is a tie, round away from zero like <code>ceil</code> for positive durations and like <code>floor</code> for negative durations.</li>
+<li><code>ceil</code>: Always round towards positive infinity.
+For negative durations this option will decrease the absolute value of the duration which may be unexpected.
+To round away from zero, use <code>ceil</code> for positive durations and <code>floor</code> for negative durations.</li>
+<li><code>trunc</code>: Always round towards zero, chopping off the part after the decimal point.</li>
+<li><code>floor</code>: Always round down, towards negative infinity.
+This mode acts the same as <code>trunc</code> for positive durations but for negative durations it will increase the absolute value of the result which may be unexpected.
+For this reason, <code>trunc</code> is recommended for most &quot;round down&quot; use cases.</li>
+</ul>
+<p>The <code>relativeTo</code> option gives the starting point used when converting between or rounding to years, months, weeks, or days.
+It is a <code>Temporal.DateTime</code> instance.
+If any other type of value is given, then it will be converted to a <code>Temporal.DateTime</code> as if it were passed to <code>Temporal.DateTime.from(..., { overflow: &#39;reject&#39; })</code>.
+A <code>Temporal.Date</code> or a date string like <code>2020-01-01</code> is also accepted because time is optional when creating a <code>Temporal.DateTime</code>.</p>
+<p>Example usage:</p>
+<pre class="language-javascript"><code class="language-javascript"><span class="token comment">// Balance a duration as far as possible without knowing a starting point</span>
+d <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token punctuation">{</span> minutes<span class="token operator">:</span> <span class="token number">130</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+d<span class="token punctuation">.</span><span class="token function">round</span><span class="token punctuation">(</span><span class="token punctuation">{</span> largestUnit<span class="token operator">:</span> <span class="token string">'days'</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => PT2H10M</span>
+
+<span class="token comment">// Round to the nearest unit</span>
+d <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token punctuation">{</span> minutes<span class="token operator">:</span> <span class="token number">10</span><span class="token punctuation">,</span> seconds<span class="token operator">:</span> <span class="token number">52</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+d<span class="token punctuation">.</span><span class="token function">round</span><span class="token punctuation">(</span><span class="token punctuation">{</span> smallestUnit<span class="token operator">:</span> <span class="token string">'minutes'</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => PT11M</span>
+d<span class="token punctuation">.</span><span class="token function">round</span><span class="token punctuation">(</span><span class="token punctuation">{</span> smallestUnit<span class="token operator">:</span> <span class="token string">'minutes'</span><span class="token punctuation">,</span> roundingMode<span class="token operator">:</span> <span class="token string">'trunc'</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => PT10M</span>
+
+<span class="token comment">// How many seconds in a multi-unit duration?</span>
+d <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'PT2H34M18S'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+d<span class="token punctuation">.</span><span class="token function">round</span><span class="token punctuation">(</span><span class="token punctuation">{</span> largestUnit<span class="token operator">:</span> <span class="token string">'seconds'</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">.</span>seconds<span class="token punctuation">;</span> <span class="token comment">// => 9258</span>
+
+<span class="token comment">// Normalize, with and without taking DST into account</span>
+d <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token punctuation">{</span> hours<span class="token operator">:</span> <span class="token number">1756</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token comment">// FIXME: write this example after ZonedDateTime is added</span>
+<span class="token comment">// d.round({</span>
+<span class="token comment">//   relativeTo: '2020-01-01T00:00+01:00[Europe/Rome]',</span>
+<span class="token comment">//   largestUnit: 'years'</span>
+<span class="token comment">// }); // => ???</span>
+d<span class="token punctuation">.</span><span class="token function">round</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  relativeTo<span class="token operator">:</span> <span class="token string">'2020-01-01'</span><span class="token punctuation">,</span>
+  largestUnit<span class="token operator">:</span> <span class="token string">'years'</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => P73DT4H</span>
+
+<span class="token comment">// Normalize days into months or years</span>
+d <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token punctuation">{</span> days<span class="token operator">:</span> <span class="token number">190</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+refDate <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Date<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'2020-01-01'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+d<span class="token punctuation">.</span><span class="token function">round</span><span class="token punctuation">(</span><span class="token punctuation">{</span> relativeTo<span class="token operator">:</span> refDate<span class="token punctuation">,</span> largestUnit<span class="token operator">:</span> <span class="token string">'years'</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => P6M6D</span>
+
+<span class="token comment">// Same, but in a different calendar system</span>
+d<span class="token punctuation">.</span><span class="token function">round</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  relativeTo<span class="token operator">:</span> refDate<span class="token punctuation">.</span><span class="token function">withCalendar</span><span class="token punctuation">(</span><span class="token string">'hebrew'</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+  largestUnit<span class="token operator">:</span> <span class="token string">'years'</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => ???</span>
+
+<span class="token comment">// Round a duration up to the next 5-minute billing period</span>
+d <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token punctuation">{</span> minutes<span class="token operator">:</span> <span class="token number">6</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+d<span class="token punctuation">.</span><span class="token function">round</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  smallestUnit<span class="token operator">:</span> <span class="token string">'minutes'</span><span class="token punctuation">,</span>
+  roundingIncrement<span class="token operator">:</span> <span class="token number">5</span><span class="token punctuation">,</span>
+  roundingMode<span class="token operator">:</span> <span class="token string">'ceil'</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// ==> P10M</span>
+
+<span class="token comment">// How many full 3-month quarters of this year, are in this duration?</span>
+d <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token punctuation">{</span> months<span class="token operator">:</span> <span class="token number">10</span><span class="token punctuation">,</span> days<span class="token operator">:</span> <span class="token number">15</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+d <span class="token operator">=</span> d<span class="token punctuation">.</span><span class="token function">round</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  smallestUnit<span class="token operator">:</span> <span class="token string">'months'</span><span class="token punctuation">,</span>
+  roundingIncrement<span class="token operator">:</span> <span class="token number">3</span><span class="token punctuation">,</span>
+  roundingMode<span class="token operator">:</span> <span class="token string">'trunc'</span><span class="token punctuation">,</span>
+  relativeTo<span class="token operator">:</span> Temporal<span class="token punctuation">.</span>now<span class="token punctuation">.</span><span class="token function">date</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+quarters <span class="token operator">=</span> d<span class="token punctuation">.</span>months <span class="token operator">/</span> <span class="token number">3</span><span class="token punctuation">;</span>
+quarters<span class="token punctuation">;</span> <span class="token comment">// => 3</span></code></pre><h3 id="total"><a class="heading-link" href="#total"></a>duration.<strong>total</strong>(<em>options</em>: object) : number</h3><p><strong>Parameters:</strong></p>
+<ul>
+<li><code>options</code> (object): An object with properties representing options for the operation.
+The following options are recognized:<ul>
+<li><code>unit</code> (string): The unit of time that will be returned.
+Valid values are <code>&#39;years&#39;</code>, <code>&#39;months&#39;</code>, <code>&#39;weeks&#39;</code>, <code>&#39;days&#39;</code>, <code>&#39;hours&#39;</code>, <code>&#39;minutes&#39;</code>, <code>&#39;seconds&#39;</code>, <code>&#39;milliseconds&#39;</code>, <code>&#39;microseconds&#39;</code>, and <code>&#39;nanoseconds&#39;</code>.
+There is no default; <code>unit</code> is required.</li>
+<li><code>relativeTo</code> (<code>Temporal.DateTime</code>): The starting point to use when converting between years, months, weeks, and days.
+It must be a <code>Temporal.DateTime</code>, or a value that can be passed to <code>Temporal.DateTime.from()</code>.</li>
+</ul>
+</li>
+</ul>
+<p><strong>Returns:</strong> a floating-point number representing the number of desired units in the <code>Temporal.Duration</code>.</p>
+<p>Calculates the number of units of time that can fit in a particular <code>Temporal.Duration</code>.
+If the duration IS NOT evenly divisible by the desired unit, then a fractional remainder will be present in the result.
+If the duration IS evenly divisible by the desired unit, then the integer result will be identical to <code>duration.round({ smallestUnit: unit, largestUnit: unit, relativeTo })[unit]</code>.</p>
+<p>Interpreting years, months, or weeks requires a reference point.
+Therefore, <code>unit</code> is <code>&#39;years&#39;</code>, <code>&#39;months&#39;</code>, or <code>&#39;weeks&#39;</code>, or the duration has nonzero &#39;years&#39;, &#39;months&#39;, or &#39;weeks&#39;, then the <code>relativeTo</code> option is required.</p>
+<p>The <code>relativeTo</code> option gives the starting point used when converting between or rounding to years, months, weeks, or days.
+It is a <code>Temporal.DateTime</code> instance.
+If any other type is provided, then it will be converted to a <code>Temporal.DateTime</code> as if it were passed to <code>Temporal.DateTime.from(..., { overflow: &#39;reject&#39; })</code>.
+A <code>Temporal.Date</code> or a date string like <code>2020-01-01</code> is also accepted because time is optional when creating a <code>Temporal.DateTime</code>.</p>
+<p>Example usage:</p>
+<pre class="language-javascript"><code class="language-javascript"><span class="token comment">// How many seconds in 18 hours and 20 minutes?</span>
+d <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token punctuation">{</span> hours<span class="token operator">:</span> <span class="token number">130</span><span class="token punctuation">,</span> minutes<span class="token operator">:</span> <span class="token number">20</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+d<span class="token punctuation">.</span><span class="token function">total</span><span class="token punctuation">(</span><span class="token punctuation">{</span> largestUnit<span class="token operator">:</span> <span class="token string">'minutes'</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => 469200</span>
+
+<span class="token comment">// How many 24-hour days is 123456789 seconds?</span>
+d <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'PT123456789S'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+d<span class="token punctuation">.</span><span class="token function">total</span><span class="token punctuation">(</span><span class="token punctuation">{</span> unit<span class="token operator">:</span> <span class="token string">'days'</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// 1428.8980208333332</span>
+
+<span class="token comment">// Find totals in months, with and without taking DST into account</span>
+d <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token punctuation">{</span> hours<span class="token operator">:</span> <span class="token number">1756</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token comment">// FIXME: write this example after ZonedDateTime is added</span>
+<span class="token comment">// d.round({</span>
+<span class="token comment">//   relativeTo: '2020-01-01T00:00+01:00[Europe/Rome]',</span>
+<span class="token comment">//   largestUnit: 'months'</span>
+<span class="token comment">// }); // => ???</span>
+d<span class="token punctuation">.</span><span class="token function">total</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  unit<span class="token operator">:</span> <span class="token string">'months'</span><span class="token punctuation">,</span>
+  relativeTo<span class="token operator">:</span> <span class="token string">'2020-01-01'</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => 2.39247311827957</span>
+<span class="token comment">// FIXME: update the result above after duration rounding is fixed</span></code></pre><h3 id="getFields"><a class="heading-link" href="#getFields"></a>duration.<strong>getFields</strong>() : { years: number, months: number, weeks: number, days: number, hours: number, minutes: number, seconds: number, milliseconds: number, microseconds: number, nanoseconds: number }</h3><p><strong>Returns:</strong> a plain object with properties equal to the fields of <code>duration</code>.</p>
+<p>This method can be used to convert a <code>Temporal.Duration</code> into a record-like data structure.
+It returns a new plain JavaScript object, with all the fields as enumerable, writable, own data properties.</p>
+<p>Usage example:</p>
+<pre class="language-javascript"><code class="language-javascript">d <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'P1Y2M3DT4H5M6.987654321S'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+Object<span class="token punctuation">.</span><span class="token function">assign</span><span class="token punctuation">(</span><span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">,</span> d<span class="token punctuation">)</span><span class="token punctuation">.</span>days<span class="token punctuation">;</span> <span class="token comment">// => undefined</span>
+Object<span class="token punctuation">.</span><span class="token function">assign</span><span class="token punctuation">(</span><span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">,</span> d<span class="token punctuation">.</span><span class="token function">getFields</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>days<span class="token punctuation">;</span> <span class="token comment">// => 3</span></code></pre><h3 id="toString"><a class="heading-link" href="#toString"></a>duration.<strong>toString</strong>() : string</h3><p><strong>Returns:</strong> the duration as an ISO 8601 string.</p>
+<p>This method overrides <code>Object.prototype.toString()</code> and provides the ISO 8601 description of the duration.</p>
+<blockquote>
+<p><strong>NOTE</strong>: If any of <code>duration.milliseconds</code>, <code>duration.microseconds</code>, or <code>duration.nanoseconds</code> are over 999, then deserializing from the result of <code>duration.toString()</code> will yield an equal but different object.
+See <a href="./balancing.html#serialization">Duration balancing</a> for more information.</p>
+</blockquote>
+<p>Usage examples:</p>
+<pre class="language-javascript"><code class="language-javascript">d <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token punctuation">{</span> years<span class="token operator">:</span> <span class="token number">1</span><span class="token punctuation">,</span> days<span class="token operator">:</span> <span class="token number">1</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+d<span class="token punctuation">.</span><span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => P1Y1D</span>
+d <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token punctuation">{</span> years<span class="token operator">:</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">,</span> days<span class="token operator">:</span> <span class="token operator">-</span><span class="token number">1</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+d<span class="token punctuation">.</span><span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => -P1Y1D</span>
+d <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token punctuation">{</span> milliseconds<span class="token operator">:</span> <span class="token number">1000</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+d<span class="token punctuation">.</span><span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => PT1S</span>
+
+<span class="token comment">// The output format always balances units under 1 s, even if the</span>
+<span class="token comment">// underlying Temporal.Duration object doesn't.</span>
+nobal <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token punctuation">{</span> milliseconds<span class="token operator">:</span> <span class="token number">3500</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+console<span class="token punctuation">.</span><span class="token function">log</span><span class="token punctuation">(</span><span class="token template-string"><span class="token template-punctuation string">`</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>nobal<span class="token interpolation-punctuation punctuation">}</span></span><span class="token template-punctuation string">`</span></span><span class="token punctuation">,</span> nobal<span class="token punctuation">.</span>seconds<span class="token punctuation">,</span> nobal<span class="token punctuation">.</span>milliseconds<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => PT3.500S 0 3500</span>
+bal <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token punctuation">{</span> milliseconds<span class="token operator">:</span> <span class="token number">3500</span> <span class="token punctuation">}</span><span class="token punctuation">,</span> <span class="token punctuation">{</span> overflow<span class="token operator">:</span> <span class="token string">'balance'</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+console<span class="token punctuation">.</span><span class="token function">log</span><span class="token punctuation">(</span><span class="token template-string"><span class="token template-punctuation string">`</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>bal<span class="token interpolation-punctuation punctuation">}</span></span><span class="token template-punctuation string">`</span></span><span class="token punctuation">,</span> bal<span class="token punctuation">.</span>seconds<span class="token punctuation">,</span> bal<span class="token punctuation">.</span>milliseconds<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => PT3.500S 3 500</span></code></pre><h3 id="toJSON"><a class="heading-link" href="#toJSON"></a>duration.<strong>toJSON</strong>() : string</h3><p><strong>Returns:</strong> a string representation of the duration that can be passed to <code>Temporal.Duration.from()</code>.</p>
+<p>This method is the same as <code>duration.toString()</code>.
+It is usually not called directly, but it can be called automatically by <code>JSON.stringify()</code>.</p>
+<blockquote>
+<p><strong>NOTE</strong>: The same caution about <code>milliseconds</code>, <code>microseconds</code>, or <code>nanoseconds</code> greater than 999 applies to this method as well.</p>
+</blockquote>
+<p>The reverse operation, recovering a <code>Temporal.Duration</code> object from a string, is <code>Temporal.Duration.from()</code>, but it cannot be called automatically by <code>JSON.parse()</code>.
+If you need to rebuild a <code>Temporal.Duration</code> object from a JSON string, then you need to know the names of the keys that should be interpreted as <code>Temporal.Duration</code>s.
+In that case you can build a custom &quot;reviver&quot; function for your use case.</p>
+<p>Example usage:</p>
+<pre class="language-js"><code class="language-js"><span class="token keyword">const</span> ban <span class="token operator">=</span> <span class="token punctuation">{</span>
+  reason<span class="token operator">:</span> <span class="token string">'cooldown'</span><span class="token punctuation">,</span>
+  banDuration<span class="token operator">:</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token punctuation">{</span> hours<span class="token operator">:</span> <span class="token number">48</span> <span class="token punctuation">}</span><span class="token punctuation">)</span>
+<span class="token punctuation">}</span><span class="token punctuation">;</span>
+<span class="token keyword">const</span> str <span class="token operator">=</span> <span class="token constant">JSON</span><span class="token punctuation">.</span><span class="token function">stringify</span><span class="token punctuation">(</span>ban<span class="token punctuation">,</span> <span class="token keyword">null</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+console<span class="token punctuation">.</span><span class="token function">log</span><span class="token punctuation">(</span>str<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token comment">// =></span>
+<span class="token comment">// {</span>
+<span class="token comment">//   "reason": "cooldown",</span>
+<span class="token comment">//   "banDuration": "PT48H"</span>
+<span class="token comment">// }</span>
+
+<span class="token comment">// To rebuild from the string:</span>
+<span class="token keyword">function</span> <span class="token function">reviver</span><span class="token punctuation">(</span><span class="token parameter">key<span class="token punctuation">,</span> value</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>key<span class="token punctuation">.</span><span class="token function">endsWith</span><span class="token punctuation">(</span><span class="token string">'Duration'</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token keyword">return</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span>value<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">return</span> value<span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span class="token constant">JSON</span><span class="token punctuation">.</span><span class="token function">parse</span><span class="token punctuation">(</span>str<span class="token punctuation">,</span> reviver<span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre><h3 id="toLocaleString"><a class="heading-link" href="#toLocaleString"></a>duration.<strong>toLocaleString</strong>(<em>locales</em>?: string | array&lt;string&gt;, <em>options</em>?: object) : string</h3><p><strong>Parameters:</strong></p>
+<ul>
+<li><code>locales</code> (optional string or array of strings): A string with a BCP 47 language tag with an optional Unicode extension key, or an array of such strings.</li>
+<li><code>options</code> (optional object): An object with properties influencing the formatting.</li>
+</ul>
+<p><strong>Returns:</strong> a language-sensitive representation of the duration.</p>
+<p>This method overrides <code>Object.prototype.toLocaleString()</code> to provide a human-readable, language-sensitive representation of <code>duration</code>.</p>
+<p>The <code>locales</code> and <code>options</code> arguments are the same as in the constructor to <a href="http://tc39.es/proposal-intl-duration-format/"><code>Intl.DurationFormat</code></a>.</p>
+<blockquote>
+<p><strong>NOTE</strong>: This method requires that your JavaScript environment supports <code>Intl.DurationFormat</code>.
+That is still an early-stage proposal and at the time of writing it is not supported anywhere.
+If <code>Intl.DurationFormat</code> is not available, then the output of this method is the same as that of <code>duration.toString()</code>, and the <code>locales</code> and <code>options</code> arguments are ignored.</p>
+</blockquote>
+<p>Usage examples:</p>
+<pre class="language-javascript"><code class="language-javascript">d <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>Duration<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'P1DT6H30M'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+d<span class="token punctuation">.</span><span class="token function">toLocaleString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => 1 day 6 hours 30 minutes</span>
+d<span class="token punctuation">.</span><span class="token function">toLocaleString</span><span class="token punctuation">(</span><span class="token string">'de-DE'</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => 1 Tag 6 Stunden 30 Minuten</span>
+d<span class="token punctuation">.</span><span class="token function">toLocaleString</span><span class="token punctuation">(</span><span class="token string">'en-US'</span><span class="token punctuation">,</span> <span class="token punctuation">{</span> day<span class="token operator">:</span> <span class="token string">'numeric'</span><span class="token punctuation">,</span> hour<span class="token operator">:</span> <span class="token string">'numeric'</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => 1 day 6 hours</span></code></pre><h3 id="valueOf"><a class="heading-link" href="#valueOf"></a>duration.<strong>valueOf</strong>()</h3><p>This method overrides <code>Object.prototype.valueOf()</code> and always throws an exception.
+This is because it&#39;s not possible to compare <code>Temporal.Duration</code> objects with the relational operators <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, or <code>&gt;=</code>.</p>
+    <footer>
+      <p>
+        This page includes a script which loads an implementation of Temporal in your browser.
+        You can open a console in your browser's developer tools and try it out directly!
+      </p>
+      <p>View this or help contribute on <a href="https://github.com/tc39/proposal-temporal">GitHub</a>.</p>
+    </footer>
+  </body>
+</html>
