@@ -138,8 +138,8 @@
   <body>
     <div class="banner">
       This proposal is <strong><a href="https://blogs.igalia.com/compilers/2020/06/23/dates-and-times-in-javascript/">experimental.</a></strong>
-      The API will change based on feedback that we get.
-      <strong>Do</strong> <a href="https://forms.gle/iL9iZg7Y9LvH41Nv8">give feedback</a> and open <a href="https://github.com/tc39/proposal-temporal/issues">issues</a>; <strong>don't</strong> use it in production!
+      It is being reviewed by TC39.
+      <strong>Do</strong> try it out and <a href="https://github.com/tc39/proposal-temporal/issues">report bugs</a>; <strong>don't</strong> use it in production!
     </div>
 <h1 id="temporalzoneddatetime">Temporal.ZonedDateTime</h1>
 <details>
@@ -191,6 +191,10 @@
 </li>
 <li><a href="#timeZone">timeZone</a>
 </li>
+<li><a href="#era">era</a>
+</li>
+<li><a href="#eraYear">eraYear</a>
+</li>
 <li><a href="#dayOfWeek">dayOfWeek</a>
 </li>
 <li><a href="#dayOfYear">dayOfYear</a>
@@ -225,6 +229,8 @@
 </li>
 <li><a href="#withPlainDate">withPlainDate</a>
 </li>
+<li><a href="#withTimeZone">withTimeZone</a>
+</li>
 <li><a href="#withCalendar">withCalendar</a>
 </li>
 <li><a href="#add">add</a>
@@ -258,8 +264,6 @@
 <li><a href="#toPlainYearMonth">toPlainYearMonth</a>
 </li>
 <li><a href="#toPlainMonthDay">toPlainMonthDay</a>
-</li>
-<li><a href="#getFields">getFields</a>
 </li>
 <li><a href="#getISOFields">getISOFields</a>
 </li>
@@ -322,14 +326,16 @@ The default is <code>&#39;reject&#39;</code>.</li>
 <p><strong>Returns:</strong> a new <code>Temporal.ZonedDateTime</code> object.</p>
 <p>This static method creates a new <code>Temporal.ZonedDateTime</code> object from another value.
 If the value is another <code>Temporal.ZonedDateTime</code> object, a new but otherwise identical object will be returned.
-If the value is any other object, a <code>Temporal.ZonedDateTime</code> will be constructed from the values of any <code>timeZone</code>, <code>offset</code>, <code>year</code>, <code>month</code>, <code>day</code>, <code>hour</code>, <code>minute</code>, <code>second</code>, <code>millisecond</code>, <code>microsecond</code>, <code>nanosecond</code>, and/or <code>calendar</code> properties that are present.
-At least the <code>timeZone</code>, <code>year</code>, <code>month</code>, and <code>day</code> properties must be present. Other properties are optional.
+If the value is any other object, a <code>Temporal.ZonedDateTime</code> will be constructed from the values of any <code>year</code> (or <code>era</code> and <code>eraYear</code>), <code>month</code> (or <code>monthCode</code>), <code>day</code>, <code>hour</code>, <code>minute</code>, <code>second</code>, <code>millisecond</code>, <code>microsecond</code>, <code>nanosecond</code>, and/or <code>calendar</code> properties that are present.
+At least the <code>timeZone</code>, <code>year</code> (or <code>era</code> and <code>eraYear</code>), <code>month</code> (or <code>monthCode</code>), and <code>day</code> properties must be present. Other properties are optional.
 If <code>calendar</code> is missing, it will be assumed to be <code>Temporal.Calendar.from(&#39;iso8601&#39;)</code>.
 Any other missing properties will be assumed to be 0 (for time fields).</p>
-<p>All date/time values will be interpreted in context of the provided time zone.
-Also, if <code>calendar</code> is present then all date/time values will also be interpreted in context of that calendar.</p>
-<p>Any non-object value is converted to a string, which is expected to be an ISO 8601 string that includes a time zone ID in brackets, and an optional calendar. For example:</p>
-<pre><code>2020-08-05T20:06:13+09:00[Asia/Tokyo][c=japanese]</code></pre><p>If the string isn&#39;t valid, then a <code>RangeError</code> will be thrown regardless of the value of <code>overflow</code>.</p>
+<p>Date/time values will be interpreted in context of the provided offset and/or time zone, depending on the <code>offset</code> option.</p>
+<p>Date/time values in object inputs will be interpreted in the context of <code>calendar</code>.
+However, date/time values in string inputs are always interpreted in the context of the ISO 8601 calendar.</p>
+<p>Any non-object value is converted to a string, which is expected to be an ISO 8601 string that includes a time zone ID in brackets, and an optional calendar.
+For example:</p>
+<pre><code>2020-08-05T20:06:13+09:00[Asia/Tokyo][u-ca-japanese]</code></pre><p>If the string isn&#39;t valid, then a <code>RangeError</code> will be thrown regardless of the value of <code>overflow</code>.</p>
 <p>Note that this string format (albeit limited to the ISO calendar system) is also used by <code>java.time</code> and some other time-zone-aware libraries.
 For more information on <code>Temporal</code>&#39;s extensions to the ISO string format and the progress towards becoming a published standard, see <a href="./iso-string-ext.html">ISO standard extensions</a>.</p>
 <p>The time zone ID is always required.
@@ -395,7 +401,7 @@ If the offset in the input is used, then there is no ambiguity and the <code>dis
 <p>Example usage:</p>
 <!-- prettier-ignore-start -->
 <pre class="language-javascript"><code class="language-javascript">zdt <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>ZonedDateTime<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'1995-12-07T03:24:30+02:00[Africa/Cairo]'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-zdt <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>ZonedDateTime<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'1995-12-07T03:24:30+02:00[Africa/Cairo][c=islamic]'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+zdt <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>ZonedDateTime<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'1995-12-07T03:24:30+02:00[Africa/Cairo][u-ca-islamic]'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 zdt <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>ZonedDateTime<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'1995-12-07T03:24:30'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>  <span class="token comment">// RangeError; time zone ID required</span>
 zdt <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>ZonedDateTime<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'1995-12-07T01:24:30Z'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>  <span class="token comment">// RangeError; time zone ID required</span>
 zdt <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>ZonedDateTime<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'1995-12-07T03:24:30+02:00'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>  <span class="token comment">// RangeError; time zone ID required</span>
@@ -440,7 +446,8 @@ zdt <span class="token operator">=</span> Temporal<span class="token punctuation
 <p>This function can be used to sort arrays of <code>Temporal.ZonedDateTime</code> objects.</p>
 <p>Comparison will use exact time, not clock time, because sorting is almost always based on when events happened in the real world.
 Note that during the hour before and after DST ends, sorting of clock time may not match the order the events actually occurred.</p>
-<p>If exact timestamps are equal, then <code>.calendar.id</code> will be compared lexicographically, in order to ensure a deterministic sort order.
+<p>Note that this function will not return 0 if the two objects have different <code>calendar</code> or <code>timeZone</code> properties, even if the exact timestamps are equal.
+If exact timestamps are equal, then <code>.calendar.id</code> will be compared lexicographically, in order to ensure a deterministic sort order.
 If those are equal too, then <code>.timeZone.id</code> will be compared lexicographically.</p>
 <p>For example:</p>
 <pre class="language-javascript"><code class="language-javascript">arr <span class="token operator">=</span> <span class="token punctuation">[</span>
@@ -470,16 +477,60 @@ Temporal<span class="token punctuation">.</span>Instant<span class="token punctu
   <span class="token comment">// => -1, because `Temporal.Instant` and `Temporal.ZonedDateTime` both compare real-world exact times</span></code></pre><!-- prettier-ignore-end -->
 
 <h2 id="properties">Properties</h2>
-<h3 id="year"><a class="heading-link" href="#year"></a>zonedDateTime.<strong>year</strong> : number</h3><h3 id="month"><a class="heading-link" href="#month"></a>zonedDateTime.<strong>month</strong> : number</h3><h3 id="day"><a class="heading-link" href="#day"></a>zonedDateTime.<strong>day</strong> : number</h3><h3 id="hour"><a class="heading-link" href="#hour"></a>zonedDateTime.<strong>hour</strong>: number</h3><h3 id="minute"><a class="heading-link" href="#minute"></a>zonedDateTime.<strong>minute</strong>: number</h3><h3 id="second"><a class="heading-link" href="#second"></a>zonedDateTime.<strong>second</strong>: number</h3><h3 id="millisecond"><a class="heading-link" href="#millisecond"></a>zonedDateTime.<strong>millisecond</strong>: number</h3><h3 id="microsecond"><a class="heading-link" href="#microsecond"></a>zonedDateTime.<strong>microsecond</strong>: number</h3><h3 id="nanosecond"><a class="heading-link" href="#nanosecond"></a>zonedDateTime.<strong>nanosecond</strong>: number</h3><p>The above read-only properties allow accessing each component of the date or time individually.
-Keep in mind that the values above are dependent on the calendar.
-For example:</p>
+<h3 id="year"><a class="heading-link" href="#year"></a>zonedDateTime.<strong>year</strong> : number</h3><h3 id="month"><a class="heading-link" href="#month"></a>zonedDateTime.<strong>month</strong> : number</h3><h3 id="day"><a class="heading-link" href="#day"></a>zonedDateTime.<strong>day</strong> : number</h3><h3 id="hour"><a class="heading-link" href="#hour"></a>zonedDateTime.<strong>hour</strong>: number</h3><h3 id="minute"><a class="heading-link" href="#minute"></a>zonedDateTime.<strong>minute</strong>: number</h3><h3 id="second"><a class="heading-link" href="#second"></a>zonedDateTime.<strong>second</strong>: number</h3><h3 id="millisecond"><a class="heading-link" href="#millisecond"></a>zonedDateTime.<strong>millisecond</strong>: number</h3><h3 id="microsecond"><a class="heading-link" href="#microsecond"></a>zonedDateTime.<strong>microsecond</strong>: number</h3><h3 id="nanosecond"><a class="heading-link" href="#nanosecond"></a>zonedDateTime.<strong>nanosecond</strong>: number</h3><p>The above read-only properties allow accessing each component of a date or time individually.</p>
+<p>Date unit details:</p>
+<ul>
+<li><code>year</code> is a signed integer representing the number of years relative to a calendar-specific epoch.
+For calendars that use eras, the anchor is usually aligned with the latest era so that <code>eraYear === year</code> for all dates in that era.
+However, some calendars like Japanese may use a different anchor.</li>
+<li><code>month</code> is a positive integer representing the ordinal index of the month in the current year.
+For calendars like Hebrew or Chinese that use leap months, the same-named month may have a different <code>month</code> value depending on the year.
+The first month in every year has <code>month</code> equal to <code>1</code>.
+The last month of every year has <code>month</code> equal to the <code>monthsInYear</code> property.
+<code>month</code> values start at 1, which is different from legacy <code>Date</code> where months are represented by zero-based indices (0 to 11).</li>
+<li><code>monthCode</code> is a calendar-specific string that identifies the month in a year-independent way.
+For common (non-leap) months, <code>monthCode</code> should be <code>`M${month}`</code>.
+For uncommon (leap) months in lunisolar calendars like Hebrew or Chinese, the month code is the previous month&#39;s code with with an &quot;L&quot; suffix appended.
+Examples: <code>&#39;M2&#39;</code> =&gt; February; <code>&#39;M8L&#39;</code> =&gt; repeated 8th month in the Chinese calendar; <code>&#39;M5L&#39;</code> =&gt; Adar I in the Hebrew calendar.</li>
+<li><code>day</code> is a positive integer representing the day of the month.</li>
+</ul>
+<p>Either <code>month</code> or <code>monthCode</code> can be used in <code>from</code> or <code>with</code> to refer to the month.
+Similarly, in calendars that user eras an <code>era</code>/<code>eraYear</code> pair can be used in place of <code>year</code> when calling <code>from</code> or <code>with</code>.</p>
+<p>Time unit details:</p>
+<ul>
+<li><code>hour</code> is an integer between 0 and 23</li>
+<li><code>minute</code> is an integer between 0 and 59</li>
+<li><code>second</code> is an integer between 0 and 59.
+If 60 (for a leap second) was provided to <code>from</code> or <code>with</code>, 59 will stored and will be returned by this property.</li>
+<li><code>millisecond</code> is an integer between 0 and 999</li>
+<li><code>microsecond</code> is an integer between 0 and 999</li>
+<li><code>nanosecond</code> is an integer between 0 and 999</li>
+</ul>
+<p>Usage examples:</p>
 <!-- prettier-ignore-start -->
-<pre class="language-javascript"><code class="language-javascript">inIsoCalendar <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>ZonedDateTime<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'2020-02-01T12:30+09:00[Asia/Tokyo]'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-  <span class="token comment">// => 2020-02-01T12:30+09:00[Asia/Tokyo]</span>
-inIsoCalendar<span class="token punctuation">.</span>year<span class="token punctuation">;</span>
-  <span class="token comment">// => 2020</span>
-inIsoCalendar<span class="token punctuation">.</span><span class="token function">withCalendar</span><span class="token punctuation">(</span><span class="token string">'japanese'</span><span class="token punctuation">)</span><span class="token punctuation">.</span>year<span class="token punctuation">;</span>
-  <span class="token comment">// => 2</span></code></pre><!-- prettier-ignore-end -->
+<pre class="language-javascript"><code class="language-javascript">dt <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>ZonedDateTime<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'1995-12-07T03:24:30.000003500[Europe/Rome]'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+dt<span class="token punctuation">.</span>year<span class="token punctuation">;</span>        <span class="token comment">// => 1995</span>
+dt<span class="token punctuation">.</span>month<span class="token punctuation">;</span>       <span class="token comment">// => 12</span>
+dt<span class="token punctuation">.</span>monthCode<span class="token punctuation">;</span>   <span class="token comment">// => "M12"</span>
+dt<span class="token punctuation">.</span>day<span class="token punctuation">;</span>         <span class="token comment">// => 7</span>
+dt<span class="token punctuation">.</span>hour<span class="token punctuation">;</span>        <span class="token comment">// => 3</span>
+dt<span class="token punctuation">.</span>minute<span class="token punctuation">;</span>      <span class="token comment">// => 24</span>
+dt<span class="token punctuation">.</span>second<span class="token punctuation">;</span>      <span class="token comment">// => 30</span>
+dt<span class="token punctuation">.</span>millisecond<span class="token punctuation">;</span> <span class="token comment">// => 0</span>
+dt<span class="token punctuation">.</span>microsecond<span class="token punctuation">;</span> <span class="token comment">// => 3</span>
+dt<span class="token punctuation">.</span>nanosecond<span class="token punctuation">;</span>  <span class="token comment">// => 500</span>
+
+dt <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>ZonedDateTime<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'2019-02-23T03:24:30.000003500[Europe/Rome][u-ca-hebrew]'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+dt<span class="token punctuation">.</span>year<span class="token punctuation">;</span>        <span class="token comment">// => 5779</span>
+dt<span class="token punctuation">.</span>month<span class="token punctuation">;</span>       <span class="token comment">// => 6</span>
+dt<span class="token punctuation">.</span>monthCode<span class="token punctuation">;</span>   <span class="token comment">// => "M5L"</span>
+dt<span class="token punctuation">.</span>day<span class="token punctuation">;</span>         <span class="token comment">// => 18</span>
+dt<span class="token punctuation">.</span>hour<span class="token punctuation">;</span>        <span class="token comment">// => 3</span>
+dt<span class="token punctuation">.</span>minute<span class="token punctuation">;</span>      <span class="token comment">// => 24</span>
+dt<span class="token punctuation">.</span>second<span class="token punctuation">;</span>      <span class="token comment">// => 30</span>
+dt<span class="token punctuation">.</span>millisecond<span class="token punctuation">;</span> <span class="token comment">// => 0</span>
+dt<span class="token punctuation">.</span>microsecond<span class="token punctuation">;</span> <span class="token comment">// => 3</span>
+dt<span class="token punctuation">.</span>nanosecond<span class="token punctuation">;</span>  <span class="token comment">// => 500</span></code></pre><!-- prettier-ignore-end -->
 
 <blockquote>
 <p><strong>NOTE</strong>: The possible values for the <code>month</code> property start at 1, which is different from legacy <code>Date</code> where months are represented by zero-based indices (0 to 11).</p>
@@ -535,7 +586,7 @@ This is generally not advised because no humans actually live in the UTC time zo
 Also, UTC has no DST and always has a zero offset, which means that any action you&#39;d take with <code>Temporal.ZonedDateTime</code> would return identical results to the same action on <code>Temporal.PlainDateTime</code> or <code>Temporal.Instant</code>.
 Therefore, you should almost always use <code>Temporal.Instant</code> to represent UTC times.
 When you want to convert UTC time to a real time zone, that&#39;s when <code>Temporal.ZonedDateTime</code> will be useful.</p>
-<p>To change the time zone while keeping the exact time constant, use <code>.with({timeZone})</code>.</p>
+<p>To change the time zone while keeping the exact time constant, use <code>.withTimeZone(timeZone)</code>.</p>
 <p>The time zone is a required property when creating <code>Temporal.ZonedDateTime</code> instances.
 If you don&#39;t know the time zone of your underlying data, please use <code>Temporal.Instant</code> and/or <code>Temporal.PlainDateTime</code>, neither of which have awareness of time zones.</p>
 <p>Although this property is a <code>Temporal.TimeZoneProtocol</code> object (which is usually a <code>Temporal.TimeZone</code> except custom timezones), it will be automatically coerced to its string form (e.g. <code>&quot;Europe/Paris&quot;</code>) when displayed by <code>console.log</code>, <code>JSON.stringify</code>, <code>${zonedDateTime.timeZone}</code>, or other similar APIs.</p>
@@ -544,20 +595,30 @@ If you don&#39;t know the time zone of your underlying data, please use <code>Te
 <pre class="language-javascript"><code class="language-javascript">zdt <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>ZonedDateTime<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'1995-12-07T03:24-08:00[America/Los_Angeles]'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">Time zone is: </span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>zdt<span class="token punctuation">.</span>timeZone<span class="token interpolation-punctuation punctuation">}</span></span><span class="token template-punctuation string">`</span></span><span class="token punctuation">;</span>
   <span class="token comment">// => "Time zone is: America/Los_Angeles"</span>
-zdt<span class="token punctuation">.</span><span class="token function">with</span><span class="token punctuation">(</span><span class="token punctuation">{</span> timeZone<span class="token operator">:</span> <span class="token string">'Asia/Singapore'</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">.</span>timeZone<span class="token punctuation">;</span>
+zdt<span class="token punctuation">.</span><span class="token function">withTimeZone</span><span class="token punctuation">(</span><span class="token string">'Asia/Singapore'</span><span class="token punctuation">)</span><span class="token punctuation">.</span>timeZone<span class="token punctuation">;</span>
   <span class="token comment">// => Asia/Singapore</span>
-zdt<span class="token punctuation">.</span><span class="token function">with</span><span class="token punctuation">(</span><span class="token punctuation">{</span> timeZone<span class="token operator">:</span> <span class="token string">'Asia/Chongqing'</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">.</span>timeZone<span class="token punctuation">;</span>
+zdt<span class="token punctuation">.</span><span class="token function">withTimeZone</span><span class="token punctuation">(</span><span class="token string">'Asia/Chongqing'</span><span class="token punctuation">)</span><span class="token punctuation">.</span>timeZone<span class="token punctuation">;</span>
   <span class="token comment">// => Asia/Shanghai (time zone IDs are normalized, e.g. Asia/Chongqing -> Asia/Shanghai)</span>
-zdt<span class="token punctuation">.</span><span class="token function">with</span><span class="token punctuation">(</span><span class="token punctuation">{</span> timeZone<span class="token operator">:</span> <span class="token string">'+05:00'</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">.</span>timeZone<span class="token punctuation">;</span>
+zdt<span class="token punctuation">.</span><span class="token function">withTimeZone</span><span class="token punctuation">(</span><span class="token string">'+05:00'</span><span class="token punctuation">)</span><span class="token punctuation">.</span>timeZone<span class="token punctuation">;</span>
   <span class="token comment">// => +05:00</span>
-zdt<span class="token punctuation">.</span><span class="token function">with</span><span class="token punctuation">(</span><span class="token punctuation">{</span> timeZone<span class="token operator">:</span> <span class="token string">'+05'</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">.</span>timeZone<span class="token punctuation">;</span>
+zdt<span class="token punctuation">.</span><span class="token function">withTimeZone</span><span class="token punctuation">(</span><span class="token string">'+05'</span><span class="token punctuation">)</span><span class="token punctuation">.</span>timeZone<span class="token punctuation">;</span>
   <span class="token comment">// => +05:00 (normalized to canonical form)</span>
-zdt<span class="token punctuation">.</span><span class="token function">with</span><span class="token punctuation">(</span><span class="token punctuation">{</span> timeZone<span class="token operator">:</span> <span class="token string">'utc'</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">.</span>timeZone<span class="token punctuation">;</span>
+zdt<span class="token punctuation">.</span><span class="token function">withTimeZone</span><span class="token punctuation">(</span><span class="token string">'utc'</span><span class="token punctuation">)</span><span class="token punctuation">.</span>timeZone<span class="token punctuation">;</span>
   <span class="token comment">// => UTC (normalized to canonical form which is uppercase)</span>
-zdt<span class="token punctuation">.</span><span class="token function">with</span><span class="token punctuation">(</span><span class="token punctuation">{</span> timeZone<span class="token operator">:</span> <span class="token string">'GMT'</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">.</span>timeZone<span class="token punctuation">;</span>
+zdt<span class="token punctuation">.</span><span class="token function">withTimeZone</span><span class="token punctuation">(</span><span class="token string">'GMT'</span><span class="token punctuation">)</span><span class="token punctuation">.</span>timeZone<span class="token punctuation">;</span>
   <span class="token comment">// => UTC (normalized to canonical form)</span></code></pre><!-- prettier-ignore-end -->
 
-<h3 id="dayOfWeek"><a class="heading-link" href="#dayOfWeek"></a>zonedDateTime.<strong>dayOfWeek</strong> : number</h3><p>The <code>dayOfWeek</code> read-only property gives the weekday number that the date falls on.
+<h3 id="era"><a class="heading-link" href="#era"></a>zonedDateTime.<strong>era</strong> : string | undefined</h3><h3 id="eraYear"><a class="heading-link" href="#eraYear"></a>zonedDateTime.<strong>eraYear</strong> : number | undefined</h3><p>In calendars that use eras, the <code>era</code> and <code>eraYear</code> read-only properties can be used together to resolve an era-relative year.
+Both properties are <code>undefined</code> when using the ISO 8601 calendar.
+As inputs to <code>from</code> or <code>with</code>, <code>era</code> and <code>eraYear</code> can be used instead of <code>year</code>.
+Unlike <code>year</code>, <code>eraYear</code> may decrease as time proceeds because some eras (like the BCE era in the Gregorian calendar) count years backwards.</p>
+<pre class="language-javascript"><code class="language-javascript">date <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>ZonedDateTime<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'-000015-01-01T12:30[Europe/Rome][u-ca-gregory]'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+date<span class="token punctuation">.</span>era<span class="token punctuation">;</span>
+<span class="token comment">// => "bce"</span>
+date<span class="token punctuation">.</span>eraYear<span class="token punctuation">;</span>
+<span class="token comment">// => 16</span>
+date<span class="token punctuation">.</span>year<span class="token punctuation">;</span>
+<span class="token comment">// => -15</span></code></pre><h3 id="dayOfWeek"><a class="heading-link" href="#dayOfWeek"></a>zonedDateTime.<strong>dayOfWeek</strong> : number</h3><p>The <code>dayOfWeek</code> read-only property gives the weekday number that the date falls on.
 For the ISO 8601 calendar, the weekday number is defined as in the ISO 8601 standard: a value between 1 and 7, inclusive, with Monday being 1, and Sunday 7.
 For an overview, see <a href="https://en.wikipedia.org/wiki/ISO_8601#Week_dates">ISO 8601 on Wikipedia</a>.</p>
 <p>Usage example:</p>
@@ -653,13 +714,13 @@ zdt<span class="token punctuation">.</span>offsetNanoseconds<span class="token p
 <p>The format used is defined in the <a href="https://en.wikipedia.org/wiki/ISO_8601#Time_offsets_from_UTC">ISO 8601</a> standard.</p>
 <p>The value of this field will change after DST transitions or after political changes to a time zone, e.g. a country switching to a new time zone.</p>
 <p>This field is used to uniquely map date/time fields to an exact date/time in cases where the calendar date and clock time are ambiguous due to time zone offset transitions.
-Therefore, this field is returned by <code>getFields()</code> and is accepted by <code>from</code> and <code>with</code>.
+Therefore, this field is accepted by <code>from</code> and <code>with</code>.
 The presence of this field means that <code>zonedDateTime.toInstant()</code> requires no parameters.</p>
 <!-- prettier-ignore-start -->
 <pre class="language-javascript"><code class="language-javascript">zdt <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>ZonedDateTime<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'2020-11-01T01:30-07:00[America/Los_Angeles]'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 zdt<span class="token punctuation">.</span>offset<span class="token punctuation">;</span>
   <span class="token comment">// => "-07:00"</span>
-zdt<span class="token punctuation">.</span><span class="token function">with</span><span class="token punctuation">(</span><span class="token punctuation">{</span> timeZone<span class="token operator">:</span> <span class="token string">'Asia/Kolkata'</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">.</span>offset<span class="token punctuation">;</span>
+zdt<span class="token punctuation">.</span><span class="token function">withTimeZone</span><span class="token punctuation">(</span><span class="token string">'Asia/Kolkata'</span><span class="token punctuation">)</span><span class="token punctuation">.</span>offset<span class="token punctuation">;</span>
   <span class="token comment">// => "+05:30"</span>
 
 minus8Hours <span class="token operator">=</span> <span class="token string">'-08:00'</span><span class="token punctuation">;</span>
@@ -668,14 +729,7 @@ daylightTime0130 <span class="token operator">=</span> Temporal<span class="toke
   <span class="token comment">// This is Pacific Daylight Time 1:30AM</span>
 repeated0130 <span class="token operator">=</span> daylightTime0130<span class="token punctuation">.</span><span class="token function">with</span><span class="token punctuation">(</span><span class="token punctuation">{</span> offset<span class="token operator">:</span> minus8Hours <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
   <span class="token comment">// => 2020-11-01T01:30-08:00[America/Los_Angeles]</span>
-  <span class="token comment">// This is Pacific Standard Time 1:30AM</span>
-<span class="token keyword">const</span> <span class="token punctuation">{</span> offset<span class="token punctuation">,</span> <span class="token operator">...</span>otherFields <span class="token punctuation">}</span> <span class="token operator">=</span> repeated0130<span class="token punctuation">.</span><span class="token function">getFields</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-zdt <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>ZonedDateTime<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span>otherFields<span class="token punctuation">,</span> <span class="token punctuation">{</span> disambiguation<span class="token operator">:</span> <span class="token string">'earlier'</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-  <span class="token comment">// => 2020-11-01T01:30-07:00[America/Los_Angeles]</span>
-zdt <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>ZonedDateTime<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token punctuation">{</span> <span class="token operator">...</span>otherFields<span class="token punctuation">,</span> offset <span class="token punctuation">}</span><span class="token punctuation">,</span> <span class="token punctuation">{</span> disambiguation<span class="token operator">:</span> <span class="token string">'earlier'</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-  <span class="token comment">// => 2020-11-01T01:30-08:00[America/Los_Angeles]</span>
-  <span class="token comment">// Note that the `{disambiguation: 'earlier'}` option is ignored because `offset`</span>
-  <span class="token comment">// is included in the input so the result is not ambiguous.</span></code></pre><!-- prettier-ignore-end -->
+  <span class="token comment">// This is Pacific Standard Time 1:30AM</span></code></pre><!-- prettier-ignore-end -->
 
 <h2 id="methods">Methods</h2>
 <h3 id="with"><a class="heading-link" href="#with"></a>zonedDateTime.<strong>with</strong>(<em>zonedDateTimeLike</em>: object | string, <em>options</em>?: object) : Temporal.ZonedDateTime</h3><p><strong>Parameters:</strong></p>
@@ -724,7 +778,7 @@ However, if the existing offset is not valid for the new result (e.g. <code>.wit
 <pre class="language-javascript"><code class="language-javascript">zdt <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>ZonedDateTime<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'1995-12-07T03:24-06:00[America/Chicago]'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 zdt<span class="token punctuation">.</span><span class="token function">with</span><span class="token punctuation">(</span><span class="token punctuation">{</span> year<span class="token operator">:</span> <span class="token number">2015</span><span class="token punctuation">,</span> minute<span class="token operator">:</span> <span class="token number">31</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => 2015-12-07T03:31-06:00[America/Chicago]</span></code></pre><h3 id="withPlainTime"><a class="heading-link" href="#withPlainTime"></a>zonedDateTime.<strong>withPlainTime</strong>(<em>plainTime</em>?: object | string) : Temporal.PlainDateTime</h3><p><strong>Parameters:</strong></p>
 <ul>
-<li><code>plainTime</code> (<code>Temporal.PlainTime</code> or plain object or string): The clock time that should replace the current clock time of <code>zonedDateTime</code>.
+<li><code>plainTime</code> (optional <code>Temporal.PlainTime</code> or plain object or string): The clock time that should replace the current clock time of <code>zonedDateTime</code>.
 If omitted, the clock time of the result will be <code>00:00:00</code>.</li>
 </ul>
 <p><strong>Returns:</strong> a new <code>Temporal.ZonedDateTime</code> object which replaces the clock time of <code>zonedDateTime</code> with the clock time represented by <code>plainTime</code>.</p>
@@ -774,15 +828,23 @@ zdt<span class="token punctuation">.</span><span class="token function">withPlai
 zdt<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span><span class="token punctuation">{</span> hours<span class="token operator">:</span> <span class="token number">12</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">withPlainDate</span><span class="token punctuation">(</span><span class="token string">'2000-06-01'</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => 2000-06-01T15:24:30-07:00[America/Los_Angeles]</span>
 
 <span class="token comment">// result contains a non-ISO calendar if present in the input</span>
-zdt<span class="token punctuation">.</span><span class="token function">withCalendar</span><span class="token punctuation">(</span><span class="token string">'japanese'</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">withPlainDate</span><span class="token punctuation">(</span><span class="token string">'2008-09-06'</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => 2008-09-06T03:24:30-07:00[America/Los_Angeles][c=japanese]</span>
-zdt<span class="token punctuation">.</span><span class="token function">withPlainDate</span><span class="token punctuation">(</span><span class="token string">'2017-09-06[c=japanese]'</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => 2017-09-06T03:24:30-07:00[America/Los_Angeles][c=japanese]</span>
-zdt<span class="token punctuation">.</span><span class="token function">withCalendar</span><span class="token punctuation">(</span><span class="token string">'japanese'</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">withPlainDate</span><span class="token punctuation">(</span><span class="token string">'2017-09-06[c=hebrew]'</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => RangeError (calendar conflict)</span></code></pre><h3 id="withCalendar"><a class="heading-link" href="#withCalendar"></a>zonedDateTime.<strong>withCalendar</strong>(<em>calendar</em>: object | string) : Temporal.ZonedDateTime</h3><p><strong>Parameters:</strong></p>
+zdt<span class="token punctuation">.</span><span class="token function">withCalendar</span><span class="token punctuation">(</span><span class="token string">'japanese'</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">withPlainDate</span><span class="token punctuation">(</span><span class="token string">'2008-09-06'</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => 2008-09-06T03:24:30-07:00[America/Los_Angeles][u-ca-japanese]</span>
+zdt<span class="token punctuation">.</span><span class="token function">withPlainDate</span><span class="token punctuation">(</span><span class="token string">'2017-09-06[u-ca-japanese]'</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => 2017-09-06T03:24:30-07:00[America/Los_Angeles][u-ca-japanese]</span>
+zdt<span class="token punctuation">.</span><span class="token function">withCalendar</span><span class="token punctuation">(</span><span class="token string">'japanese'</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">withPlainDate</span><span class="token punctuation">(</span><span class="token string">'2017-09-06[u-ca-hebrew]'</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => RangeError (calendar conflict)</span></code></pre><h3 id="withTimeZone"><a class="heading-link" href="#withTimeZone"></a>zonedDateTime.<strong>withTimeZone</strong>(<em>timeZone</em>: object | string) : Temporal.ZonedDateTime</h3><p><strong>Parameters:</strong></p>
+<ul>
+<li><code>timeZone</code> (<code>Temporal.TimeZone</code> or plain object or string): The time zone into which to project <code>zonedDateTime</code>.</li>
+</ul>
+<p><strong>Returns:</strong> a new <code>Temporal.ZonedDateTime</code> object which is the date indicated by <code>zonedDateTime</code>, projected into <code>timeZone</code>.</p>
+<p>Usage example:</p>
+<pre class="language-javascript"><code class="language-javascript">zdt <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>ZonedDateTime<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'1995-12-07T03:24:30+09:00[Asia/Tokyo]'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+zdt<span class="token punctuation">.</span><span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => "1995-12-07T03:24:30+09:00[Asia/Tokyo]"</span>
+zdt<span class="token punctuation">.</span><span class="token function">withTimeZone</span><span class="token punctuation">(</span><span class="token string">'Africa/Accra'</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => "1995-12-06T18:24:30+00:00[Africa/Accra]"</span></code></pre><h3 id="withCalendar"><a class="heading-link" href="#withCalendar"></a>zonedDateTime.<strong>withCalendar</strong>(<em>calendar</em>: object | string) : Temporal.ZonedDateTime</h3><p><strong>Parameters:</strong></p>
 <ul>
 <li><code>calendar</code> (<code>Temporal.Calendar</code> or plain object or string): The calendar into which to project <code>zonedDateTime</code>.</li>
 </ul>
 <p><strong>Returns:</strong> a new <code>Temporal.ZonedDateTime</code> object which is the date indicated by <code>zonedDateTime</code>, projected into <code>calendar</code>.</p>
 <p>Usage example:</p>
-<pre class="language-javascript"><code class="language-javascript">zdt <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>ZonedDateTime<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'1995-12-07T03:24:30.000003500+09:00[Asia/Tokyo][c=japanese]'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<pre class="language-javascript"><code class="language-javascript">zdt <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>ZonedDateTime<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'1995-12-07T03:24:30.000003500+09:00[Asia/Tokyo][u-ca-japanese]'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>zdt<span class="token punctuation">.</span>era<span class="token interpolation-punctuation punctuation">}</span></span><span class="token string"> </span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>zdt<span class="token punctuation">.</span>year<span class="token interpolation-punctuation punctuation">}</span></span><span class="token template-punctuation string">`</span></span><span class="token punctuation">;</span> <span class="token comment">// => "heisei 7"</span>
 zdt<span class="token punctuation">.</span><span class="token function">withCalendar</span><span class="token punctuation">(</span><span class="token string">'iso8601'</span><span class="token punctuation">)</span><span class="token punctuation">.</span>year<span class="token punctuation">;</span> <span class="token comment">// => 1995</span></code></pre><h3 id="add"><a class="heading-link" href="#add"></a>zonedDateTime.<strong>add</strong>(<em>duration</em>: object, <em>options</em>?: object) : Temporal.ZonedDateTime</h3><p><strong>Parameters:</strong></p>
 <ul>
@@ -944,7 +1006,7 @@ To calculate the difference between calendar dates only, use <code>.toPlainDate(
 To calculate the difference between clock times only, use <code>.toPlainTime().until(other.toPlainTime())</code>.</p>
 <p>If the other <code>Temporal.ZonedDateTime</code> is in a different time zone, then the same days can be different lengths in each time zone, e.g. if only one of them observes DST.
 Therefore, a <code>RangeError</code> will be thrown if <code>largestUnit</code> is <code>&#39;days&#39;</code> or larger and the two instances&#39; time zones have different <code>id</code> fields.
-To work around this limitation, transform one of the instances to the other&#39;s time zone using <code>.with({timeZone: other.timeZone})</code> and then calculate the same-timezone difference.
+To work around this limitation, transform one of the instances to the other&#39;s time zone using <code>.withTimeZone(other.timeZone)</code> and then calculate the same-timezone difference.
 Because of the complexity and ambiguity involved in cross-timezone calculations involving days or larger units, <code>&#39;hours&#39;</code> is the default for <code>largestUnit</code>.</p>
 <p>Take care when using milliseconds, microseconds, or nanoseconds as the largest unit.
 For some durations, the resulting value may overflow <code>Number.MAX_SAFE_INTEGER</code> and lose precision in its least significant digit(s).
@@ -1098,7 +1160,7 @@ The default is <code>&#39;trunc&#39;</code>.</li>
 <p>Examples:</p>
 <ul>
 <li><code>2011-12-03T10:15:30+01:00[Europe/Paris]</code></li>
-<li><code>2011-12-03T10:15:30+09:00[Asia/Tokyo][c=japanese]</code></li>
+<li><code>2011-12-03T10:15:30+09:00[Asia/Tokyo][u-ca-japanese]</code></li>
 </ul>
 <p>This method overrides the <code>Object.prototype.toString()</code> method and provides a convenient, unambiguous string representation of <code>zonedDateTime</code>.
 The string is &quot;round-trippable&quot;.
@@ -1117,7 +1179,7 @@ For more information on <code>Temporal</code>&#39;s extensions to the ISO string
 <pre class="language-javascript"><code class="language-javascript">zdt <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>ZonedDateTime<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token punctuation">{</span> year<span class="token operator">:</span> <span class="token number">2019</span><span class="token punctuation">,</span> month<span class="token operator">:</span> <span class="token number">12</span><span class="token punctuation">,</span> day<span class="token operator">:</span> <span class="token number">1</span><span class="token punctuation">,</span> hour<span class="token operator">:</span> <span class="token number">12</span><span class="token punctuation">,</span> timeZone<span class="token operator">:</span> <span class="token string">'Africa/Lagos'</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 zdt<span class="token punctuation">.</span><span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => 2019-12-01T12:00+01:00[Africa/Lagos]</span>
 zdt<span class="token punctuation">.</span><span class="token function">withCalendar</span><span class="token punctuation">(</span><span class="token string">'japanese'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-zdt<span class="token punctuation">.</span><span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => 2019-12-01T12:00+01:00[Africa/Lagos][c=japanese]</span></code></pre><h3 id="toLocaleString"><a class="heading-link" href="#toLocaleString"></a>zonedDateTime.<strong>toLocaleString</strong>(<em>locales</em>?: string | array&lt;string&gt;, <em>options</em>?: object) : string</h3><p><strong>Parameters:</strong></p>
+zdt<span class="token punctuation">.</span><span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => 2019-12-01T12:00+01:00[Africa/Lagos][u-ca-japanese]</span></code></pre><h3 id="toLocaleString"><a class="heading-link" href="#toLocaleString"></a>zonedDateTime.<strong>toLocaleString</strong>(<em>locales</em>?: string | array&lt;string&gt;, <em>options</em>?: object) : string</h3><p><strong>Parameters:</strong></p>
 <ul>
 <li><code>locales</code> (optional string or array of strings): A string with a BCP 47 language tag with an optional Unicode extension key, or an array of such strings.</li>
 <li><code>options</code> (optional object): An object with properties influencing the formatting.</li>
@@ -1127,7 +1189,7 @@ zdt<span class="token punctuation">.</span><span class="token function">toString
 <p>The <code>locales</code> and <code>options</code> arguments are the same as in the constructor to <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DateTimeFormat"><code>Intl.ZonedDateTimeFormat</code></a>.</p>
 <p><code>options.timeZone</code> will be automatically set from the time zone of of <code>zonedDateTime</code>.
 If a different time zone ID is provided in <code>options.timeZone</code>, a RangeError will be thrown.
-To display a <code>Temporal.ZonedDateTime</code> value in a different time zone, use <code>with({timeZone}).toLocaleString()</code>.</p>
+To display a <code>Temporal.ZonedDateTime</code> value in a different time zone, use <code>withTimeZone(timeZone).toLocaleString()</code>.</p>
 <p>Example usage:</p>
 <!-- prettier-ignore-start -->
 <pre class="language-javascript"><code class="language-javascript">zdt <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>ZonedDateTime<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'2019-12-01T12:00+01:00[Europe/Berlin]'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
@@ -1137,7 +1199,7 @@ options <span class="token operator">=</span> <span class="token punctuation">{<
 zdt<span class="token punctuation">.</span><span class="token function">toLocaleString</span><span class="token punctuation">(</span><span class="token string">'de-DE'</span><span class="token punctuation">,</span> options<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => Sonntag, 1. Dezember 2019</span>
 zdt<span class="token punctuation">.</span><span class="token function">toLocaleString</span><span class="token punctuation">(</span><span class="token string">'de-DE'</span><span class="token punctuation">,</span> <span class="token punctuation">{</span> timeZone<span class="token operator">:</span> <span class="token string">'Pacific/Auckland'</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
   <span class="token comment">// => RangeError: Time zone option Pacific/Auckland does not match actual time zone Europe/Berlin</span>
-zdt<span class="token punctuation">.</span><span class="token function">with</span><span class="token punctuation">(</span><span class="token punctuation">{</span> timeZone<span class="token operator">:</span> <span class="token string">'Pacific/Auckland'</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">toLocaleString</span><span class="token punctuation">(</span><span class="token string">'de-DE'</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => 2.12.2019, 00:00:00</span>
+zdt<span class="token punctuation">.</span><span class="token function">withTimeZone</span><span class="token punctuation">(</span><span class="token string">'Pacific/Auckland'</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">toLocaleString</span><span class="token punctuation">(</span><span class="token string">'de-DE'</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => 2.12.2019, 00:00:00</span>
 zdt<span class="token punctuation">.</span><span class="token function">toLocaleString</span><span class="token punctuation">(</span><span class="token string">'en-US-u-nu-fullwide-hc-h12'</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => １２/１/２０１９, １２:００:００ PM</span></code></pre><!-- prettier-ignore-end -->
 
 <h3 id="toJSON"><a class="heading-link" href="#toJSON"></a>zonedDateTime.<strong>toJSON</strong>() : string</h3><p><strong>Returns:</strong> a string in the ISO 8601 date format representing <code>zonedDateTime</code>.</p>
@@ -1192,49 +1254,15 @@ zdt<span class="token punctuation">.</span><span class="token function">toPlainD
 zdt<span class="token punctuation">.</span><span class="token function">toPlainDate</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => 1995-12-07</span>
 zdt<span class="token punctuation">.</span><span class="token function">toPlainYearMonth</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => 1995-12</span>
 zdt<span class="token punctuation">.</span><span class="token function">toPlainMonthDay</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => 12-07</span>
-zdt<span class="token punctuation">.</span><span class="token function">toPlainTime</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => 03:24:30</span></code></pre><h3 id="getFields"><a class="heading-link" href="#getFields"></a>zonedDateTime.<strong>getFields</strong>() : { year: number, month: number, day: number, hour: number, minute: number, second: number, millisecond: number, microsecond: number, nanosecond: number, offset: string, timeZone: object, calendar: object, [propName: string]: unknown }</h3><p><strong>Returns:</strong> a plain object with properties equal to the fields of <code>zonedDateTime</code>, including all date/time fields (expressed in the current calendar) as well as the <code>calendar</code>, <code>timeZone</code>, and <code>offset</code> properties.</p>
-<p>This method can be used to convert a <code>Temporal.ZonedDateTime</code> into a record-like data structure.
-It returns a new plain JavaScript object, with all the fields as enumerable, writable, own data properties.</p>
-<p>This method is helpful when you want to use the ES6 &quot;object spread&quot; (<code>...</code>) feature (or equivalent code like <code>Object.assign</code>) on a <code>Temporal.ZonedDateTime</code> instance.<br>Because <code>Temporal.ZonedDateTime</code> fields are not &quot;own properties&quot; according to JavaScript, they cannot be enumerated by <code>...</code> or <code>Object.assign</code>.
-But calling <code>.getFields()</code> creates a new object whose properties can be enumerated by <code>...</code> or <code>Object.assign</code>.</p>
-<p>The <code>timeZone</code> and <code>calendar</code> properties are returned as objects, not as their string IDs.</p>
-<p>Note that if using a different calendar from ISO 8601, these will be the calendar-specific values.</p>
-<blockquote>
-<p><strong>NOTE</strong>: The possible values for the <code>month</code> property of the returned object start at 1, which is different from legacy <code>Date</code> where months are represented by zero-based indices (0 to 11).</p>
-</blockquote>
-<p>Usage example:</p>
-<pre class="language-javascript"><code class="language-javascript">zdt <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>ZonedDateTime<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'1995-12-07T03:24:30.000003500-08:00[America/Los_Angeles]'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-
-<span class="token keyword">const</span> thisWontWork <span class="token operator">=</span> <span class="token punctuation">{</span> <span class="token operator">...</span>zdt<span class="token punctuation">,</span> hour<span class="token operator">:</span> <span class="token number">12</span> <span class="token punctuation">}</span><span class="token punctuation">;</span>
-<span class="token constant">JSON</span><span class="token punctuation">.</span><span class="token function">stringify</span><span class="token punctuation">(</span>thisWontWork<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => { "hour": 12 }</span>
-<span class="token comment">// There are no other properties because Temporal.ZonedDateTime has no enumerable own properties</span>
-
-<span class="token keyword">const</span> thisWillWork <span class="token operator">=</span> <span class="token punctuation">{</span> <span class="token operator">...</span>zdt<span class="token punctuation">.</span><span class="token function">getFields</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> hour<span class="token operator">:</span> <span class="token number">12</span> <span class="token punctuation">}</span><span class="token punctuation">;</span>
-<span class="token constant">JSON</span><span class="token punctuation">.</span><span class="token function">stringify</span><span class="token punctuation">(</span>thisWillWork<span class="token punctuation">,</span> <span class="token keyword">undefined</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-<span class="token comment">// => "{</span>
-<span class="token comment">//   "timeZone": "America/Los_Angeles",</span>
-<span class="token comment">//   "offsetNanoseconds": -28800000000000,</span>
-<span class="token comment">//   "day": 7,</span>
-<span class="token comment">//   "hour": 12,    // note that `hour` has been updated</span>
-<span class="token comment">//   "microsecond": 3,</span>
-<span class="token comment">//   "millisecond": 0,</span>
-<span class="token comment">//   "minute": 24,</span>
-<span class="token comment">//   "month": 12,</span>
-<span class="token comment">//   "nanosecond": 500,</span>
-<span class="token comment">//   "second": 30,</span>
-<span class="token comment">//   "year": 1995,</span>
-<span class="token comment">//   "calendar": {}</span>
-<span class="token comment">// }"</span></code></pre><h3 id="getISOFields"><a class="heading-link" href="#getISOFields"></a>zonedDateTime.<strong>getISOFields</strong>(): { isoYear: number, isoMonth: number, isoDay: number, hour: number, minute: number, second: number, millisecond: number, microsecond: number, nanosecond: number, offset: string, timeZone: object, calendar: object }</h3><p><strong>Returns:</strong> a plain object with properties expressing <code>zonedDateTime</code> in the ISO 8601 calendar, including all date/time fields as well as the <code>calendar</code>, <code>timeZone</code>, and <code>offset</code> properties.
-Note that date/time properties have different names with an <code>iso</code> prefix to better differentiate from &quot;normal&quot; <code>getFields</code> results.</p>
+zdt<span class="token punctuation">.</span><span class="token function">toPlainTime</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => 03:24:30</span></code></pre><h3 id="getISOFields"><a class="heading-link" href="#getISOFields"></a>zonedDateTime.<strong>getISOFields</strong>(): { isoYear: number, isoMonth: number, isoDay: number, hour: number, minute: number, second: number, millisecond: number, microsecond: number, nanosecond: number, offset: string, timeZone: object, calendar: object }</h3><p><strong>Returns:</strong> a plain object with properties expressing <code>zonedDateTime</code> in the ISO 8601 calendar, including all date/time fields as well as the <code>calendar</code>, <code>timeZone</code>, and <code>offset</code> properties.</p>
 <p>This is an advanced method that&#39;s mainly useful if you are implementing a custom calendar.
-Most developers will not need to use it.
-Instead, most applications will use <code>zonedDateTime.getFields()</code> (for fields in the current calendar) or <code>zonedDateTime.withCalendar(&#39;iso8601&#39;).getFields()</code> (for fields expressed using the ISO 8601 calendar).</p>
+Most developers will not need to use it.</p>
 <p>Usage example:</p>
 <pre class="language-javascript"><code class="language-javascript"><span class="token comment">// get a Temporal.ZonedDateTime in `japanese` calendar system</span>
 zdt <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>ZonedDateTime<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'1995-12-07T03:24:30.000003500+01:00[Europe/Paris]'</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">withCalendar</span><span class="token punctuation">(</span><span class="token string">'japanese'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 
 <span class="token comment">// Year in japanese calendar is year 7 of Heisei era</span>
-zdt<span class="token punctuation">.</span><span class="token function">getFields</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span>year<span class="token punctuation">;</span> <span class="token comment">// => 7</span>
+zdt<span class="token punctuation">.</span>year<span class="token punctuation">;</span> <span class="token comment">// => 7</span>
 zdt<span class="token punctuation">.</span><span class="token function">getISOFields</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span>isoYear<span class="token punctuation">;</span> <span class="token comment">// => 1995</span>
 
 <span class="token comment">// Instead of calling getISOFields, the pattern below is recommended for most use cases</span>

@@ -138,8 +138,8 @@
   <body>
     <div class="banner">
       This proposal is <strong><a href="https://blogs.igalia.com/compilers/2020/06/23/dates-and-times-in-javascript/">experimental.</a></strong>
-      The API will change based on feedback that we get.
-      <strong>Do</strong> <a href="https://forms.gle/iL9iZg7Y9LvH41Nv8">give feedback</a> and open <a href="https://github.com/tc39/proposal-temporal/issues">issues</a>; <strong>don't</strong> use it in production!
+      It is being reviewed by TC39.
+      <strong>Do</strong> try it out and <a href="https://github.com/tc39/proposal-temporal/issues">report bugs</a>; <strong>don't</strong> use it in production!
     </div>
 <h1 id="time-zones-and-resolving-ambiguity">Time Zones and Resolving Ambiguity</h1>
 <details>
@@ -205,7 +205,7 @@ It also includes helper functions, e.g. to fetch the current time zone offset fo
 </ul>
 <p>There are two ways to get a human-readable calendar date and clock time from a <code>Temporal</code> type that stores exact time.</p>
 <ul>
-<li>If the exact time is already represented by a <a href="./zoneddatetime.html"><code>Temporal.ZonedDateTime</code></a> instance then the wall-clock time values are trivially available using the properties and methods of that type, e.g. <a href="./zoneddatetime.html#year"><code>.year</code></a>, <a href="./zoneddatetime.html#hour"><code>.hour</code></a>, <a href="./zoneddatetime.html#getFields"><code>.getFields()</code></a>, or <a href="./zoneddatetime.html#toLocaleString"><code>.toLocaleString()</code></a>.</li>
+<li>If the exact time is already represented by a <a href="./zoneddatetime.html"><code>Temporal.ZonedDateTime</code></a> instance then the wall-clock time values are trivially available using the properties and methods of that type, e.g. <a href="./zoneddatetime.html#year"><code>.year</code></a>, <a href="./zoneddatetime.html#hour"><code>.hour</code></a>, or <a href="./zoneddatetime.html#toLocaleString"><code>.toLocaleString()</code></a>.</li>
 <li>However, if the exact time is represented by a <a href="./instant.html"><code>Temporal.Instant</code></a>, use a time zone and optional calendar to create a <a href="./zoneddatetime.html"><code>Temporal.ZonedDateTime</code></a>. Example:</li>
 </ul>
 <!-- prettier-ignore-start -->
@@ -231,7 +231,7 @@ zdt <span class="token operator">=</span> instant<span class="token punctuation"
   <span class="token comment">// this is identical to the result of toZonedDateTime() above</span>
 
 zdt <span class="token operator">=</span> instant<span class="token punctuation">.</span><span class="token function">toZonedDateTime</span><span class="token punctuation">(</span><span class="token string">'Asia/Tokyo'</span><span class="token punctuation">,</span> <span class="token string">'japanese'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-  <span class="token comment">// => 2019-09-03T17:34:05+09:00[Asia/Tokyo][c=japanese]</span>
+  <span class="token comment">// => 2019-09-03T17:34:05+09:00[Asia/Tokyo][u-ca-japanese]</span>
 zdt<span class="token punctuation">.</span><span class="token function">toLocaleString</span><span class="token punctuation">(</span><span class="token string">'en-us'</span><span class="token punctuation">,</span> <span class="token punctuation">{</span> <span class="token operator">...</span>formatOptions<span class="token punctuation">,</span> calendar<span class="token operator">:</span> zdt<span class="token punctuation">.</span>calendar <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
   <span class="token comment">// => "Sep 3, 1 Reiwa, 5:34:05 PM"</span>
 zdt<span class="token punctuation">.</span>year<span class="token punctuation">;</span>
