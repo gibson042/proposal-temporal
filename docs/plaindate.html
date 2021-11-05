@@ -239,16 +239,16 @@ A <code>Temporal.PlainDate</code> can be converted into a <code>Temporal.ZonedDa
 It can also be combined with a <code>Temporal.PlainTime</code> to yield a &quot;zoneless&quot; <code>Temporal.PlainDateTime</code> using the <code>toPlainDateTime()</code> method.</p>
 <p><code>Temporal.PlainYearMonth</code> and <code>Temporal.PlainMonthDay</code> carry less information than <code>Temporal.PlainDate</code> and should be used when complete information is not required.</p>
 <h2 id="constructor">Constructor</h2>
-<h3 id="new-Temporal-PlainDate"><a class="heading-link" href="#new-Temporal-PlainDate"></a><strong>new Temporal.PlainDate</strong>(<em>isoYear</em>: number, <em>isoMonth</em>: number, <em>isoDay</em>: number, <em>calendar</em>?: object) : Temporal.PlainDate</h3><p><strong>Parameters:</strong></p>
+<h3 id="new-Temporal-PlainDate"><a class="heading-link" href="#new-Temporal-PlainDate"></a><strong>new Temporal.PlainDate</strong>(<em>isoYear</em>: number, <em>isoMonth</em>: number, <em>isoDay</em>: number, <em>calendar</em>?: string | object) : Temporal.PlainDate</h3><p><strong>Parameters:</strong></p>
 <ul>
 <li><code>isoYear</code> (number): A year.</li>
 <li><code>isoMonth</code> (number): A month, ranging between 1 and 12 inclusive.</li>
 <li><code>isoDay</code> (number): A day of the month, ranging between 1 and 31 inclusive.</li>
-<li><code>calendar</code> (optional <code>Temporal.Calendar</code> or plain object): A calendar to project the date into.</li>
+<li><code>calendar</code> (optional <code>Temporal.Calendar</code>, plain object, or string): A calendar to project the date into.</li>
 </ul>
 <p><strong>Returns:</strong> a new <code>Temporal.PlainDate</code> object.</p>
 <p>Use this constructor if you have the correct parameters for the date already as individual number values in the ISO 8601 calendar.
-Otherwise, <code>Temporal.PlainDate.from()</code>, which accepts more kinds of input, allows inputting dates in different calendar reckonings, and allows controlling the overflow behaviour, is probably more convenient.</p>
+Otherwise, <code>Temporal.PlainDate.from()</code>, which accepts more kinds of input, allows inputting dates in different calendar reckonings, and allows controlling the overflow behavior, is probably more convenient.</p>
 <p>All values are given as reckoned in the <a href="https://en.wikipedia.org/wiki/ISO_8601#Dates">ISO 8601 calendar</a>.
 Together, <code>isoYear</code>, <code>isoMonth</code>, and <code>isoDay</code> must represent a valid date in that calendar, even if you are passing a different calendar as the <code>calendar</code> parameter.</p>
 <p>The range of allowed values for this type is exactly enough that calling <a href="./plaindatetime.html#toPlainDate"><code>toPlainDate()</code></a> on any valid <code>Temporal.PlainDateTime</code> will succeed.
