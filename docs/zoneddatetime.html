@@ -279,7 +279,7 @@ As the broadest <code>Temporal</code> type, <code>Temporal.ZonedDateTime</code> 
 <li>Creating derived values (e.g. change time to 2:30AM) can avoid worrying that the result will be invalid due to the time zone&#39;s DST rules.</li>
 <li>Properties are available to easily measure attributes like &quot;length of day&quot; or &quot;starting time of day&quot; which may not be the same on all days in all time zones due to DST transitions or political changes to the definitions of time zones.</li>
 <li>It&#39;s easy to flip back and forth between a human-readable representation (like <code>Temporal.PlainDateTime</code>) and the UTC timeline (like <code>Temporal.Instant</code>) without having to do any work to keep the two in sync.</li>
-<li>A date/time, an offset, a time zone, and an optional calendar can be persisted in a single string that can be sorted alphabetically by the exact time they happened.
+<li>A date/time, an offset, a time zone, and an optional calendar can be persisted in a single string.
 This behavior is also be helpful for developers who are not sure which of those components will be needed by later readers of this data.</li>
 <li>Multiple time-zone-sensitive operations can be performed in a chain without having to repeatedly provide the same time zone.</li>
 </ul>
@@ -327,7 +327,7 @@ The default is <code>&#39;reject&#39;</code>.</li>
 <p><strong>Returns:</strong> a new <code>Temporal.ZonedDateTime</code> object.</p>
 <p>This static method creates a new <code>Temporal.ZonedDateTime</code> object from another value.
 If the value is another <code>Temporal.ZonedDateTime</code> object, a new but otherwise identical object will be returned.
-If the value is any other object, a <code>Temporal.ZonedDateTime</code> will be constructed from the values of any <code>year</code> (or <code>era</code> and <code>eraYear</code>), <code>month</code> (or <code>monthCode</code>), <code>day</code>, <code>hour</code>, <code>minute</code>, <code>second</code>, <code>millisecond</code>, <code>microsecond</code>, <code>nanosecond</code>, and/or <code>calendar</code> properties that are present.
+If the value is any other object, a <code>Temporal.ZonedDateTime</code> will be constructed from the values of any <code>timeZone</code>, <code>year</code> (or <code>era</code> and <code>eraYear</code>), <code>month</code> (or <code>monthCode</code>), <code>day</code>, <code>hour</code>, <code>minute</code>, <code>second</code>, <code>millisecond</code>, <code>microsecond</code>, <code>nanosecond</code>, and/or <code>calendar</code> properties that are present.
 At least the <code>timeZone</code>, <code>year</code> (or <code>era</code> and <code>eraYear</code>), <code>month</code> (or <code>monthCode</code>), and <code>day</code> properties must be present. Other properties are optional.
 If <code>calendar</code> is missing, it will be assumed to be <code>Temporal.Calendar.from(&#39;iso8601&#39;)</code>.
 Any other missing properties will be assumed to be 0 (for time fields).</p>
@@ -1162,10 +1162,10 @@ The following options are recognized:<ul>
 Valid values are <code>&#39;auto&#39;</code> and <code>&#39;never&#39;</code>.
 The default is <code>&#39;auto&#39;</code>.</li>
 <li><code>timeZoneName</code> (string): Whether to show the time zone name annotation in the return value.
-Valid values are <code>&#39;auto&#39;</code> and <code>&#39;never&#39;</code>.
+Valid values are <code>&#39;auto&#39;</code>, <code>&#39;never&#39;</code>, and <code>&#39;critical&#39;</code>.
 The default is <code>&#39;auto&#39;</code>.</li>
 <li><code>calendarName</code> (string): Whether to show the calendar annotation in the return value.
-Valid values are <code>&#39;auto&#39;</code>, <code>&#39;always&#39;</code>, and <code>&#39;never&#39;</code>.
+Valid values are <code>&#39;auto&#39;</code>, <code>&#39;always&#39;</code>, <code>&#39;never&#39;</code>, and <code>&#39;critical&#39;</code>.
 The default is <code>&#39;auto&#39;</code>.</li>
 <li><code>fractionalSecondDigits</code> (number or string): How many digits to print after the decimal point in the output string.
 Valid values are <code>&#39;auto&#39;</code>, 0, 1, 2, 3, 4, 5, 6, 7, 8, or 9.
@@ -1194,10 +1194,12 @@ If no options are given, the default is <code>fractionalSecondDigits: &#39;auto&
 Note that rounding may change the value of other units as well.</p>
 <p>Normally, a calendar annotation is shown when <code>zonedDateTime</code>&#39;s calendar is not the ISO 8601 calendar.
 By setting the <code>calendarName</code> option to <code>&#39;always&#39;</code> or <code>&#39;never&#39;</code> this can be overridden to always or never show the annotation, respectively.
+Normally not necessary, a value of <code>&#39;critical&#39;</code> is equivalent to <code>&#39;always&#39;</code> but the annotation will contain an additional <code>!</code> for certain interoperation use cases.
 For more information on the calendar annotation, see <a href="./strings.html#calendar-systems">ISO string extensions</a>.</p>
 <p>Likewise, passing <code>&#39;never&#39;</code> to the <code>timeZoneName</code> or <code>offset</code> options controls whether the time zone offset (<code>+01:00</code>) or name annotation (<code>[Europe/Paris]</code>) are shown.
-If the time zone offset is shown, it is always shown rounded to the nearest minute.</p>
-<p>The string format output by this method can be parsed by <a href="https://docs.oracle.com/javase/8/docs/api/java/time/ZonedDateTime.html"><code>java.time.ZonedDateTime</code></a> as long as the calendar annotation is not output.
+If the time zone offset is shown, it is always shown rounded to the nearest minute.
+The <code>timeZoneName</code> option can additionally be <code>&#39;critical&#39;</code> which will add an additional <code>!</code> to the annotation, similar to <code>calendarName</code>.</p>
+<p>The string format output by this method can be parsed by <a href="https://docs.oracle.com/javase/8/docs/api/java/time/ZonedDateTime.html"><code>java.time.ZonedDateTime</code></a> as long as the calendar annotation is not output and <code>&#39;critical&#39;</code> is not used.
 For more information on <code>Temporal</code>&#39;s extensions to the ISO 8601 / RFC 3339 string format and the progress towards becoming a published standard, see <a href="./strings.html">String Parsing, Serialization, and Formatting</a>.</p>
 <p>Example usage:</p>
 <pre class="language-javascript"><code class="language-javascript">zdt <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>ZonedDateTime<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token punctuation">{</span> <span class="token literal-property property">year</span><span class="token operator">:</span> <span class="token number">2019</span><span class="token punctuation">,</span> <span class="token literal-property property">month</span><span class="token operator">:</span> <span class="token number">12</span><span class="token punctuation">,</span> <span class="token literal-property property">day</span><span class="token operator">:</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token literal-property property">hour</span><span class="token operator">:</span> <span class="token number">12</span><span class="token punctuation">,</span> <span class="token literal-property property">timeZone</span><span class="token operator">:</span> <span class="token string">'Africa/Lagos'</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
