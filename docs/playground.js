@@ -8258,10 +8258,14 @@
       var increment = options.roundingIncrement;
       if (increment === undefined) return 1;
       increment = ES.ToNumber(increment);
-      if (!NumberIsFinite(increment) || increment < 1) {
-        throw new RangeError("roundingIncrement must be at least 1 and finite, not ".concat(increment));
+      if (!NumberIsFinite(increment)) {
+        throw new RangeError('roundingIncrement must be finite');
       }
-      return MathTrunc(increment);
+      var integerIncrement = MathTrunc(increment);
+      if (integerIncrement < 1 || integerIncrement > 1e9) {
+        throw new RangeError("roundingIncrement must be at least 1 and at most 1e9, not ".concat(increment));
+      }
+      return integerIncrement;
     },
     ValidateTemporalRoundingIncrement: function ValidateTemporalRoundingIncrement(increment, dividend, inclusive) {
       var maximum = inclusive ? dividend : dividend - 1;
@@ -9062,78 +9066,164 @@
     CalendarYear: function CalendarYear(calendar, dateLike) {
       var year = ES.GetMethod(calendar, 'year');
       var result = ES.Call(year, calendar, [dateLike]);
-      return ES.ToIntegerWithTruncation(result);
+      if (typeof result !== 'number') {
+        throw new TypeError('calendar year result must be an integer');
+      }
+      if (!IsIntegralNumber$1(result)) {
+        throw new RangeError('calendar year result must be an integer');
+      }
+      return result;
     },
     CalendarMonth: function CalendarMonth(calendar, dateLike) {
       var month = ES.GetMethod(calendar, 'month');
       var result = ES.Call(month, calendar, [dateLike]);
-      return ES.ToPositiveIntegerWithTruncation(result);
+      if (typeof result !== 'number') {
+        throw new TypeError('calendar month result must be a positive integer');
+      }
+      if (!IsIntegralNumber$1(result) || result < 1) {
+        throw new RangeError('calendar month result must be a positive integer');
+      }
+      return result;
     },
     CalendarMonthCode: function CalendarMonthCode(calendar, dateLike) {
       var monthCode = ES.GetMethod(calendar, 'monthCode');
       var result = ES.Call(monthCode, calendar, [dateLike]);
-      if (result === undefined) {
-        throw new RangeError('calendar monthCode result must be a string');
+      if (typeof result !== 'string') {
+        throw new TypeError('calendar monthCode result must be a string');
       }
-      return ES.ToString(result);
+      return result;
     },
     CalendarDay: function CalendarDay(calendar, dateLike) {
       var day = ES.GetMethod(calendar, 'day');
       var result = ES.Call(day, calendar, [dateLike]);
-      return ES.ToPositiveIntegerWithTruncation(result);
+      if (typeof result !== 'number') {
+        throw new TypeError('calendar day result must be a positive integer');
+      }
+      if (!IsIntegralNumber$1(result) || result < 1) {
+        throw new RangeError('calendar day result must be a positive integer');
+      }
+      return result;
     },
     CalendarEra: function CalendarEra(calendar, dateLike) {
       var era = ES.GetMethod(calendar, 'era');
       var result = ES.Call(era, calendar, [dateLike]);
-      if (result !== undefined) {
-        result = ES.ToString(result);
+      if (result === undefined) {
+        return result;
+      }
+      if (typeof result !== 'string') {
+        throw new TypeError('calendar era result must be a string or undefined');
       }
       return result;
     },
     CalendarEraYear: function CalendarEraYear(calendar, dateLike) {
       var eraYear = ES.GetMethod(calendar, 'eraYear');
       var result = ES.Call(eraYear, calendar, [dateLike]);
-      if (result !== undefined) {
-        result = ES.ToIntegerWithTruncation(result);
+      if (result === undefined) {
+        return result;
+      }
+      if (typeof result !== 'number') {
+        throw new TypeError('calendar eraYear result must be an integer or undefined');
+      }
+      if (!IsIntegralNumber$1(result)) {
+        throw new RangeError('calendar eraYear result must be an integer or undefined');
       }
       return result;
     },
     CalendarDayOfWeek: function CalendarDayOfWeek(calendar, dateLike) {
       var dayOfWeek = ES.GetMethod(calendar, 'dayOfWeek');
-      return ES.ToPositiveIntegerWithTruncation(ES.Call(dayOfWeek, calendar, [dateLike]));
+      var result = ES.Call(dayOfWeek, calendar, [dateLike]);
+      if (typeof result !== 'number') {
+        throw new TypeError('calendar dayOfWeek result must be a positive integer');
+      }
+      if (!IsIntegralNumber$1(result) || result < 1) {
+        throw new RangeError('calendar dayOfWeek result must be a positive integer');
+      }
+      return result;
     },
     CalendarDayOfYear: function CalendarDayOfYear(calendar, dateLike) {
       var dayOfYear = ES.GetMethod(calendar, 'dayOfYear');
-      return ES.ToPositiveIntegerWithTruncation(ES.Call(dayOfYear, calendar, [dateLike]));
+      var result = ES.Call(dayOfYear, calendar, [dateLike]);
+      if (typeof result !== 'number') {
+        throw new TypeError('calendar dayOfYear result must be a positive integer');
+      }
+      if (!IsIntegralNumber$1(result) || result < 1) {
+        throw new RangeError('calendar dayOfYear result must be a positive integer');
+      }
+      return result;
     },
     CalendarWeekOfYear: function CalendarWeekOfYear(calendar, dateLike) {
       var weekOfYear = ES.GetMethod(calendar, 'weekOfYear');
-      return ES.ToPositiveIntegerWithTruncation(ES.Call(weekOfYear, calendar, [dateLike]));
+      var result = ES.Call(weekOfYear, calendar, [dateLike]);
+      if (typeof result !== 'number') {
+        throw new TypeError('calendar weekOfYear result must be a positive integer');
+      }
+      if (!IsIntegralNumber$1(result) || result < 1) {
+        throw new RangeError('calendar weekOfYear result must be a positive integer');
+      }
+      return result;
     },
     CalendarYearOfWeek: function CalendarYearOfWeek(calendar, dateLike) {
       var yearOfWeek = ES.GetMethod(calendar, 'yearOfWeek');
       var result = ES.Call(yearOfWeek, calendar, [dateLike]);
-      return ES.ToIntegerWithTruncation(result);
+      if (typeof result !== 'number') {
+        throw new TypeError('calendar yearOfWeek result must be an integer');
+      }
+      if (!IsIntegralNumber$1(result)) {
+        throw new RangeError('calendar yearOfWeek result must be an integer');
+      }
+      return result;
     },
     CalendarDaysInWeek: function CalendarDaysInWeek(calendar, dateLike) {
       var daysInWeek = ES.GetMethod(calendar, 'daysInWeek');
-      return ES.ToPositiveIntegerWithTruncation(ES.Call(daysInWeek, calendar, [dateLike]));
+      var result = ES.Call(daysInWeek, calendar, [dateLike]);
+      if (typeof result !== 'number') {
+        throw new TypeError('calendar daysInWeek result must be a positive integer');
+      }
+      if (!IsIntegralNumber$1(result) || result < 1) {
+        throw new RangeError('calendar daysInWeek result must be a positive integer');
+      }
+      return result;
     },
     CalendarDaysInMonth: function CalendarDaysInMonth(calendar, dateLike) {
       var daysInMonth = ES.GetMethod(calendar, 'daysInMonth');
-      return ES.ToPositiveIntegerWithTruncation(ES.Call(daysInMonth, calendar, [dateLike]));
+      var result = ES.Call(daysInMonth, calendar, [dateLike]);
+      if (typeof result !== 'number') {
+        throw new TypeError('calendar daysInMonth result must be a positive integer');
+      }
+      if (!IsIntegralNumber$1(result) || result < 1) {
+        throw new RangeError('calendar daysInMonth result must be a positive integer');
+      }
+      return result;
     },
     CalendarDaysInYear: function CalendarDaysInYear(calendar, dateLike) {
       var daysInYear = ES.GetMethod(calendar, 'daysInYear');
-      return ES.ToPositiveIntegerWithTruncation(ES.Call(daysInYear, calendar, [dateLike]));
+      var result = ES.Call(daysInYear, calendar, [dateLike]);
+      if (typeof result !== 'number') {
+        throw new TypeError('calendar daysInYear result must be a positive integer');
+      }
+      if (!IsIntegralNumber$1(result) || result < 1) {
+        throw new RangeError('calendar daysInYear result must be a positive integer');
+      }
+      return result;
     },
     CalendarMonthsInYear: function CalendarMonthsInYear(calendar, dateLike) {
       var monthsInYear = ES.GetMethod(calendar, 'monthsInYear');
-      return ES.ToPositiveIntegerWithTruncation(ES.Call(monthsInYear, calendar, [dateLike]));
+      var result = ES.Call(monthsInYear, calendar, [dateLike]);
+      if (typeof result !== 'number') {
+        throw new TypeError('calendar monthsInYear result must be a positive integer');
+      }
+      if (!IsIntegralNumber$1(result) || result < 1) {
+        throw new RangeError('calendar monthsInYear result must be a positive integer');
+      }
+      return result;
     },
     CalendarInLeapYear: function CalendarInLeapYear(calendar, dateLike) {
       var inLeapYear = ES.GetMethod(calendar, 'inLeapYear');
-      return !!ES.Call(inLeapYear, calendar, [dateLike]);
+      var result = ES.Call(inLeapYear, calendar, [dateLike]);
+      if (typeof result !== 'boolean') {
+        throw new TypeError('calendar inLeapYear result must be a boolean');
+      }
+      return result;
     },
     ToTemporalCalendar: function ToTemporalCalendar(calendarLike) {
       if (ES.Type(calendarLike) === 'Object') {
@@ -11044,12 +11134,12 @@
       ES.CalendarEqualsOrThrow(calendar, otherCalendar, 'compute difference between months');
       var settings = ES.GetDifferenceSettings(operation, options, 'date', ['week', 'day'], 'month', 'year');
       var fieldNames = ES.CalendarFields(calendar, ['monthCode', 'year']);
-      var otherFields = ES.PrepareTemporalFields(other, fieldNames, []);
-      otherFields.day = 1;
-      var otherDate = ES.CalendarDateFromFields(calendar, otherFields);
       var thisFields = ES.PrepareTemporalFields(yearMonth, fieldNames, []);
       thisFields.day = 1;
       var thisDate = ES.CalendarDateFromFields(calendar, thisFields);
+      var otherFields = ES.PrepareTemporalFields(other, fieldNames, []);
+      otherFields.day = 1;
+      var otherDate = ES.CalendarDateFromFields(calendar, otherFields);
       var untilOptions = ObjectCreate$8(null);
       ES.CopyDataProperties(untilOptions, options, []);
       untilOptions.largestUnit = settings.largestUnit;
@@ -15692,13 +15782,13 @@
           throw new TypeError('invalid argument');
         }
         ES.RejectObjectWithCalendarOrTimeZone(temporalDateLike);
+        options = ES.GetOptionsObject(options);
         var calendar = GetSlot(this, CALENDAR);
         var fieldNames = ES.CalendarFields(calendar, ['day', 'month', 'monthCode', 'year']);
-        var partialDate = ES.PrepareTemporalFields(temporalDateLike, fieldNames, 'partial');
         var fields = ES.PrepareTemporalFields(this, fieldNames, []);
+        var partialDate = ES.PrepareTemporalFields(temporalDateLike, fieldNames, 'partial');
         fields = ES.CalendarMergeFields(calendar, fields, partialDate);
         fields = ES.PrepareTemporalFields(fields, fieldNames, []);
-        options = ES.GetOptionsObject(options);
         return ES.CalendarDateFromFields(calendar, fields, options);
       }
     }, {
@@ -16059,8 +16149,8 @@
         options = ES.GetOptionsObject(options);
         var calendar = GetSlot(this, CALENDAR);
         var fieldNames = ES.CalendarFields(calendar, ['day', 'hour', 'microsecond', 'millisecond', 'minute', 'month', 'monthCode', 'nanosecond', 'second', 'year']);
-        var partialDateTime = ES.PrepareTemporalFields(temporalDateTimeLike, fieldNames, 'partial');
         var fields = ES.PrepareTemporalFields(this, fieldNames, []);
+        var partialDateTime = ES.PrepareTemporalFields(temporalDateTimeLike, fieldNames, 'partial');
         fields = ES.CalendarMergeFields(calendar, fields, partialDateTime);
         fields = ES.PrepareTemporalFields(fields, fieldNames, []);
         var _ES$InterpretTemporal = ES.InterpretTemporalDateTimeFields(calendar, fields, options),
@@ -16804,13 +16894,13 @@
           throw new TypeError('invalid argument');
         }
         ES.RejectObjectWithCalendarOrTimeZone(temporalMonthDayLike);
+        options = ES.GetOptionsObject(options);
         var calendar = GetSlot(this, CALENDAR);
         var fieldNames = ES.CalendarFields(calendar, ['day', 'month', 'monthCode', 'year']);
-        var partialMonthDay = ES.PrepareTemporalFields(temporalMonthDayLike, fieldNames, 'partial');
         var fields = ES.PrepareTemporalFields(this, fieldNames, []);
+        var partialMonthDay = ES.PrepareTemporalFields(temporalMonthDayLike, fieldNames, 'partial');
         fields = ES.CalendarMergeFields(calendar, fields, partialMonthDay);
         fields = ES.PrepareTemporalFields(fields, fieldNames, []);
-        options = ES.GetOptionsObject(options);
         return ES.CalendarMonthDayFromFields(calendar, fields, options);
       }
     }, {
@@ -17085,9 +17175,9 @@
           throw new TypeError('invalid argument');
         }
         ES.RejectObjectWithCalendarOrTimeZone(temporalTimeLike);
-        var partialTime = ES.ToTemporalTimeRecord(temporalTimeLike, 'partial');
         options = ES.GetOptionsObject(options);
         var overflow = ES.ToTemporalOverflow(options);
+        var partialTime = ES.ToTemporalTimeRecord(temporalTimeLike, 'partial');
         var fields = ES.ToTemporalTimeRecord(this);
         var _ObjectAssign = ObjectAssign(fields, partialTime),
           hour = _ObjectAssign.hour,
@@ -17398,13 +17488,13 @@
           throw new TypeError('invalid argument');
         }
         ES.RejectObjectWithCalendarOrTimeZone(temporalYearMonthLike);
+        options = ES.GetOptionsObject(options);
         var calendar = GetSlot(this, CALENDAR);
         var fieldNames = ES.CalendarFields(calendar, ['month', 'monthCode', 'year']);
-        var partialYearMonth = ES.PrepareTemporalFields(temporalYearMonthLike, fieldNames, 'partial');
         var fields = ES.PrepareTemporalFields(this, fieldNames, []);
+        var partialYearMonth = ES.PrepareTemporalFields(temporalYearMonthLike, fieldNames, 'partial');
         fields = ES.CalendarMergeFields(calendar, fields, partialYearMonth);
         fields = ES.PrepareTemporalFields(fields, fieldNames, []);
-        options = ES.GetOptionsObject(options);
         return ES.CalendarYearMonthFromFields(calendar, fields, options);
       }
     }, {
@@ -17761,15 +17851,14 @@
           throw new TypeError('invalid zoned-date-time-like');
         }
         ES.RejectObjectWithCalendarOrTimeZone(temporalZonedDateTimeLike);
+        options = ES.GetOptionsObject(options);
         var calendar = GetSlot(this, CALENDAR);
         var fieldNames = ES.CalendarFields(calendar, ['day', 'hour', 'microsecond', 'millisecond', 'minute', 'month', 'monthCode', 'nanosecond', 'second', 'year']);
         ES.Call(ArrayPrototypePush, fieldNames, ['offset']);
+        var fields = ES.PrepareTemporalFields(this, fieldNames, ['offset']);
         var partialZonedDateTime = ES.PrepareTemporalFields(temporalZonedDateTimeLike, fieldNames, 'partial');
-        ES.Call(ArrayPrototypePush, fieldNames, ['timeZone']);
-        var fields = ES.PrepareTemporalFields(this, fieldNames, ['timeZone', 'offset']);
         fields = ES.CalendarMergeFields(calendar, fields, partialZonedDateTime);
-        fields = ES.PrepareTemporalFields(fields, fieldNames, ['timeZone', 'offset']);
-        options = ES.GetOptionsObject(options);
+        fields = ES.PrepareTemporalFields(fields, fieldNames, ['offset']);
         var disambiguation = ES.ToTemporalDisambiguation(options);
         var offset = ES.ToTemporalOffset(options, 'prefer');
         var _ES$InterpretTemporal = ES.InterpretTemporalDateTimeFields(calendar, fields, options),
