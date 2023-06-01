@@ -8017,10 +8017,11 @@
   var DURATION_FIELDS = ['days', 'hours', 'microseconds', 'milliseconds', 'minutes', 'months', 'nanoseconds', 'seconds', 'weeks', 'years'];
   var IntlDateTimeFormatEnUsCache = new Map();
   function getIntlDateTimeFormatEnUsForTimeZone(timeZoneIdentifier) {
-    var instance = IntlDateTimeFormatEnUsCache.get(timeZoneIdentifier);
+    var lowercaseIdentifier = ASCIILowercase(timeZoneIdentifier);
+    var instance = IntlDateTimeFormatEnUsCache.get(lowercaseIdentifier);
     if (instance === undefined) {
       instance = new IntlDateTimeFormat$2('en-us', {
-        timeZone: String(timeZoneIdentifier),
+        timeZone: lowercaseIdentifier,
         hour12: false,
         era: 'short',
         year: 'numeric',
@@ -8030,7 +8031,7 @@
         minute: 'numeric',
         second: 'numeric'
       });
-      IntlDateTimeFormatEnUsCache.set(timeZoneIdentifier, instance);
+      IntlDateTimeFormatEnUsCache.set(lowercaseIdentifier, instance);
     }
     return instance;
   }
@@ -8115,16 +8116,22 @@
       throw new TypeError('with() does not support a timeZone property');
     }
   }
+  function CanonicalizeTimeZoneOffsetString(offsetString) {
+    var offsetNs = ParseTimeZoneOffsetString(offsetString);
+    return FormatTimeZoneOffsetString(offsetNs);
+  }
   function ParseTemporalTimeZone(stringIdent) {
     var _ParseTemporalTimeZon = ParseTemporalTimeZoneString(stringIdent),
-      ianaName = _ParseTemporalTimeZon.ianaName,
+      tzName = _ParseTemporalTimeZon.tzName,
       offset = _ParseTemporalTimeZon.offset,
       z = _ParseTemporalTimeZon.z;
-    if (ianaName) return GetCanonicalTimeZoneIdentifier(ianaName);
+    if (tzName) {
+      if (IsTimeZoneOffsetString(tzName)) return CanonicalizeTimeZoneOffsetString(tzName);
+      return GetCanonicalTimeZoneIdentifier(tzName);
+    }
     if (z) return 'UTC';
-    // if !ianaName && !z then offset must be present
-    var offsetNs = ParseTimeZoneOffsetString(offset);
-    return FormatTimeZoneOffsetString(offsetNs);
+    // if !tzName && !z then offset must be present
+    return CanonicalizeTimeZoneOffsetString(offset);
   }
   function MaybeFormatCalendarAnnotation(calendar, showCalendar) {
     if (showCalendar === 'never') return '';
@@ -8209,7 +8216,7 @@
       }
       if (offset === '-00:00') offset = '+00:00';
     }
-    var ianaName = match[19];
+    var tzName = match[19];
     var calendar = processAnnotations(match[20]);
     RejectDateTime(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond);
     return {
@@ -8223,7 +8230,7 @@
       millisecond: millisecond,
       microsecond: microsecond,
       nanosecond: nanosecond,
-      ianaName: ianaName,
+      tzName: tzName,
       offset: offset,
       z: z,
       calendar: calendar
@@ -8236,7 +8243,7 @@
   }
   function ParseTemporalZonedDateTimeString(isoString) {
     var result = ParseISODateTime(isoString);
-    if (!result.ianaName) throw new RangeError('Temporal.ZonedDateTime requires a time zone ID in brackets');
+    if (!result.tzName) throw new RangeError('Temporal.ZonedDateTime requires a time zone ID in brackets');
     return result;
   }
   function ParseTemporalDateTimeString(isoString) {
@@ -8369,12 +8376,12 @@
   function ParseTemporalTimeZoneString(stringIdent) {
     var bareID = new RegExp("^".concat(timeZoneID.source, "$"), 'i');
     if (bareID.test(stringIdent)) return {
-      ianaName: stringIdent
+      tzName: stringIdent
     };
     try {
       // Try parsing ISO string instead
       var result = ParseISODateTime(stringIdent);
-      if (result.z || result.offset || result.ianaName) {
+      if (result.z || result.offset || result.tzName) {
         return result;
       }
     } catch (_unused3) {
@@ -8842,7 +8849,7 @@
       timeZone = fields.timeZone;
       if (timeZone !== undefined) timeZone = ToTemporalTimeZoneSlotValue(timeZone);
     } else {
-      var ianaName, z;
+      var tzName, z;
       var _ParseISODateTime4 = ParseISODateTime(ToString$1(relativeTo));
       year = _ParseISODateTime4.year;
       month = _ParseISODateTime4.month;
@@ -8854,11 +8861,11 @@
       microsecond = _ParseISODateTime4.microsecond;
       nanosecond = _ParseISODateTime4.nanosecond;
       calendar = _ParseISODateTime4.calendar;
-      ianaName = _ParseISODateTime4.ianaName;
+      tzName = _ParseISODateTime4.tzName;
       offset = _ParseISODateTime4.offset;
       z = _ParseISODateTime4.z;
-      if (ianaName) {
-        timeZone = ToTemporalTimeZoneSlotValue(ianaName);
+      if (tzName) {
+        timeZone = ToTemporalTimeZoneSlotValue(tzName);
         if (z) {
           offsetBehaviour = 'exact';
         } else if (!offset) {
@@ -9258,7 +9265,7 @@
       microsecond = _InterpretTemporalDat3.microsecond;
       nanosecond = _InterpretTemporalDat3.nanosecond;
     } else {
-      var ianaName, z;
+      var tzName, z;
       var _ParseTemporalZonedDa = ParseTemporalZonedDateTimeString(ToString$1(item));
       year = _ParseTemporalZonedDa.year;
       month = _ParseTemporalZonedDa.month;
@@ -9269,11 +9276,11 @@
       millisecond = _ParseTemporalZonedDa.millisecond;
       microsecond = _ParseTemporalZonedDa.microsecond;
       nanosecond = _ParseTemporalZonedDa.nanosecond;
-      ianaName = _ParseTemporalZonedDa.ianaName;
+      tzName = _ParseTemporalZonedDa.tzName;
       offset = _ParseTemporalZonedDa.offset;
       z = _ParseTemporalZonedDa.z;
       calendar = _ParseTemporalZonedDa.calendar;
-      timeZone = ToTemporalTimeZoneSlotValue(ianaName);
+      timeZone = ToTemporalTimeZoneSlotValue(tzName);
       if (z) {
         offsetBehaviour = 'exact';
       } else if (!offset) {
@@ -10214,10 +10221,10 @@
     return result;
   }
   function IsTimeZoneOffsetString(string) {
-    return OFFSET.test(String(string));
+    return OFFSET.test(string);
   }
   function ParseTimeZoneOffsetString(string) {
-    var match = OFFSET.exec(String(string));
+    var match = OFFSET.exec(string);
     if (!match) {
       throw new RangeError("invalid time zone offset: ".concat(string));
     }
@@ -10228,12 +10235,15 @@
     var nanoseconds = +((match[5] || 0) + '000000000').slice(0, 9);
     return sign * (((hours * 60 + minutes) * 60 + seconds) * 1e9 + nanoseconds);
   }
+
+  // In the spec, GetCanonicalTimeZoneIdentifier is infallible and is always
+  // preceded by a call to IsAvailableTimeZoneName. However in the polyfill,
+  // we don't (yet) have a way to check if a time zone ID is valid without
+  // also canonicalizing it. So we combine both operations into one function,
+  // which will return the canonical ID if the ID is valid, and will throw
+  // if it's not.
   function GetCanonicalTimeZoneIdentifier(timeZoneIdentifier) {
-    if (IsTimeZoneOffsetString(timeZoneIdentifier)) {
-      var offsetNs = ParseTimeZoneOffsetString(timeZoneIdentifier);
-      return FormatTimeZoneOffsetString(offsetNs);
-    }
-    var formatter = getIntlDateTimeFormatEnUsForTimeZone(String(timeZoneIdentifier));
+    var formatter = getIntlDateTimeFormatEnUsForTimeZone(timeZoneIdentifier);
     return formatter.resolvedOptions().timeZone;
   }
   function GetNamedTimeZoneOffsetNanoseconds(id, epochNanoseconds) {
@@ -11441,7 +11451,7 @@
     var date1 = CreateTemporalDate(y1, mon1, d1, calendar);
     var date2 = CreateTemporalDate(y2, mon2, d2, calendar);
     var dateLargestUnit = LargerOfTwoTemporalUnits('day', largestUnit);
-    var untilOptions = CopyOptions(options);
+    var untilOptions = SnapshotOwnProperties(GetOptionsObject(options), null);
     untilOptions.largestUnit = dateLargestUnit;
     var untilResult = CalendarDateUntil(calendar, date1, date2, untilOptions);
     var years = GetSlot(untilResult, YEARS);
@@ -11572,7 +11582,7 @@
   function DifferenceTemporalInstant(operation, instant, other, options) {
     var sign = operation === 'since' ? -1 : 1;
     other = ToTemporalInstant(other);
-    var resolvedOptions = CopyOptions(options);
+    var resolvedOptions = SnapshotOwnProperties(GetOptionsObject(options), null);
     var settings = GetDifferenceSettings(operation, resolvedOptions, 'time', [], 'nanosecond', 'second');
     var onens = GetSlot(instant, EPOCHNANOSECONDS);
     var twons = GetSlot(other, EPOCHNANOSECONDS);
@@ -11592,7 +11602,7 @@
     var calendar = GetSlot(plainDate, CALENDAR);
     var otherCalendar = GetSlot(other, CALENDAR);
     ThrowIfCalendarsNotEqual(calendar, otherCalendar, 'compute difference between dates');
-    var resolvedOptions = CopyOptions(options);
+    var resolvedOptions = SnapshotOwnProperties(GetOptionsObject(options), null);
     var settings = GetDifferenceSettings(operation, resolvedOptions, 'date', [], 'day', 'day');
     resolvedOptions.largestUnit = settings.largestUnit;
     var untilResult = CalendarDateUntil(calendar, plainDate, other, resolvedOptions);
@@ -11616,7 +11626,7 @@
     var calendar = GetSlot(plainDateTime, CALENDAR);
     var otherCalendar = GetSlot(other, CALENDAR);
     ThrowIfCalendarsNotEqual(calendar, otherCalendar, 'compute difference between dates');
-    var resolvedOptions = CopyOptions(options);
+    var resolvedOptions = SnapshotOwnProperties(GetOptionsObject(options), null);
     var settings = GetDifferenceSettings(operation, resolvedOptions, 'datetime', [], 'nanosecond', 'day');
     var _DifferenceISODateTim3 = DifferenceISODateTime(GetSlot(plainDateTime, ISO_YEAR), GetSlot(plainDateTime, ISO_MONTH), GetSlot(plainDateTime, ISO_DAY), GetSlot(plainDateTime, ISO_HOUR), GetSlot(plainDateTime, ISO_MINUTE), GetSlot(plainDateTime, ISO_SECOND), GetSlot(plainDateTime, ISO_MILLISECOND), GetSlot(plainDateTime, ISO_MICROSECOND), GetSlot(plainDateTime, ISO_NANOSECOND), GetSlot(other, ISO_YEAR), GetSlot(other, ISO_MONTH), GetSlot(other, ISO_DAY), GetSlot(other, ISO_HOUR), GetSlot(other, ISO_MINUTE), GetSlot(other, ISO_SECOND), GetSlot(other, ISO_MILLISECOND), GetSlot(other, ISO_MICROSECOND), GetSlot(other, ISO_NANOSECOND), calendar, settings.largestUnit, resolvedOptions),
       years = _DifferenceISODateTim3.years,
@@ -11655,7 +11665,7 @@
   function DifferenceTemporalPlainTime(operation, plainTime, other, options) {
     var sign = operation === 'since' ? -1 : 1;
     other = ToTemporalTime(other);
-    var resolvedOptions = CopyOptions(options);
+    var resolvedOptions = SnapshotOwnProperties(GetOptionsObject(options), null);
     var settings = GetDifferenceSettings(operation, resolvedOptions, 'time', [], 'nanosecond', 'hour');
     var _DifferenceTime2 = DifferenceTime(GetSlot(plainTime, ISO_HOUR), GetSlot(plainTime, ISO_MINUTE), GetSlot(plainTime, ISO_SECOND), GetSlot(plainTime, ISO_MILLISECOND), GetSlot(plainTime, ISO_MICROSECOND), GetSlot(plainTime, ISO_NANOSECOND), GetSlot(other, ISO_HOUR), GetSlot(other, ISO_MINUTE), GetSlot(other, ISO_SECOND), GetSlot(other, ISO_MILLISECOND), GetSlot(other, ISO_MICROSECOND), GetSlot(other, ISO_NANOSECOND)),
       hours = _DifferenceTime2.hours,
@@ -11687,7 +11697,7 @@
     var calendar = GetSlot(yearMonth, CALENDAR);
     var otherCalendar = GetSlot(other, CALENDAR);
     ThrowIfCalendarsNotEqual(calendar, otherCalendar, 'compute difference between months');
-    var resolvedOptions = CopyOptions(options);
+    var resolvedOptions = SnapshotOwnProperties(GetOptionsObject(options), null);
     var settings = GetDifferenceSettings(operation, resolvedOptions, 'date', ['week', 'day'], 'month', 'year');
     resolvedOptions.largestUnit = settings.largestUnit;
     var fieldNames = CalendarFields(calendar, ['monthCode', 'year']);
@@ -11714,7 +11724,7 @@
     var calendar = GetSlot(zonedDateTime, CALENDAR);
     var otherCalendar = GetSlot(other, CALENDAR);
     ThrowIfCalendarsNotEqual(calendar, otherCalendar, 'compute difference between dates');
-    var resolvedOptions = CopyOptions(options);
+    var resolvedOptions = SnapshotOwnProperties(GetOptionsObject(options), null);
     var settings = GetDifferenceSettings(operation, resolvedOptions, 'datetime', [], 'nanosecond', 'hour');
     resolvedOptions.largestUnit = settings.largestUnit;
     var ns1 = GetSlot(zonedDateTime, EPOCHNANOSECONDS);
@@ -12111,7 +12121,7 @@
     var calendar = GetSlot(yearMonth, CALENDAR);
     var fieldNames = CalendarFields(calendar, ['monthCode', 'year']);
     var fields = PrepareTemporalFields(yearMonth, fieldNames, []);
-    var fieldsCopy = CopyOptions(fields);
+    var fieldsCopy = SnapshotOwnProperties(GetOptionsObject(fields), null);
     fields.day = 1;
     var startDate = CalendarDateFromFields(calendar, fields);
     var sign = DurationSign(years, months, weeks, days, 0, 0, 0, 0, 0, 0);
@@ -12126,7 +12136,7 @@
       startDate = CalendarDateFromFields(calendar, fieldsCopy);
     }
     var durationToAdd = new Duration(years, months, weeks, days, 0, 0, 0, 0, 0, 0);
-    var optionsCopy = CopyOptions(options);
+    var optionsCopy = SnapshotOwnProperties(GetOptionsObject(options), null);
     var addedDate = CalendarDateAdd(calendar, startDate, durationToAdd, options, dateAdd);
     var addedDateFields = PrepareTemporalFields(addedDate, fieldNames, []);
     return CalendarYearMonthFromFields(calendar, addedDateFields, optionsCopy);
@@ -12702,10 +12712,12 @@
     if (Type$6(options) === 'Object') return options;
     throw new TypeError("Options parameter must be an object, not ".concat(options === null ? 'null' : "a ".concat(_typeof(options))));
   }
-  function CopyOptions(options) {
-    var optionsCopy = ObjectCreate$8(null);
-    CopyDataProperties(optionsCopy, GetOptionsObject(options), []);
-    return optionsCopy;
+  function SnapshotOwnProperties(source, proto) {
+    var excludedKeys = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
+    var excludedValues = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : [];
+    var copy = ObjectCreate$8(proto);
+    CopyDataProperties(copy, ToObject$1(source), excludedKeys, excludedValues);
+    return copy;
   }
   function GetOption(options, property, allowedValues, fallback) {
     var value = options[property];
@@ -13485,12 +13497,8 @@
       key: "mergeFields",
       value: function mergeFields(fields, additionalFields) {
         if (!IsTemporalCalendar(this)) throw new TypeError('invalid receiver');
-        fields = ToObject$1(fields);
-        var fieldsCopy = ObjectCreate$6(null);
-        CopyDataProperties(fieldsCopy, fields, [], [undefined]);
-        additionalFields = ToObject$1(additionalFields);
-        var additionalFieldsCopy = ObjectCreate$6(null);
-        CopyDataProperties(additionalFieldsCopy, additionalFields, [], [undefined]);
+        var fieldsCopy = SnapshotOwnProperties(fields, null, [], [undefined]);
+        var additionalFieldsCopy = SnapshotOwnProperties(additionalFields, null, [], [undefined]);
         var additionalKeys = ReflectOwnKeys(additionalFieldsCopy);
         var overriddenKeys = impl[GetSlot(this, CALENDAR_ID)].fieldKeysToIgnore(additionalKeys);
         var merged = ObjectCreate$6(null);
@@ -17854,19 +17862,24 @@
   MakeIntrinsicClass(PlainTime, 'Temporal.PlainTime');
 
   var TimeZone = /*#__PURE__*/function () {
-    function TimeZone(timeZoneIdentifier) {
+    function TimeZone(identifier) {
       _classCallCheck(this, TimeZone);
       // Note: if the argument is not passed, GetCanonicalTimeZoneIdentifier(undefined) will throw.
       //       This check exists only to improve the error message.
       if (arguments.length < 1) {
         throw new RangeError('missing argument: identifier is required');
       }
-      timeZoneIdentifier = GetCanonicalTimeZoneIdentifier(timeZoneIdentifier);
+      var stringIdentifier = ToString$1(identifier);
+      if (IsTimeZoneOffsetString(stringIdentifier)) {
+        stringIdentifier = CanonicalizeTimeZoneOffsetString(stringIdentifier);
+      } else {
+        stringIdentifier = GetCanonicalTimeZoneIdentifier(stringIdentifier);
+      }
       CreateSlots(this);
-      SetSlot(this, TIMEZONE_ID, timeZoneIdentifier);
+      SetSlot(this, TIMEZONE_ID, stringIdentifier);
       {
         Object.defineProperty(this, '_repr_', {
-          value: "".concat(this[Symbol.toStringTag], " <").concat(timeZoneIdentifier, ">"),
+          value: "".concat(this[Symbol.toStringTag], " <").concat(stringIdentifier, ">"),
           writable: false,
           enumerable: false,
           configurable: false
@@ -18667,12 +18680,12 @@
         var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : undefined;
         if (!IsTemporalZonedDateTime(this)) throw new TypeError('invalid receiver');
         options = GetOptionsObject(options);
-        var optionsCopy = ObjectCreate(null);
+
         // This is not quite per specification, but this polyfill's DateTimeFormat
         // already doesn't match the InitializeDateTimeFormat operation, and the
         // access order might change anyway;
         // see https://github.com/tc39/ecma402/issues/747
-        CopyDataProperties(optionsCopy, options, ['timeZone']);
+        var optionsCopy = SnapshotOwnProperties(options, null, ['timeZone']);
         if (options.timeZone !== undefined) {
           throw new TypeError('ZonedDateTime toLocaleString does not accept a timeZone option');
         }
