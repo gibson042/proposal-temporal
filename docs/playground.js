@@ -1556,12 +1556,12 @@
 
 	var ERROR_MESSAGE = 'Function.prototype.bind called on incompatible ';
 	var slice = Array.prototype.slice;
-	var toStr$4 = Object.prototype.toString;
+	var toStr$3 = Object.prototype.toString;
 	var funcType = '[object Function]';
 
 	var implementation$3 = function bind(that) {
 	    var target = this;
-	    if (typeof target !== 'function' || toStr$4.call(target) !== funcType) {
+	    if (typeof target !== 'function' || toStr$3.call(target) !== funcType) {
 	        throw new TypeError(ERROR_MESSAGE + target);
 	    }
 	    var args = slice.call(arguments, 1);
@@ -1607,18 +1607,9 @@
 
 	var functionBind = Function.prototype.bind || implementation$2;
 
-	var src;
-	var hasRequiredSrc;
+	var bind$1 = functionBind;
 
-	function requireSrc () {
-		if (hasRequiredSrc) return src;
-		hasRequiredSrc = 1;
-
-		var bind = functionBind;
-
-		src = bind.call(Function.call, Object.prototype.hasOwnProperty);
-		return src;
-	}
+	var src = bind$1.call(Function.call, Object.prototype.hasOwnProperty);
 
 	var undefined$1;
 
@@ -1834,7 +1825,7 @@
 	};
 
 	var bind = functionBind;
-	var hasOwn = requireSrc();
+	var hasOwn = src;
 	var $concat = bind.call(Function.call, Array.prototype.concat);
 	var $spliceApply = bind.call(Function.apply, Array.prototype.splice);
 	var $replace = bind.call(Function.call, String.prototype.replace);
@@ -2044,10 +2035,10 @@
 	var $Array = GetIntrinsic$d('%Array%');
 
 	// eslint-disable-next-line global-require
-	var toStr$3 = !$Array.isArray && callBound$2('Object.prototype.toString');
+	var toStr$2 = !$Array.isArray && callBound$2('Object.prototype.toString');
 
 	var IsArray$3 = $Array.isArray || function IsArray(argument) {
-		return toStr$3(argument) === '[object Array]';
+		return toStr$2(argument) === '[object Array]';
 	};
 
 	// https://262.ecma-international.org/6.0/#sec-isarray
@@ -2117,7 +2108,7 @@
 
 		var GetIntrinsic = getIntrinsic;
 
-		var has = requireSrc();
+		var has = src;
 		var $TypeError = GetIntrinsic('%TypeError%');
 
 		isPropertyDescriptor = function IsPropertyDescriptor(ES, Desc) {
@@ -2193,7 +2184,7 @@
 		if (hasRequiredIsMatchRecord) return isMatchRecord;
 		hasRequiredIsMatchRecord = 1;
 
-		var has = requireSrc();
+		var has = src;
 
 		// https://262.ecma-international.org/13.0/#sec-match-records
 
@@ -2222,7 +2213,7 @@
 		var $TypeError = GetIntrinsic('%TypeError%');
 		var $SyntaxError = GetIntrinsic('%SyntaxError%');
 
-		var has = requireSrc();
+		var has = src;
 
 		var isMatchRecord = requireIsMatchRecord();
 
@@ -2296,7 +2287,7 @@
 		if (hasRequiredIsAccessorDescriptor) return IsAccessorDescriptor;
 		hasRequiredIsAccessorDescriptor = 1;
 
-		var has = requireSrc();
+		var has = src;
 
 		var Type = Type$5;
 
@@ -2327,7 +2318,7 @@
 		if (hasRequiredIsDataDescriptor) return IsDataDescriptor;
 		hasRequiredIsDataDescriptor = 1;
 
-		var has = requireSrc();
+		var has = src;
 
 		var Type = Type$5;
 
@@ -2403,105 +2394,114 @@
 		return ToBoolean;
 	}
 
-	var fnToStr = Function.prototype.toString;
-	var reflectApply = typeof Reflect === 'object' && Reflect !== null && Reflect.apply;
-	var badArrayLike;
-	var isCallableMarker;
-	if (typeof reflectApply === 'function' && typeof Object.defineProperty === 'function') {
-		try {
-			badArrayLike = Object.defineProperty({}, 'length', {
-				get: function () {
-					throw isCallableMarker;
-				}
-			});
-			isCallableMarker = {};
-			// eslint-disable-next-line no-throw-literal
-			reflectApply(function () { throw 42; }, null, badArrayLike);
-		} catch (_) {
-			if (_ !== isCallableMarker) {
-				reflectApply = null;
-			}
-		}
-	} else {
-		reflectApply = null;
-	}
+	var isCallable$1;
+	var hasRequiredIsCallable$1;
 
-	var constructorRegex = /^\s*class\b/;
-	var isES6ClassFn = function isES6ClassFunction(value) {
-		try {
-			var fnStr = fnToStr.call(value);
-			return constructorRegex.test(fnStr);
-		} catch (e) {
-			return false; // not a function
-		}
-	};
+	function requireIsCallable$1 () {
+		if (hasRequiredIsCallable$1) return isCallable$1;
+		hasRequiredIsCallable$1 = 1;
 
-	var tryFunctionObject = function tryFunctionToStr(value) {
-		try {
-			if (isES6ClassFn(value)) { return false; }
-			fnToStr.call(value);
-			return true;
-		} catch (e) {
-			return false;
-		}
-	};
-	var toStr$2 = Object.prototype.toString;
-	var objectClass = '[object Object]';
-	var fnClass = '[object Function]';
-	var genClass = '[object GeneratorFunction]';
-	var ddaClass = '[object HTMLAllCollection]'; // IE 11
-	var ddaClass2 = '[object HTML document.all class]';
-	var ddaClass3 = '[object HTMLCollection]'; // IE 9-10
-	var hasToStringTag$1 = typeof Symbol === 'function' && !!Symbol.toStringTag; // better: use `has-tostringtag`
-
-	var isIE68 = !(0 in [,]); // eslint-disable-line no-sparse-arrays, comma-spacing
-
-	var isDDA = function isDocumentDotAll() { return false; };
-	if (typeof document === 'object') {
-		// Firefox 3 canonicalizes DDA to undefined when it's not accessed directly
-		var all = document.all;
-		if (toStr$2.call(all) === toStr$2.call(document.all)) {
-			isDDA = function isDocumentDotAll(value) {
-				/* globals document: false */
-				// in IE 6-8, typeof document.all is "object" and it's truthy
-				if ((isIE68 || !value) && (typeof value === 'undefined' || typeof value === 'object')) {
-					try {
-						var str = toStr$2.call(value);
-						return (
-							str === ddaClass
-							|| str === ddaClass2
-							|| str === ddaClass3 // opera 12.16
-							|| str === objectClass // IE 6-8
-						) && value('') == null; // eslint-disable-line eqeqeq
-					} catch (e) { /**/ }
-				}
-				return false;
-			};
-		}
-	}
-
-	var isCallable$1 = reflectApply
-		? function isCallable(value) {
-			if (isDDA(value)) { return true; }
-			if (!value) { return false; }
-			if (typeof value !== 'function' && typeof value !== 'object') { return false; }
+		var fnToStr = Function.prototype.toString;
+		var reflectApply = typeof Reflect === 'object' && Reflect !== null && Reflect.apply;
+		var badArrayLike;
+		var isCallableMarker;
+		if (typeof reflectApply === 'function' && typeof Object.defineProperty === 'function') {
 			try {
-				reflectApply(value, null, badArrayLike);
-			} catch (e) {
-				if (e !== isCallableMarker) { return false; }
+				badArrayLike = Object.defineProperty({}, 'length', {
+					get: function () {
+						throw isCallableMarker;
+					}
+				});
+				isCallableMarker = {};
+				// eslint-disable-next-line no-throw-literal
+				reflectApply(function () { throw 42; }, null, badArrayLike);
+			} catch (_) {
+				if (_ !== isCallableMarker) {
+					reflectApply = null;
+				}
 			}
-			return !isES6ClassFn(value) && tryFunctionObject(value);
+		} else {
+			reflectApply = null;
 		}
-		: function isCallable(value) {
-			if (isDDA(value)) { return true; }
-			if (!value) { return false; }
-			if (typeof value !== 'function' && typeof value !== 'object') { return false; }
-			if (hasToStringTag$1) { return tryFunctionObject(value); }
-			if (isES6ClassFn(value)) { return false; }
-			var strClass = toStr$2.call(value);
-			if (strClass !== fnClass && strClass !== genClass && !(/^\[object HTML/).test(strClass)) { return false; }
-			return tryFunctionObject(value);
+
+		var constructorRegex = /^\s*class\b/;
+		var isES6ClassFn = function isES6ClassFunction(value) {
+			try {
+				var fnStr = fnToStr.call(value);
+				return constructorRegex.test(fnStr);
+			} catch (e) {
+				return false; // not a function
+			}
 		};
+
+		var tryFunctionObject = function tryFunctionToStr(value) {
+			try {
+				if (isES6ClassFn(value)) { return false; }
+				fnToStr.call(value);
+				return true;
+			} catch (e) {
+				return false;
+			}
+		};
+		var toStr = Object.prototype.toString;
+		var objectClass = '[object Object]';
+		var fnClass = '[object Function]';
+		var genClass = '[object GeneratorFunction]';
+		var ddaClass = '[object HTMLAllCollection]'; // IE 11
+		var ddaClass2 = '[object HTML document.all class]';
+		var ddaClass3 = '[object HTMLCollection]'; // IE 9-10
+		var hasToStringTag = typeof Symbol === 'function' && !!Symbol.toStringTag; // better: use `has-tostringtag`
+
+		var isIE68 = !(0 in [,]); // eslint-disable-line no-sparse-arrays, comma-spacing
+
+		var isDDA = function isDocumentDotAll() { return false; };
+		if (typeof document === 'object') {
+			// Firefox 3 canonicalizes DDA to undefined when it's not accessed directly
+			var all = document.all;
+			if (toStr.call(all) === toStr.call(document.all)) {
+				isDDA = function isDocumentDotAll(value) {
+					/* globals document: false */
+					// in IE 6-8, typeof document.all is "object" and it's truthy
+					if ((isIE68 || !value) && (typeof value === 'undefined' || typeof value === 'object')) {
+						try {
+							var str = toStr.call(value);
+							return (
+								str === ddaClass
+								|| str === ddaClass2
+								|| str === ddaClass3 // opera 12.16
+								|| str === objectClass // IE 6-8
+							) && value('') == null; // eslint-disable-line eqeqeq
+						} catch (e) { /**/ }
+					}
+					return false;
+				};
+			}
+		}
+
+		isCallable$1 = reflectApply
+			? function isCallable(value) {
+				if (isDDA(value)) { return true; }
+				if (!value) { return false; }
+				if (typeof value !== 'function' && typeof value !== 'object') { return false; }
+				try {
+					reflectApply(value, null, badArrayLike);
+				} catch (e) {
+					if (e !== isCallableMarker) { return false; }
+				}
+				return !isES6ClassFn(value) && tryFunctionObject(value);
+			}
+			: function isCallable(value) {
+				if (isDDA(value)) { return true; }
+				if (!value) { return false; }
+				if (typeof value !== 'function' && typeof value !== 'object') { return false; }
+				if (hasToStringTag) { return tryFunctionObject(value); }
+				if (isES6ClassFn(value)) { return false; }
+				var strClass = toStr.call(value);
+				if (strClass !== fnClass && strClass !== genClass && !(/^\[object HTML/).test(strClass)) { return false; }
+				return tryFunctionObject(value);
+			};
+		return isCallable$1;
+	}
 
 	var IsCallable$1;
 	var hasRequiredIsCallable;
@@ -2512,7 +2512,7 @@
 
 		// http://262.ecma-international.org/5.1/#sec-9.11
 
-		IsCallable$1 = isCallable$1;
+		IsCallable$1 = requireIsCallable$1();
 		return IsCallable$1;
 	}
 
@@ -2523,7 +2523,7 @@
 		if (hasRequiredToPropertyDescriptor) return ToPropertyDescriptor;
 		hasRequiredToPropertyDescriptor = 1;
 
-		var has = requireSrc();
+		var has = src;
 
 		var GetIntrinsic = getIntrinsic;
 
@@ -6611,7 +6611,7 @@
 
 	var $TypeError$3 = GetIntrinsic$7('%TypeError%');
 
-	var has = requireSrc();
+	var has = src;
 
 	var IsPropertyKey = IsPropertyKey$4;
 	var Type$2 = Type$5;
@@ -6750,7 +6750,7 @@
 	var hasSymbols = typeof Symbol === 'function' && typeof Symbol.iterator === 'symbol';
 
 	var isPrimitive$1 = isPrimitive$2;
-	var isCallable = isCallable$1;
+	var isCallable = requireIsCallable$1();
 	var isDate = isDateObject;
 	var isSymbol = isSymbolExports;
 
@@ -7732,6 +7732,7 @@
 	const ArrayPrototypePush$4 = Array.prototype.push;
 	const ArrayPrototypeSort = Array.prototype.sort;
 	const IntlDateTimeFormat$2 = globalThis.Intl.DateTimeFormat;
+	const IntlSupportedValuesOf = globalThis.Intl.supportedValuesOf;
 	const MathAbs$1 = Math.abs;
 	const MathFloor$1 = Math.floor;
 	const MathMax = Math.max;
@@ -7915,7 +7916,9 @@
 	  } = ParseTemporalTimeZoneString(stringIdent);
 	  if (tzName) {
 	    if (IsTimeZoneOffsetString(tzName)) return CanonicalizeTimeZoneOffsetString(tzName);
-	    return GetCanonicalTimeZoneIdentifier(tzName);
+	    const record = GetAvailableNamedTimeZoneIdentifier(tzName);
+	    if (!record) throw new RangeError("Unrecognized time zone ".concat(tzName));
+	    return record.primaryIdentifier;
 	  }
 	  if (z) return 'UTC';
 	  // if !tzName && !z then offset must be present
@@ -10024,16 +10027,96 @@
 	  const nanoseconds = +((match[5] || 0) + '000000000').slice(0, 9);
 	  return sign * (((hours * 60 + minutes) * 60 + seconds) * 1e9 + nanoseconds);
 	}
+	let canonicalTimeZoneIdsCache = undefined;
+	function GetAvailableNamedTimeZoneIdentifier(identifier) {
+	  var _canonicalTimeZoneIds, _specialCases$segment, _specialCases$segment2;
+	  // The most common case is when the identifier is a canonical time zone ID.
+	  // Fast-path that case by caching all canonical IDs. For old ECMAScript
+	  // implementations lacking this API, set the cache to `null` to avoid retries.
+	  if (canonicalTimeZoneIdsCache === undefined) {
+	    const canonicalTimeZoneIds = IntlSupportedValuesOf === null || IntlSupportedValuesOf === void 0 ? void 0 : IntlSupportedValuesOf('timeZone');
+	    canonicalTimeZoneIdsCache = canonicalTimeZoneIds ? new Map(canonicalTimeZoneIds.map(id => [ASCIILowercase(id), id])) : null;
+	  }
+	  const lower = ASCIILowercase(identifier);
+	  let primaryIdentifier = (_canonicalTimeZoneIds = canonicalTimeZoneIdsCache) === null || _canonicalTimeZoneIds === void 0 ? void 0 : _canonicalTimeZoneIds.get(lower);
+	  if (primaryIdentifier) return {
+	    identifier: primaryIdentifier,
+	    primaryIdentifier
+	  };
 
-	// In the spec, GetCanonicalTimeZoneIdentifier is infallible and is always
-	// preceded by a call to IsAvailableTimeZoneName. However in the polyfill,
-	// we don't (yet) have a way to check if a time zone ID is valid without
-	// also canonicalizing it. So we combine both operations into one function,
-	// which will return the canonical ID if the ID is valid, and will throw
-	// if it's not.
-	function GetCanonicalTimeZoneIdentifier(timeZoneIdentifier) {
-	  const formatter = getIntlDateTimeFormatEnUsForTimeZone(timeZoneIdentifier);
-	  return formatter.resolvedOptions().timeZone;
+	  // It's not already a primary identifier, so get its primary identifier (or
+	  // return if it's not an available named time zone ID).
+	  try {
+	    const formatter = getIntlDateTimeFormatEnUsForTimeZone(identifier);
+	    primaryIdentifier = formatter.resolvedOptions().timeZone;
+	  } catch {
+	    return undefined;
+	  }
+
+	  // The identifier is an alias (a deprecated identifier that's a synonym for a
+	  // primary identifier), so we need to case-normalize the identifier to match
+	  // the IANA TZDB, e.g. america/new_york => America/New_York. There's no
+	  // built-in way to do this using Intl.DateTimeFormat, but the we can normalize
+	  // almost all aliases (modulo a few special cases) using the TZDB's basic
+	  // capitalization pattern:
+	  // 1. capitalize the first letter of the identifier
+	  // 2. capitalize the letter after every slash, dash, or underscore delimiter
+	  const standardCase = [...lower].map((c, i) => i === 0 || '/-_'.includes(lower[i - 1]) ? c.toUpperCase() : c).join('');
+	  const segments = standardCase.split('/');
+	  if (segments.length === 1) {
+	    // If a single-segment legacy ID is 2-3 chars or contains a number or dash, then
+	    // (except for the "GB-Eire" special case) the case-normalized form is uppercase.
+	    // These are: GMT+0, GMT-0, GB, NZ, PRC, ROC, ROK, UCT, GMT, GMT0, CET, CST6CDT,
+	    // EET, EST, HST, MET, MST, MST7MDT, PST8PDT, WET, NZ-CHAT, and W-SU.
+	    // Otherwise it's standard form: first letter capitalized, e.g. Iran, Egypt, Hongkong
+	    if (lower === 'gb-eire') return {
+	      identifier: 'GB-Eire',
+	      primaryIdentifier
+	    };
+	    return {
+	      identifier: lower.length <= 3 || /[-0-9]/.test(lower) ? lower.toUpperCase() : segments[0],
+	      primaryIdentifier
+	    };
+	  }
+
+	  // All Etc zone names are uppercase except three exceptions.
+	  if (segments[0] === 'Etc') {
+	    const etcName = ['Zulu', 'Greenwich', 'Universal'].includes(segments[1]) ? segments[1] : segments[1].toUpperCase();
+	    return {
+	      identifier: "Etc/".concat(etcName),
+	      primaryIdentifier
+	    };
+	  }
+
+	  // Legacy US identifiers like US/Alaska or US/Indiana-Starke are 2 segments and use standard form.
+	  if (segments[0] === 'Us') return {
+	    identifier: "US/".concat(segments[1]),
+	    primaryIdentifier
+	  };
+
+	  // For multi-segment IDs, there's a few special cases in the second/third segments
+	  const specialCases = {
+	    Act: 'ACT',
+	    Lhi: 'LHI',
+	    Nsw: 'NSW',
+	    Dar_Es_Salaam: 'Dar_es_Salaam',
+	    Port_Of_Spain: 'Port_of_Spain',
+	    Isle_Of_Man: 'Isle_of_Man',
+	    Comodrivadavia: 'ComodRivadavia',
+	    Knox_In: 'Knox_IN',
+	    Dumontdurville: 'DumontDUrville',
+	    Mcmurdo: 'McMurdo',
+	    Denoronha: 'DeNoronha',
+	    Easterisland: 'EasterIsland',
+	    Bajanorte: 'BajaNorte',
+	    Bajasur: 'BajaSur'
+	  };
+	  segments[1] = (_specialCases$segment = specialCases[segments[1]]) !== null && _specialCases$segment !== void 0 ? _specialCases$segment : segments[1];
+	  if (segments.length > 2) segments[2] = (_specialCases$segment2 = specialCases[segments[2]]) !== null && _specialCases$segment2 !== void 0 ? _specialCases$segment2 : segments[2];
+	  return {
+	    identifier: segments.join('/'),
+	    primaryIdentifier
+	  };
 	}
 	function GetNamedTimeZoneOffsetNanoseconds(id, epochNanoseconds) {
 	  const {
@@ -12729,7 +12812,8 @@
 	const DATETIME = Symbol('datetime');
 	const INST = Symbol('instant');
 	const ORIGINAL = Symbol('original');
-	const TZ_RESOLVED = Symbol('timezone');
+	const TZ_CANONICAL = Symbol('timezone-canonical');
+	const TZ_ORIGINAL = Symbol('timezone-original');
 	const CAL_ID = Symbol('calendar-id');
 	const LOCALE = Symbol('locale');
 	const OPTIONS = Symbol('options');
@@ -12787,7 +12871,7 @@
 	  }
 	  this[LOCALE] = ro.locale;
 	  this[ORIGINAL] = original;
-	  this[TZ_RESOLVED] = ro.timeZone;
+	  this[TZ_CANONICAL] = ro.timeZone;
 	  this[CAL_ID] = ro.calendar;
 	  this[DATE] = dateAmend;
 	  this[YM] = yearMonthAmend;
@@ -12795,6 +12879,25 @@
 	  this[TIME] = timeAmend;
 	  this[DATETIME] = datetimeAmend;
 	  this[INST] = instantAmend;
+
+	  // Save the original time zone, for a few reasons:
+	  // - Clearer error messages
+	  // - More clearly follows the spec for InitializeDateTimeFormat
+	  // - Because it follows the spec more closely, will make it easier to integrate
+	  //   support of offset strings and other potential changes like proposal-canonical-tz.
+	  const timeZoneOption = hasOptions ? options.timeZone : undefined;
+	  if (timeZoneOption === undefined) {
+	    this[TZ_ORIGINAL] = ro.timeZone;
+	  } else {
+	    const id = ToString$1(timeZoneOption);
+	    if (IsTimeZoneOffsetString(id)) {
+	      // Note: https://github.com/tc39/ecma402/issues/683 will remove this
+	      throw new RangeError('Intl.DateTimeFormat does not currently support offset time zones');
+	    }
+	    const record = GetAvailableNamedTimeZoneIdentifier(id);
+	    if (!record) throw new RangeError("Intl.DateTimeFormat formats built-in time zones, not ".concat(id));
+	    this[TZ_ORIGINAL] = record.identifier;
+	  }
 	}
 	DateTimeFormat.supportedLocalesOf = function () {
 	  return IntlDateTimeFormat$1.supportedLocalesOf(...arguments);
@@ -12817,7 +12920,9 @@
 	  configurable: false
 	});
 	function resolvedOptions() {
-	  return this[ORIGINAL].resolvedOptions();
+	  const resolved = this[ORIGINAL].resolvedOptions();
+	  resolved.timeZone = this[TZ_CANONICAL];
+	  return resolved;
 	}
 	function format(datetime) {
 	  let {
@@ -13029,7 +13134,7 @@
 	    const nanosecond = GetSlot(temporalObj, ISO_NANOSECOND);
 	    const datetime = new DateTime(1970, 1, 1, hour, minute, second, millisecond, microsecond, nanosecond, main[CAL_ID]);
 	    return {
-	      instant: GetInstantFor(main[TZ_RESOLVED], datetime, 'compatible'),
+	      instant: GetInstantFor(main[TZ_CANONICAL], datetime, 'compatible'),
 	      formatter: getPropLazy(main, TIME)
 	    };
 	  }
@@ -13043,7 +13148,7 @@
 	    }
 	    const datetime = new DateTime(isoYear, isoMonth, referenceISODay, 12, 0, 0, 0, 0, 0, calendar);
 	    return {
-	      instant: GetInstantFor(main[TZ_RESOLVED], datetime, 'compatible'),
+	      instant: GetInstantFor(main[TZ_CANONICAL], datetime, 'compatible'),
 	      formatter: getPropLazy(main, YM)
 	    };
 	  }
@@ -13057,7 +13162,7 @@
 	    }
 	    const datetime = new DateTime(referenceISOYear, isoMonth, isoDay, 12, 0, 0, 0, 0, 0, calendar);
 	    return {
-	      instant: GetInstantFor(main[TZ_RESOLVED], datetime, 'compatible'),
+	      instant: GetInstantFor(main[TZ_CANONICAL], datetime, 'compatible'),
 	      formatter: getPropLazy(main, MD)
 	    };
 	  }
@@ -13071,7 +13176,7 @@
 	    }
 	    const datetime = new DateTime(isoYear, isoMonth, isoDay, 12, 0, 0, 0, 0, 0, main[CAL_ID]);
 	    return {
-	      instant: GetInstantFor(main[TZ_RESOLVED], datetime, 'compatible'),
+	      instant: GetInstantFor(main[TZ_CANONICAL], datetime, 'compatible'),
 	      formatter: getPropLazy(main, DATE)
 	    };
 	  }
@@ -13094,7 +13199,7 @@
 	      datetime = new DateTime(isoYear, isoMonth, isoDay, hour, minute, second, millisecond, microsecond, nanosecond, main[CAL_ID]);
 	    }
 	    return {
-	      instant: GetInstantFor(main[TZ_RESOLVED], datetime, 'compatible'),
+	      instant: GetInstantFor(main[TZ_CANONICAL], datetime, 'compatible'),
 	      formatter: getPropLazy(main, DATETIME)
 	    };
 	  }
@@ -13835,7 +13940,7 @@
 	        day: 'numeric',
 	        month: 'numeric',
 	        year: 'numeric',
-	        era: this.eraLength,
+	        era: 'short',
 	        timeZone: 'UTC'
 	      });
 	    }
@@ -14107,11 +14212,12 @@
 	      // If the estimate is in the same year & month as the target, then we can
 	      // calculate the result exactly and short-circuit any additional logic.
 	      // This optimization assumes that months are continuous. It would break if
-	      // a calendar skipped days, like the Julian->Gregorian switchover. But the
-	      // only ICU calendars that currently skip days (japanese/roc/buddhist) is
+	      // a calendar skipped days, like the Julian->Gregorian switchover. But
+	      // current ICU calendars only skip days (japanese/roc/buddhist) because of
 	      // a bug (https://bugs.chromium.org/p/chromium/issues/detail?id=1173158)
-	      // that's currently detected by `checkIcuBugs()` which will throw. So
-	      // this optimization should be safe for all ICU calendars.
+	      // that's currently worked around by a custom calendarToIsoDate
+	      // implementation in those calendars. So this optimization should be safe
+	      // for all ICU calendars.
 	      let testIsoEstimate = this.addDaysIso(isoEstimate, diffDays);
 	      if (date.day > this.minimumMonthLength(date)) {
 	        // There's a chance that the calendar date is out of range. Throw or
@@ -14361,11 +14467,11 @@
 	    // Add enough days to roll over to the next month. One we're in the next
 	    // month, we can calculate the length of the current month. NOTE: This
 	    // algorithm assumes that months are continuous. It would break if a
-	    // calendar skipped days, like the Julian->Gregorian switchover. But the
-	    // only ICU calendars that currently skip days (japanese/roc/buddhist) is a
-	    // bug (https://bugs.chromium.org/p/chromium/issues/detail?id=1173158)
-	    // that's currently detected by `checkIcuBugs()` which will throw. So this
-	    // code should be safe for all ICU calendars.
+	    // calendar skipped days, like the Julian->Gregorian switchover. But current
+	    // ICU calendars only skip days (japanese/roc/buddhist) because of a bug
+	    // (https://bugs.chromium.org/p/chromium/issues/detail?id=1173158) that's
+	    // currently worked around by a custom calendarToIsoDate implementation in
+	    // those calendars. So this code should be safe for all ICU calendars.
 	    const {
 	      day
 	    } = calendarDate;
@@ -14436,9 +14542,6 @@
 	    const duration = DifferenceISODate(oneIso.year, oneIso.month, oneIso.day, twoIso.year, twoIso.month, twoIso.day, 'day');
 	    return duration.days;
 	  },
-	  // The short era format works for all calendars except Japanese, which will
-	  // override.
-	  eraLength: 'short',
 	  // All built-in calendars except Chinese/Dangi and Hebrew use an era
 	  hasEra: true,
 	  monthDayFromFields(fields, overflow, cache) {
@@ -15231,21 +15334,36 @@
 	      } = this;
 	      const isoYearEstimate = year + anchorEra.isoEpoch.year - (anchorEra.hasYearZero ? 0 : 1);
 	      return RegulateISODate(isoYearEstimate, month, day, 'constrain');
-	    },
-	    // Several calendars based on the Gregorian calendar use Julian dates (not
-	    // proleptic Gregorian dates) before the Julian switchover in Oct 1582. See
-	    // https://bugs.chromium.org/p/chromium/issues/detail?id=1173158.
-	    v8IsVulnerableToJulianBug: new Date('+001001-01-01T00:00Z').toLocaleDateString('en-US-u-ca-japanese', {
-	      timeZone: 'UTC'
-	    }).startsWith('12'),
-	    calendarIsVulnerableToJulianBug: false,
-	    checkIcuBugs(isoDate) {
-	      if (this.calendarIsVulnerableToJulianBug && this.v8IsVulnerableToJulianBug) {
-	        const beforeJulianSwitch = CompareISODate(isoDate.year, isoDate.month, isoDate.day, 1582, 10, 15) < 0;
-	        if (beforeJulianSwitch) {
-	          throw new RangeError("calendar '".concat(this.id, "' is broken for ISO dates before 1582-10-15") + ' (see https://bugs.chromium.org/p/chromium/issues/detail?id=1173158)');
-	        }
-	      }
+	    }
+	  });
+	};
+
+	/**
+	 * Some calendars are identical to Gregorian except era and year. For these
+	 * calendars, we can avoid using Intl.DateTimeFormat and just calculate the
+	 * year, era, and eraYear. This is faster (because Intl.DateTimeFormat is slow
+	 * and uses a huge amount of RAM), and it avoids ICU bugs like
+	 * https://bugs.chromium.org/p/chromium/issues/detail?id=1173158.
+	 */
+	const makeHelperSameMonthDayAsGregorian = (id, originalEras) => {
+	  const base = makeHelperGregorian(id, originalEras);
+	  return ObjectAssign$1(base, {
+	    isoToCalendarDate(isoDate) {
+	      // Month and day are same as ISO, so bypass Intl.DateTimeFormat and
+	      // calculate the year, era, and eraYear here.
+	      const {
+	        year: isoYear,
+	        month,
+	        day
+	      } = isoDate;
+	      const monthCode = buildMonthCode(month);
+	      const year = isoYear - this.anchorEra.isoEpoch.year + 1;
+	      return this.completeEraYear({
+	        year,
+	        month,
+	        monthCode,
+	        day
+	      });
 	    }
 	  });
 	};
@@ -15330,7 +15448,7 @@
 	    year: 5501
 	  }
 	}]);
-	const helperRoc = ObjectAssign$1({}, makeHelperGregorian('roc', [{
+	const helperRoc = ObjectAssign$1({}, makeHelperSameMonthDayAsGregorian('roc', [{
 	  name: 'minguo',
 	  isoEpoch: {
 	    year: 1912,
@@ -15340,10 +15458,8 @@
 	}, {
 	  name: 'before-roc',
 	  reverseOf: 'minguo'
-	}]), {
-	  calendarIsVulnerableToJulianBug: true
-	});
-	const helperBuddhist = ObjectAssign$1({}, makeHelperGregorian('buddhist', [{
+	}]));
+	const helperBuddhist = ObjectAssign$1({}, makeHelperSameMonthDayAsGregorian('buddhist', [{
 	  name: 'be',
 	  hasYearZero: true,
 	  isoEpoch: {
@@ -15351,10 +15467,8 @@
 	    month: 1,
 	    day: 1
 	  }
-	}]), {
-	  calendarIsVulnerableToJulianBug: true
-	});
-	const helperGregory = ObjectAssign$1({}, makeHelperGregorian('gregory', [{
+	}]));
+	const helperGregory = ObjectAssign$1({}, makeHelperSameMonthDayAsGregorian('gregory', [{
 	  name: 'ce',
 	  isoEpoch: {
 	    year: 1,
@@ -15412,7 +15526,7 @@
 	// '1 1, 6 Meiji, 12:00:00 PM'
 	// > new Date('1872-12-31T12:00').toLocaleString(...args)
 	// '12 31, 5 Meiji, 12:00:00 PM'
-	makeHelperGregorian('japanese', [
+	makeHelperSameMonthDayAsGregorian('japanese', [
 	// The Japanese calendar `year` is just the ISO year, because (unlike other
 	// ICU calendars) there's no obvious "default era", we use the ISO year.
 	{
@@ -15486,11 +15600,7 @@
 	  name: 'bce',
 	  reverseOf: 'ce'
 	}]), {
-	  // The last 3 Japanese eras confusingly return only one character in the
-	  // default "short" era, so need to use the long format.
-	  eraLength: 'long',
 	  erasBeginMidYear: true,
-	  calendarIsVulnerableToJulianBug: true,
 	  reviseIntlEra(calendarDate, isoDate) {
 	    const {
 	      era,
@@ -17498,7 +17608,9 @@
 	    if (IsTimeZoneOffsetString(stringIdentifier)) {
 	      stringIdentifier = CanonicalizeTimeZoneOffsetString(stringIdentifier);
 	    } else {
-	      stringIdentifier = GetCanonicalTimeZoneIdentifier(stringIdentifier);
+	      const record = GetAvailableNamedTimeZoneIdentifier(stringIdentifier);
+	      if (!record) throw new RangeError("Invalid time zone identifier: ".concat(stringIdentifier));
+	      stringIdentifier = record.primaryIdentifier;
 	    }
 	    CreateSlots(this);
 	    SetSlot(this, TIMEZONE_ID, stringIdentifier);
@@ -18156,13 +18268,15 @@
 	      // The rest of the defaults will be filled in by formatting the Instant
 	    }
 
-	    let timeZone = ToTemporalTimeZoneIdentifier(GetSlot(this, TIME_ZONE));
-	    if (IsTimeZoneOffsetString(timeZone)) {
+	    const timeZoneIdentifier = ToTemporalTimeZoneIdentifier(GetSlot(this, TIME_ZONE));
+	    if (IsTimeZoneOffsetString(timeZoneIdentifier)) {
 	      // Note: https://github.com/tc39/ecma402/issues/683 will remove this
-	      throw new RangeError('toLocaleString does not support offset string time zones');
+	      throw new RangeError('toLocaleString does not currently support offset time zones');
+	    } else {
+	      const record = GetAvailableNamedTimeZoneIdentifier(timeZoneIdentifier);
+	      if (!record) throw new RangeError("toLocaleString formats built-in time zones, not ".concat(timeZoneIdentifier));
+	      optionsCopy.timeZone = record.primaryIdentifier;
 	    }
-	    timeZone = GetCanonicalTimeZoneIdentifier(timeZone);
-	    optionsCopy.timeZone = timeZone;
 	    const formatter = new DateTimeFormat(locales, optionsCopy);
 	    const localeCalendarIdentifier = Call$1(customResolvedOptions, formatter, []).calendar;
 	    const calendarIdentifier = ToTemporalCalendarIdentifier(GetSlot(this, CALENDAR));
