@@ -1604,9 +1604,18 @@
 
 	var functionBind = Function.prototype.bind || implementation$2;
 
-	var bind$1 = functionBind;
+	var src;
+	var hasRequiredSrc;
 
-	var src = bind$1.call(Function.call, Object.prototype.hasOwnProperty);
+	function requireSrc () {
+		if (hasRequiredSrc) return src;
+		hasRequiredSrc = 1;
+
+		var bind = functionBind;
+
+		src = bind.call(Function.call, Object.prototype.hasOwnProperty);
+		return src;
+	}
 
 	var undefined$1;
 
@@ -1822,7 +1831,7 @@
 	};
 
 	var bind = functionBind;
-	var hasOwn = src;
+	var hasOwn = requireSrc();
 	var $concat = bind.call(Function.call, Array.prototype.concat);
 	var $spliceApply = bind.call(Function.apply, Array.prototype.splice);
 	var $replace = bind.call(Function.call, String.prototype.replace);
@@ -2105,7 +2114,7 @@
 
 		var GetIntrinsic = getIntrinsic;
 
-		var has = src;
+		var has = requireSrc();
 		var $TypeError = GetIntrinsic('%TypeError%');
 
 		isPropertyDescriptor = function IsPropertyDescriptor(ES, Desc) {
@@ -2205,7 +2214,7 @@
 		if (hasRequiredIsMatchRecord) return isMatchRecord;
 		hasRequiredIsMatchRecord = 1;
 
-		var has = src;
+		var has = requireSrc();
 
 		// https://262.ecma-international.org/13.0/#sec-match-records
 
@@ -2234,7 +2243,7 @@
 		var $TypeError = GetIntrinsic('%TypeError%');
 		var $SyntaxError = GetIntrinsic('%SyntaxError%');
 
-		var has = src;
+		var has = requireSrc();
 		var isInteger = isInteger$2;
 
 		var isMatchRecord = requireIsMatchRecord();
@@ -2324,7 +2333,7 @@
 		if (hasRequiredIsAccessorDescriptor) return IsAccessorDescriptor;
 		hasRequiredIsAccessorDescriptor = 1;
 
-		var has = src;
+		var has = requireSrc();
 
 		var Type = Type$4;
 
@@ -2355,7 +2364,7 @@
 		if (hasRequiredIsDataDescriptor) return IsDataDescriptor;
 		hasRequiredIsDataDescriptor = 1;
 
-		var has = src;
+		var has = requireSrc();
 
 		var Type = Type$4;
 
@@ -2551,7 +2560,7 @@
 		if (hasRequiredToPropertyDescriptor) return ToPropertyDescriptor;
 		hasRequiredToPropertyDescriptor = 1;
 
-		var has = src;
+		var has = requireSrc();
 
 		var GetIntrinsic = getIntrinsic;
 
@@ -6589,7 +6598,7 @@
 
 	var $TypeError$3 = GetIntrinsic$8('%TypeError%');
 
-	var has = src;
+	var has = requireSrc();
 
 	var IsPropertyKey = IsPropertyKey$4;
 	var Type$1 = Type$4;
