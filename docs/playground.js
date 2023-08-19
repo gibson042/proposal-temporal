@@ -1604,18 +1604,9 @@
 
 	var functionBind = Function.prototype.bind || implementation$2;
 
-	var src;
-	var hasRequiredSrc;
+	var bind$1 = functionBind;
 
-	function requireSrc () {
-		if (hasRequiredSrc) return src;
-		hasRequiredSrc = 1;
-
-		var bind = functionBind;
-
-		src = bind.call(Function.call, Object.prototype.hasOwnProperty);
-		return src;
-	}
+	var src = bind$1.call(Function.call, Object.prototype.hasOwnProperty);
 
 	var undefined$1;
 
@@ -1831,7 +1822,7 @@
 	};
 
 	var bind = functionBind;
-	var hasOwn = requireSrc();
+	var hasOwn = src;
 	var $concat = bind.call(Function.call, Array.prototype.concat);
 	var $spliceApply = bind.call(Function.apply, Array.prototype.splice);
 	var $replace = bind.call(Function.call, String.prototype.replace);
@@ -2114,7 +2105,7 @@
 
 		var GetIntrinsic = getIntrinsic;
 
-		var has = requireSrc();
+		var has = src;
 		var $TypeError = GetIntrinsic('%TypeError%');
 
 		isPropertyDescriptor = function IsPropertyDescriptor(ES, Desc) {
@@ -2214,7 +2205,7 @@
 		if (hasRequiredIsMatchRecord) return isMatchRecord;
 		hasRequiredIsMatchRecord = 1;
 
-		var has = requireSrc();
+		var has = src;
 
 		// https://262.ecma-international.org/13.0/#sec-match-records
 
@@ -2243,7 +2234,7 @@
 		var $TypeError = GetIntrinsic('%TypeError%');
 		var $SyntaxError = GetIntrinsic('%SyntaxError%');
 
-		var has = requireSrc();
+		var has = src;
 		var isInteger = isInteger$2;
 
 		var isMatchRecord = requireIsMatchRecord();
@@ -2333,7 +2324,7 @@
 		if (hasRequiredIsAccessorDescriptor) return IsAccessorDescriptor;
 		hasRequiredIsAccessorDescriptor = 1;
 
-		var has = requireSrc();
+		var has = src;
 
 		var Type = Type$4;
 
@@ -2364,7 +2355,7 @@
 		if (hasRequiredIsDataDescriptor) return IsDataDescriptor;
 		hasRequiredIsDataDescriptor = 1;
 
-		var has = requireSrc();
+		var has = src;
 
 		var Type = Type$4;
 
@@ -2560,7 +2551,7 @@
 		if (hasRequiredToPropertyDescriptor) return ToPropertyDescriptor;
 		hasRequiredToPropertyDescriptor = 1;
 
-		var has = requireSrc();
+		var has = src;
 
 		var GetIntrinsic = getIntrinsic;
 
@@ -6598,7 +6589,7 @@
 
 	var $TypeError$3 = GetIntrinsic$8('%TypeError%');
 
-	var has = requireSrc();
+	var has = src;
 
 	var IsPropertyKey = IsPropertyKey$4;
 	var Type$1 = Type$4;
@@ -7718,9 +7709,9 @@
 	  GetSlots(container)[id] = value;
 	}
 
-	const tzComponent = /\.[-A-Za-z_]|\.\.[-A-Za-z._]{1,12}|\.[-A-Za-z_][-A-Za-z._]{0,12}|[A-Za-z_][-A-Za-z._]{0,13}/;
-	const offsetIdentifierNoCapture = /(?:[+\u2212-][0-2][0-9](?::?[0-5][0-9])?)/;
-	const timeZoneID = new RegExp('(?:' + ["(?:".concat(tzComponent.source, ")(?:\\/(?:").concat(tzComponent.source, "))*"), 'Etc/GMT(?:0|[-+]\\d{1,2})', 'GMT[-+]?0', 'EST5EDT', 'CST6CDT', 'MST7MDT', 'PST8PDT', offsetIdentifierNoCapture.source].join('|') + ')');
+	const offsetIdentifierNoCapture = /(?:[+\u2212-](?:[01][0-9]|2[0-3])(?::?[0-5][0-9])?)/;
+	const tzComponent = /[A-Za-z._][A-Za-z._0-9+-]*/;
+	const timeZoneID = new RegExp("(?:".concat(offsetIdentifierNoCapture.source, "|(?:").concat(tzComponent.source, ")(?:\\/(?:").concat(tzComponent.source, "))*)"));
 	const yearpart = /(?:[+\u2212-]\d{6}|\d{4})/;
 	const monthpart = /(?:0[1-9]|1[0-2])/;
 	const daypart = /(?:0[1-9]|[12]\d|3[01])/;
