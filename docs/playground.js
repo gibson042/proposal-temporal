@@ -1358,7 +1358,7 @@
 
 		    BigInteger.prototype.toString = function (radix, alphabet) {
 		        if (radix === undefined$1) radix = 10;
-		        if (radix !== 10) return toBaseString(this, radix, alphabet);
+		        if (radix !== 10 || alphabet) return toBaseString(this, radix, alphabet);
 		        var v = this.value, l = v.length, str = String(v[--l]), zeros = "0000000", digit;
 		        while (--l >= 0) {
 		            digit = String(v[l]);
@@ -1370,7 +1370,7 @@
 
 		    SmallInteger.prototype.toString = function (radix, alphabet) {
 		        if (radix === undefined$1) radix = 10;
-		        if (radix != 10) return toBaseString(this, radix, alphabet);
+		        if (radix != 10 || alphabet) return toBaseString(this, radix, alphabet);
 		        return String(this.value);
 		    };
 
@@ -1488,6 +1488,36 @@
 	var BigIntegerExports = BigInteger.exports;
 	var bigInt = /*@__PURE__*/getDefaultExportFromCjs(BigIntegerExports);
 
+	/** @type {import('.')} */
+	var esErrors = Error;
+
+	/** @type {import('./eval')} */
+	var _eval = EvalError;
+
+	var range;
+	var hasRequiredRange;
+
+	function requireRange () {
+		if (hasRequiredRange) return range;
+		hasRequiredRange = 1;
+
+		/** @type {import('./range')} */
+		range = RangeError;
+		return range;
+	}
+
+	/** @type {import('./ref')} */
+	var ref = ReferenceError;
+
+	/** @type {import('./syntax')} */
+	var syntax = SyntaxError;
+
+	/** @type {import('./type')} */
+	var type = TypeError;
+
+	/** @type {import('./uri')} */
+	var uri = URIError;
+
 	var shams$1;
 	var hasRequiredShams$1;
 
@@ -1560,19 +1590,23 @@
 	}
 
 	var test = {
+		__proto__: null,
 		foo: {}
 	};
 
 	var $Object$1 = Object;
 
+	/** @type {import('.')} */
 	var hasProto$1 = function hasProto() {
-		return { __proto__: test }.foo === test.foo && !({ __proto__: null } instanceof $Object$1);
+		// @ts-expect-error: TS errors on an inherited property for some reason
+		return { __proto__: test }.foo === test.foo
+			&& !(test instanceof $Object$1);
 	};
 
 	/* eslint no-invalid-this: 1 */
 
 	var ERROR_MESSAGE = 'Function.prototype.bind called on incompatible ';
-	var toStr$4 = Object.prototype.toString;
+	var toStr$5 = Object.prototype.toString;
 	var max = Math.max;
 	var funcType = '[object Function]';
 
@@ -1610,7 +1644,7 @@
 
 	var implementation$3 = function bind(that) {
 	    var target = this;
-	    if (typeof target !== 'function' || toStr$4.apply(target) !== funcType) {
+	    if (typeof target !== 'function' || toStr$5.apply(target) !== funcType) {
 	        throw new TypeError(ERROR_MESSAGE + target);
 	    }
 	    var args = slicy(arguments, 1);
@@ -1656,27 +1690,24 @@
 
 	var functionBind = Function.prototype.bind || implementation$2;
 
-	var hasown;
-	var hasRequiredHasown;
+	var call = Function.prototype.call;
+	var $hasOwn = Object.prototype.hasOwnProperty;
+	var bind$1 = functionBind;
 
-	function requireHasown () {
-		if (hasRequiredHasown) return hasown;
-		hasRequiredHasown = 1;
-
-		var call = Function.prototype.call;
-		var $hasOwn = Object.prototype.hasOwnProperty;
-		var bind = functionBind;
-
-		/** @type {(o: {}, p: PropertyKey) => p is keyof o} */
-		hasown = bind.call(call, $hasOwn);
-		return hasown;
-	}
+	/** @type {import('.')} */
+	var hasown = bind$1.call(call, $hasOwn);
 
 	var undefined$1;
 
-	var $SyntaxError$3 = SyntaxError;
+	var $Error = esErrors;
+	var $EvalError = _eval;
+	var $RangeError$1 = requireRange();
+	var $ReferenceError = ref;
+	var $SyntaxError$4 = syntax;
+	var $TypeError$t = type;
+	var $URIError = uri;
+
 	var $Function = Function;
-	var $TypeError$f = TypeError;
 
 	// eslint-disable-next-line consistent-return
 	var getEvalledConstructor = function (expressionSyntax) {
@@ -1685,19 +1716,19 @@
 		} catch (e) {}
 	};
 
-	var $gOPD$1 = Object.getOwnPropertyDescriptor;
-	if ($gOPD$1) {
+	var $gOPD$2 = Object.getOwnPropertyDescriptor;
+	if ($gOPD$2) {
 		try {
-			$gOPD$1({}, '');
+			$gOPD$2({}, '');
 		} catch (e) {
-			$gOPD$1 = null; // this is IE 8, which has a broken gOPD
+			$gOPD$2 = null; // this is IE 8, which has a broken gOPD
 		}
 	}
 
 	var throwTypeError = function () {
-		throw new $TypeError$f();
+		throw new $TypeError$t();
 	};
-	var ThrowTypeError = $gOPD$1
+	var ThrowTypeError = $gOPD$2
 		? (function () {
 			try {
 				// eslint-disable-next-line no-unused-expressions, no-caller, no-restricted-properties
@@ -1706,7 +1737,7 @@
 			} catch (calleeThrows) {
 				try {
 					// IE 8 throws on Object.getOwnPropertyDescriptor(arguments, '')
-					return $gOPD$1(arguments, 'callee').get;
+					return $gOPD$2(arguments, 'callee').get;
 				} catch (gOPDthrows) {
 					return throwTypeError;
 				}
@@ -1728,6 +1759,7 @@
 	var TypedArray = typeof Uint8Array === 'undefined' || !getProto ? undefined$1 : getProto(Uint8Array);
 
 	var INTRINSICS$1 = {
+		__proto__: null,
 		'%AggregateError%': typeof AggregateError === 'undefined' ? undefined$1 : AggregateError,
 		'%Array%': Array,
 		'%ArrayBuffer%': typeof ArrayBuffer === 'undefined' ? undefined$1 : ArrayBuffer,
@@ -1748,9 +1780,9 @@
 		'%decodeURIComponent%': decodeURIComponent,
 		'%encodeURI%': encodeURI,
 		'%encodeURIComponent%': encodeURIComponent,
-		'%Error%': Error,
+		'%Error%': $Error,
 		'%eval%': eval, // eslint-disable-line no-eval
-		'%EvalError%': EvalError,
+		'%EvalError%': $EvalError,
 		'%Float32Array%': typeof Float32Array === 'undefined' ? undefined$1 : Float32Array,
 		'%Float64Array%': typeof Float64Array === 'undefined' ? undefined$1 : Float64Array,
 		'%FinalizationRegistry%': typeof FinalizationRegistry === 'undefined' ? undefined$1 : FinalizationRegistry,
@@ -1772,8 +1804,8 @@
 		'%parseInt%': parseInt,
 		'%Promise%': typeof Promise === 'undefined' ? undefined$1 : Promise,
 		'%Proxy%': typeof Proxy === 'undefined' ? undefined$1 : Proxy,
-		'%RangeError%': RangeError,
-		'%ReferenceError%': ReferenceError,
+		'%RangeError%': $RangeError$1,
+		'%ReferenceError%': $ReferenceError,
 		'%Reflect%': typeof Reflect === 'undefined' ? undefined$1 : Reflect,
 		'%RegExp%': RegExp,
 		'%Set%': typeof Set === 'undefined' ? undefined$1 : Set,
@@ -1782,15 +1814,15 @@
 		'%String%': String,
 		'%StringIteratorPrototype%': hasSymbols$3 && getProto ? getProto(''[Symbol.iterator]()) : undefined$1,
 		'%Symbol%': hasSymbols$3 ? Symbol : undefined$1,
-		'%SyntaxError%': $SyntaxError$3,
+		'%SyntaxError%': $SyntaxError$4,
 		'%ThrowTypeError%': ThrowTypeError,
 		'%TypedArray%': TypedArray,
-		'%TypeError%': $TypeError$f,
+		'%TypeError%': $TypeError$t,
 		'%Uint8Array%': typeof Uint8Array === 'undefined' ? undefined$1 : Uint8Array,
 		'%Uint8ClampedArray%': typeof Uint8ClampedArray === 'undefined' ? undefined$1 : Uint8ClampedArray,
 		'%Uint16Array%': typeof Uint16Array === 'undefined' ? undefined$1 : Uint16Array,
 		'%Uint32Array%': typeof Uint32Array === 'undefined' ? undefined$1 : Uint32Array,
-		'%URIError%': URIError,
+		'%URIError%': $URIError,
 		'%WeakMap%': typeof WeakMap === 'undefined' ? undefined$1 : WeakMap,
 		'%WeakRef%': typeof WeakRef === 'undefined' ? undefined$1 : WeakRef,
 		'%WeakSet%': typeof WeakSet === 'undefined' ? undefined$1 : WeakSet
@@ -1832,6 +1864,7 @@
 	};
 
 	var LEGACY_ALIASES = {
+		__proto__: null,
 		'%ArrayBufferPrototype%': ['ArrayBuffer', 'prototype'],
 		'%ArrayPrototype%': ['Array', 'prototype'],
 		'%ArrayProto_entries%': ['Array', 'prototype', 'entries'],
@@ -1886,10 +1919,10 @@
 	};
 
 	var bind = functionBind;
-	var hasOwn$1 = requireHasown();
-	var $concat = bind.call(Function.call, Array.prototype.concat);
+	var hasOwn$7 = hasown;
+	var $concat$1 = bind.call(Function.call, Array.prototype.concat);
 	var $spliceApply = bind.call(Function.apply, Array.prototype.splice);
-	var $replace = bind.call(Function.call, String.prototype.replace);
+	var $replace$1 = bind.call(Function.call, String.prototype.replace);
 	var $strSlice = bind.call(Function.call, String.prototype.slice);
 	var $exec = bind.call(Function.call, RegExp.prototype.exec);
 
@@ -1900,13 +1933,13 @@
 		var first = $strSlice(string, 0, 1);
 		var last = $strSlice(string, -1);
 		if (first === '%' && last !== '%') {
-			throw new $SyntaxError$3('invalid intrinsic syntax, expected closing `%`');
+			throw new $SyntaxError$4('invalid intrinsic syntax, expected closing `%`');
 		} else if (last === '%' && first !== '%') {
-			throw new $SyntaxError$3('invalid intrinsic syntax, expected opening `%`');
+			throw new $SyntaxError$4('invalid intrinsic syntax, expected opening `%`');
 		}
 		var result = [];
-		$replace(string, rePropName, function (match, number, quote, subString) {
-			result[result.length] = quote ? $replace(subString, reEscapeChar, '$1') : number || match;
+		$replace$1(string, rePropName, function (match, number, quote, subString) {
+			result[result.length] = quote ? $replace$1(subString, reEscapeChar, '$1') : number || match;
 		});
 		return result;
 	};
@@ -1915,18 +1948,18 @@
 	var getBaseIntrinsic = function getBaseIntrinsic(name, allowMissing) {
 		var intrinsicName = name;
 		var alias;
-		if (hasOwn$1(LEGACY_ALIASES, intrinsicName)) {
+		if (hasOwn$7(LEGACY_ALIASES, intrinsicName)) {
 			alias = LEGACY_ALIASES[intrinsicName];
 			intrinsicName = '%' + alias[0] + '%';
 		}
 
-		if (hasOwn$1(INTRINSICS$1, intrinsicName)) {
+		if (hasOwn$7(INTRINSICS$1, intrinsicName)) {
 			var value = INTRINSICS$1[intrinsicName];
 			if (value === needsEval) {
 				value = doEval(intrinsicName);
 			}
 			if (typeof value === 'undefined' && !allowMissing) {
-				throw new $TypeError$f('intrinsic ' + name + ' exists, but is not available. Please file an issue!');
+				throw new $TypeError$t('intrinsic ' + name + ' exists, but is not available. Please file an issue!');
 			}
 
 			return {
@@ -1936,19 +1969,19 @@
 			};
 		}
 
-		throw new $SyntaxError$3('intrinsic ' + name + ' does not exist!');
+		throw new $SyntaxError$4('intrinsic ' + name + ' does not exist!');
 	};
 
 	var getIntrinsic = function GetIntrinsic(name, allowMissing) {
 		if (typeof name !== 'string' || name.length === 0) {
-			throw new $TypeError$f('intrinsic name must be a non-empty string');
+			throw new $TypeError$t('intrinsic name must be a non-empty string');
 		}
 		if (arguments.length > 1 && typeof allowMissing !== 'boolean') {
-			throw new $TypeError$f('"allowMissing" argument must be a boolean');
+			throw new $TypeError$t('"allowMissing" argument must be a boolean');
 		}
 
 		if ($exec(/^%?[^%]*%?$/, name) === null) {
-			throw new $SyntaxError$3('`%` may not be present anywhere but at the beginning and end of the intrinsic name');
+			throw new $SyntaxError$4('`%` may not be present anywhere but at the beginning and end of the intrinsic name');
 		}
 		var parts = stringToPath(name);
 		var intrinsicBaseName = parts.length > 0 ? parts[0] : '';
@@ -1961,7 +1994,7 @@
 		var alias = intrinsic.alias;
 		if (alias) {
 			intrinsicBaseName = alias[0];
-			$spliceApply(parts, $concat([0, 1], alias));
+			$spliceApply(parts, $concat$1([0, 1], alias));
 		}
 
 		for (var i = 1, isOwn = true; i < parts.length; i += 1) {
@@ -1975,7 +2008,7 @@
 				)
 				&& first !== last
 			) {
-				throw new $SyntaxError$3('property names with quotes must have matching quotes');
+				throw new $SyntaxError$4('property names with quotes must have matching quotes');
 			}
 			if (part === 'constructor' || !isOwn) {
 				skipFurtherCaching = true;
@@ -1984,17 +2017,17 @@
 			intrinsicBaseName += '.' + part;
 			intrinsicRealName = '%' + intrinsicBaseName + '%';
 
-			if (hasOwn$1(INTRINSICS$1, intrinsicRealName)) {
+			if (hasOwn$7(INTRINSICS$1, intrinsicRealName)) {
 				value = INTRINSICS$1[intrinsicRealName];
 			} else if (value != null) {
 				if (!(part in value)) {
 					if (!allowMissing) {
-						throw new $TypeError$f('base intrinsic for ' + name + ' exists, but the property is not available.');
+						throw new $TypeError$t('base intrinsic for ' + name + ' exists, but the property is not available.');
 					}
 					return void undefined$1;
 				}
-				if ($gOPD$1 && (i + 1) >= parts.length) {
-					var desc = $gOPD$1(value, part);
+				if ($gOPD$2 && (i + 1) >= parts.length) {
+					var desc = $gOPD$2(value, part);
 					isOwn = !!desc;
 
 					// By convention, when a data property is converted to an accessor
@@ -2010,7 +2043,7 @@
 						value = value[part];
 					}
 				} else {
-					isOwn = hasOwn$1(value, part);
+					isOwn = hasOwn$7(value, part);
 					value = value[part];
 				}
 
@@ -2024,26 +2057,109 @@
 
 	var callBind$2 = {exports: {}};
 
-	var GetIntrinsic$p = getIntrinsic;
+	var esDefineProperty;
+	var hasRequiredEsDefineProperty;
 
-	var $defineProperty$1 = GetIntrinsic$p('%Object.defineProperty%', true);
+	function requireEsDefineProperty () {
+		if (hasRequiredEsDefineProperty) return esDefineProperty;
+		hasRequiredEsDefineProperty = 1;
 
-	var hasPropertyDescriptors$1 = function hasPropertyDescriptors() {
-		if ($defineProperty$1) {
+		var GetIntrinsic = getIntrinsic;
+
+		/** @type {import('.')} */
+		var $defineProperty = GetIntrinsic('%Object.defineProperty%', true) || false;
+		if ($defineProperty) {
 			try {
-				$defineProperty$1({}, 'a', { value: 1 });
-				return true;
+				$defineProperty({}, 'a', { value: 1 });
 			} catch (e) {
 				// IE 8 has a broken defineProperty
-				return false;
+				$defineProperty = false;
 			}
 		}
-		return false;
+
+		esDefineProperty = $defineProperty;
+		return esDefineProperty;
+	}
+
+	var GetIntrinsic$f = getIntrinsic;
+
+	var $gOPD$1 = GetIntrinsic$f('%Object.getOwnPropertyDescriptor%', true);
+
+	if ($gOPD$1) {
+		try {
+			$gOPD$1([], 'length');
+		} catch (e) {
+			// IE 8 has a broken gOPD
+			$gOPD$1 = null;
+		}
+	}
+
+	var gopd$1 = $gOPD$1;
+
+	var $defineProperty$2 = requireEsDefineProperty();
+
+	var $SyntaxError$3 = syntax;
+	var $TypeError$s = type;
+
+	var gopd = gopd$1;
+
+	/** @type {import('.')} */
+	var defineDataProperty = function defineDataProperty(
+		obj,
+		property,
+		value
+	) {
+		if (!obj || (typeof obj !== 'object' && typeof obj !== 'function')) {
+			throw new $TypeError$s('`obj` must be an object or a function`');
+		}
+		if (typeof property !== 'string' && typeof property !== 'symbol') {
+			throw new $TypeError$s('`property` must be a string or a symbol`');
+		}
+		if (arguments.length > 3 && typeof arguments[3] !== 'boolean' && arguments[3] !== null) {
+			throw new $TypeError$s('`nonEnumerable`, if provided, must be a boolean or null');
+		}
+		if (arguments.length > 4 && typeof arguments[4] !== 'boolean' && arguments[4] !== null) {
+			throw new $TypeError$s('`nonWritable`, if provided, must be a boolean or null');
+		}
+		if (arguments.length > 5 && typeof arguments[5] !== 'boolean' && arguments[5] !== null) {
+			throw new $TypeError$s('`nonConfigurable`, if provided, must be a boolean or null');
+		}
+		if (arguments.length > 6 && typeof arguments[6] !== 'boolean') {
+			throw new $TypeError$s('`loose`, if provided, must be a boolean');
+		}
+
+		var nonEnumerable = arguments.length > 3 ? arguments[3] : null;
+		var nonWritable = arguments.length > 4 ? arguments[4] : null;
+		var nonConfigurable = arguments.length > 5 ? arguments[5] : null;
+		var loose = arguments.length > 6 ? arguments[6] : false;
+
+		/* @type {false | TypedPropertyDescriptor<unknown>} */
+		var desc = !!gopd && gopd(obj, property);
+
+		if ($defineProperty$2) {
+			$defineProperty$2(obj, property, {
+				configurable: nonConfigurable === null && desc ? desc.configurable : !nonConfigurable,
+				enumerable: nonEnumerable === null && desc ? desc.enumerable : !nonEnumerable,
+				value: value,
+				writable: nonWritable === null && desc ? desc.writable : !nonWritable
+			});
+		} else if (loose || (!nonEnumerable && !nonWritable && !nonConfigurable)) {
+			// must fall back to [[Set]], and was not explicitly asked to make non-enumerable, non-writable, or non-configurable
+			obj[property] = value; // eslint-disable-line no-param-reassign
+		} else {
+			throw new $SyntaxError$3('This environment does not support defining a property as non-configurable, non-writable, or non-enumerable.');
+		}
+	};
+
+	var $defineProperty$1 = requireEsDefineProperty();
+
+	var hasPropertyDescriptors$1 = function hasPropertyDescriptors() {
+		return !!$defineProperty$1;
 	};
 
 	hasPropertyDescriptors$1.hasArrayLengthDefineBug = function hasArrayLengthDefineBug() {
 		// node v0.6 has a bug where array lengths can be Set but not Defined
-		if (!hasPropertyDescriptors$1()) {
+		if (!$defineProperty$1) {
 			return null;
 		}
 		try {
@@ -2056,102 +2172,21 @@
 
 	var hasPropertyDescriptors_1 = hasPropertyDescriptors$1;
 
-	var GetIntrinsic$o = getIntrinsic;
-
-	var $gOPD = GetIntrinsic$o('%Object.getOwnPropertyDescriptor%', true);
-
-	if ($gOPD) {
-		try {
-			$gOPD([], 'length');
-		} catch (e) {
-			// IE 8 has a broken gOPD
-			$gOPD = null;
-		}
-	}
-
-	var gopd$1 = $gOPD;
-
-	var hasPropertyDescriptors = hasPropertyDescriptors_1();
-
-	var GetIntrinsic$n = getIntrinsic;
-
-	var $defineProperty = hasPropertyDescriptors && GetIntrinsic$n('%Object.defineProperty%', true);
-	if ($defineProperty) {
-		try {
-			$defineProperty({}, 'a', { value: 1 });
-		} catch (e) {
-			// IE 8 has a broken defineProperty
-			$defineProperty = false;
-		}
-	}
-
-	var $SyntaxError$2 = GetIntrinsic$n('%SyntaxError%');
-	var $TypeError$e = GetIntrinsic$n('%TypeError%');
-
-	var gopd = gopd$1;
-
-	/** @type {(obj: Record<PropertyKey, unknown>, property: PropertyKey, value: unknown, nonEnumerable?: boolean | null, nonWritable?: boolean | null, nonConfigurable?: boolean | null, loose?: boolean) => void} */
-	var defineDataProperty = function defineDataProperty(
-		obj,
-		property,
-		value
-	) {
-		if (!obj || (typeof obj !== 'object' && typeof obj !== 'function')) {
-			throw new $TypeError$e('`obj` must be an object or a function`');
-		}
-		if (typeof property !== 'string' && typeof property !== 'symbol') {
-			throw new $TypeError$e('`property` must be a string or a symbol`');
-		}
-		if (arguments.length > 3 && typeof arguments[3] !== 'boolean' && arguments[3] !== null) {
-			throw new $TypeError$e('`nonEnumerable`, if provided, must be a boolean or null');
-		}
-		if (arguments.length > 4 && typeof arguments[4] !== 'boolean' && arguments[4] !== null) {
-			throw new $TypeError$e('`nonWritable`, if provided, must be a boolean or null');
-		}
-		if (arguments.length > 5 && typeof arguments[5] !== 'boolean' && arguments[5] !== null) {
-			throw new $TypeError$e('`nonConfigurable`, if provided, must be a boolean or null');
-		}
-		if (arguments.length > 6 && typeof arguments[6] !== 'boolean') {
-			throw new $TypeError$e('`loose`, if provided, must be a boolean');
-		}
-
-		var nonEnumerable = arguments.length > 3 ? arguments[3] : null;
-		var nonWritable = arguments.length > 4 ? arguments[4] : null;
-		var nonConfigurable = arguments.length > 5 ? arguments[5] : null;
-		var loose = arguments.length > 6 ? arguments[6] : false;
-
-		/* @type {false | TypedPropertyDescriptor<unknown>} */
-		var desc = !!gopd && gopd(obj, property);
-
-		if ($defineProperty) {
-			$defineProperty(obj, property, {
-				configurable: nonConfigurable === null && desc ? desc.configurable : !nonConfigurable,
-				enumerable: nonEnumerable === null && desc ? desc.enumerable : !nonEnumerable,
-				value: value,
-				writable: nonWritable === null && desc ? desc.writable : !nonWritable
-			});
-		} else if (loose || (!nonEnumerable && !nonWritable && !nonConfigurable)) {
-			// must fall back to [[Set]], and was not explicitly asked to make non-enumerable, non-writable, or non-configurable
-			obj[property] = value; // eslint-disable-line no-param-reassign
-		} else {
-			throw new $SyntaxError$2('This environment does not support defining a property as non-configurable, non-writable, or non-enumerable.');
-		}
-	};
-
-	var GetIntrinsic$m = getIntrinsic;
+	var GetIntrinsic$e = getIntrinsic;
 	var define = defineDataProperty;
 	var hasDescriptors = hasPropertyDescriptors_1();
 	var gOPD = gopd$1;
 
-	var $TypeError$d = GetIntrinsic$m('%TypeError%');
-	var $floor$2 = GetIntrinsic$m('%Math.floor%');
+	var $TypeError$r = type;
+	var $floor$3 = GetIntrinsic$e('%Math.floor%');
 
+	/** @type {import('.')} */
 	var setFunctionLength = function setFunctionLength(fn, length) {
 		if (typeof fn !== 'function') {
-			throw new $TypeError$d('`fn` is not a function');
+			throw new $TypeError$r('`fn` is not a function');
 		}
-		if (typeof length !== 'number' || length < 0 || length > 0xFFFFFFFF || $floor$2(length) !== length) {
-			throw new $TypeError$d('`length` must be a positive 32-bit integer');
+		if (typeof length !== 'number' || length < 0 || length > 0xFFFFFFFF || $floor$3(length) !== length) {
+			throw new $TypeError$r('`length` must be a positive 32-bit integer');
 		}
 
 		var loose = arguments.length > 2 && !!arguments[2];
@@ -2170,9 +2205,9 @@
 
 		if (functionLengthIsConfigurable || functionLengthIsWritable || !loose) {
 			if (hasDescriptors) {
-				define(fn, 'length', length, true, true);
+				define(/** @type {Parameters<define>[0]} */ (fn), 'length', length, true, true);
 			} else {
-				define(fn, 'length', length);
+				define(/** @type {Parameters<define>[0]} */ (fn), 'length', length);
 			}
 		}
 		return fn;
@@ -2184,22 +2219,13 @@
 		var GetIntrinsic = getIntrinsic;
 		var setFunctionLength$1 = setFunctionLength;
 
-		var $TypeError = GetIntrinsic('%TypeError%');
+		var $TypeError = type;
 		var $apply = GetIntrinsic('%Function.prototype.apply%');
 		var $call = GetIntrinsic('%Function.prototype.call%');
 		var $reflectApply = GetIntrinsic('%Reflect.apply%', true) || bind.call($call, $apply);
 
-		var $defineProperty = GetIntrinsic('%Object.defineProperty%', true);
+		var $defineProperty = requireEsDefineProperty();
 		var $max = GetIntrinsic('%Math.max%');
-
-		if ($defineProperty) {
-			try {
-				$defineProperty({}, 'a', { value: 1 });
-			} catch (e) {
-				// IE 8 has a broken defineProperty
-				$defineProperty = null;
-			}
-		}
 
 		module.exports = function callBind(originalFunction) {
 			if (typeof originalFunction !== 'function') {
@@ -2226,58 +2252,58 @@
 
 	var callBindExports = callBind$2.exports;
 
-	var GetIntrinsic$l = getIntrinsic;
+	var GetIntrinsic$d = getIntrinsic;
 
 	var callBind$1 = callBindExports;
 
-	var $indexOf = callBind$1(GetIntrinsic$l('String.prototype.indexOf'));
+	var $indexOf = callBind$1(GetIntrinsic$d('String.prototype.indexOf'));
 
-	var callBound$2 = function callBoundIntrinsic(name, allowMissing) {
-		var intrinsic = GetIntrinsic$l(name, !!allowMissing);
+	var callBound$4 = function callBoundIntrinsic(name, allowMissing) {
+		var intrinsic = GetIntrinsic$d(name, !!allowMissing);
 		if (typeof intrinsic === 'function' && $indexOf(name, '.prototype.') > -1) {
 			return callBind$1(intrinsic);
 		}
 		return intrinsic;
 	};
 
-	var callBound$3 = /*@__PURE__*/getDefaultExportFromCjs(callBound$2);
+	var callBound$5 = /*@__PURE__*/getDefaultExportFromCjs(callBound$4);
 
-	var GetIntrinsic$k = getIntrinsic;
+	var GetIntrinsic$c = getIntrinsic;
 
-	var $Array = GetIntrinsic$k('%Array%');
+	var $Array = GetIntrinsic$c('%Array%');
 
 	// eslint-disable-next-line global-require
-	var toStr$3 = !$Array.isArray && callBound$2('Object.prototype.toString');
+	var toStr$4 = !$Array.isArray && callBound$4('Object.prototype.toString');
 
-	var IsArray$4 = $Array.isArray || function IsArray(argument) {
-		return toStr$3(argument) === '[object Array]';
+	var IsArray$5 = $Array.isArray || function IsArray(argument) {
+		return toStr$4(argument) === '[object Array]';
 	};
 
 	// https://262.ecma-international.org/6.0/#sec-isarray
-	var IsArray$2 = IsArray$4;
+	var IsArray$3 = IsArray$5;
 
-	var IsArray$3 = /*@__PURE__*/getDefaultExportFromCjs(IsArray$2);
+	var IsArray$4 = /*@__PURE__*/getDefaultExportFromCjs(IsArray$3);
 
-	var GetIntrinsic$j = getIntrinsic;
-	var callBound$1 = callBound$2;
+	var GetIntrinsic$b = getIntrinsic;
+	var callBound$3 = callBound$4;
 
-	var $TypeError$c = GetIntrinsic$j('%TypeError%');
+	var $TypeError$q = type;
 
-	var IsArray$1 = IsArray$2;
+	var IsArray$2 = IsArray$3;
 
-	var $apply = GetIntrinsic$j('%Reflect.apply%', true) || callBound$1('Function.prototype.apply');
+	var $apply = GetIntrinsic$b('%Reflect.apply%', true) || callBound$3('Function.prototype.apply');
 
 	// https://262.ecma-international.org/6.0/#sec-call
 
-	var Call$2 = function Call(F, V) {
+	var Call$3 = function Call(F, V) {
 		var argumentsList = arguments.length > 2 ? arguments[2] : [];
-		if (!IsArray$1(argumentsList)) {
-			throw new $TypeError$c('Assertion failed: optional `argumentsList`, if provided, must be a List');
+		if (!IsArray$2(argumentsList)) {
+			throw new $TypeError$q('Assertion failed: optional `argumentsList`, if provided, must be a List');
 		}
 		return $apply(F, V, argumentsList);
 	};
 
-	var Call$3 = /*@__PURE__*/getDefaultExportFromCjs(Call$2);
+	var Call$4 = /*@__PURE__*/getDefaultExportFromCjs(Call$3);
 
 	var global$1 = (typeof global !== "undefined" ? global :
 	  typeof self !== "undefined" ? self :
@@ -2480,7 +2506,7 @@
 
 	var toString = {}.toString;
 
-	var isArray$1 = Array.isArray || function (arr) {
+	var isArray$3 = Array.isArray || function (arr) {
 	  return toString.call(arr) == '[object Array]';
 	};
 
@@ -2760,7 +2786,7 @@
 	      return fromArrayLike(that, obj)
 	    }
 
-	    if (obj.type === 'Buffer' && isArray$1(obj.data)) {
+	    if (obj.type === 'Buffer' && isArray$3(obj.data)) {
 	      return fromArrayLike(that, obj.data)
 	    }
 	  }
@@ -2825,7 +2851,7 @@
 	};
 
 	Buffer.concat = function concat (list, length) {
-	  if (!isArray$1(list)) {
+	  if (!isArray$3(list)) {
 	    throw new TypeError('"list" argument must be an Array of Buffers')
 	  }
 
@@ -4507,10 +4533,10 @@
 
 	var formatRegExp = /%[sdj%]/g;
 	function format$1(f) {
-	  if (!isString$1(f)) {
+	  if (!isString$2(f)) {
 	    var objects = [];
 	    for (var i = 0; i < arguments.length; i++) {
-	      objects.push(inspect$3(arguments[i]));
+	      objects.push(inspect$5(arguments[i]));
 	    }
 	    return objects.join(' ');
 	  }
@@ -4538,7 +4564,7 @@
 	    if (isNull(x) || !isObject(x)) {
 	      str += ' ' + x;
 	    } else {
-	      str += ' ' + inspect$3(x);
+	      str += ' ' + inspect$5(x);
 	    }
 	  }
 	  return str;
@@ -4605,7 +4631,7 @@
 	 * @param {Object} opts Optional options object that alters the output.
 	 */
 	/* legacy: obj, showHidden, depth, colors*/
-	function inspect$3(obj, opts) {
+	function inspect$5(obj, opts) {
 	  // default options
 	  var ctx = {
 	    seen: [],
@@ -4614,7 +4640,7 @@
 	  // legacy...
 	  if (arguments.length >= 3) ctx.depth = arguments[2];
 	  if (arguments.length >= 4) ctx.colors = arguments[3];
-	  if (isBoolean(opts)) {
+	  if (isBoolean$1(opts)) {
 	    // legacy...
 	    ctx.showHidden = opts;
 	  } else if (opts) {
@@ -4631,7 +4657,7 @@
 	}
 
 	// http://en.wikipedia.org/wiki/ANSI_escape_code#graphics
-	inspect$3.colors = {
+	inspect$5.colors = {
 	  'bold' : [1, 22],
 	  'italic' : [3, 23],
 	  'underline' : [4, 24],
@@ -4648,7 +4674,7 @@
 	};
 
 	// Don't use 'blue' not visible on cmd.exe
-	inspect$3.styles = {
+	inspect$5.styles = {
 	  'special': 'cyan',
 	  'number': 'yellow',
 	  'boolean': 'yellow',
@@ -4662,11 +4688,11 @@
 
 
 	function stylizeWithColor(str, styleType) {
-	  var style = inspect$3.styles[styleType];
+	  var style = inspect$5.styles[styleType];
 
 	  if (style) {
-	    return '\u001b[' + inspect$3.colors[style][0] + 'm' + str +
-	           '\u001b[' + inspect$3.colors[style][1] + 'm';
+	    return '\u001b[' + inspect$5.colors[style][0] + 'm' + str +
+	           '\u001b[' + inspect$5.colors[style][1] + 'm';
 	  } else {
 	    return str;
 	  }
@@ -4696,11 +4722,11 @@
 	      value &&
 	      isFunction(value.inspect) &&
 	      // Filter out the util module, it's inspect function is special
-	      value.inspect !== inspect$3 &&
+	      value.inspect !== inspect$5 &&
 	      // Also filter out any prototype objects using the circular check.
 	      !(value.constructor && value.constructor.prototype === value)) {
 	    var ret = value.inspect(recurseTimes, ctx);
-	    if (!isString$1(ret)) {
+	    if (!isString$2(ret)) {
 	      ret = formatValue(ctx, ret, recurseTimes);
 	    }
 	    return ret;
@@ -4722,7 +4748,7 @@
 
 	  // IE doesn't make error fields non-enumerable
 	  // http://msdn.microsoft.com/en-us/library/ie/dww52sbt(v=vs.94).aspx
-	  if (isError(value)
+	  if (isError$1(value)
 	      && (keys.indexOf('message') >= 0 || keys.indexOf('description') >= 0)) {
 	    return formatError(value);
 	  }
@@ -4733,13 +4759,13 @@
 	      var name = value.name ? ': ' + value.name : '';
 	      return ctx.stylize('[Function' + name + ']', 'special');
 	    }
-	    if (isRegExp(value)) {
+	    if (isRegExp$1(value)) {
 	      return ctx.stylize(RegExp.prototype.toString.call(value), 'regexp');
 	    }
-	    if (isDate$1(value)) {
+	    if (isDate$2(value)) {
 	      return ctx.stylize(Date.prototype.toString.call(value), 'date');
 	    }
-	    if (isError(value)) {
+	    if (isError$1(value)) {
 	      return formatError(value);
 	    }
 	  }
@@ -4747,7 +4773,7 @@
 	  var base = '', array = false, braces = ['{', '}'];
 
 	  // Make Array say that they are Array
-	  if (isArray(value)) {
+	  if (isArray$2(value)) {
 	    array = true;
 	    braces = ['[', ']'];
 	  }
@@ -4759,17 +4785,17 @@
 	  }
 
 	  // Make RegExps say that they are RegExps
-	  if (isRegExp(value)) {
+	  if (isRegExp$1(value)) {
 	    base = ' ' + RegExp.prototype.toString.call(value);
 	  }
 
 	  // Make dates with properties first say the date
-	  if (isDate$1(value)) {
+	  if (isDate$2(value)) {
 	    base = ' ' + Date.prototype.toUTCString.call(value);
 	  }
 
 	  // Make error with message first say the error
-	  if (isError(value)) {
+	  if (isError$1(value)) {
 	    base = ' ' + formatError(value);
 	  }
 
@@ -4778,7 +4804,7 @@
 	  }
 
 	  if (recurseTimes < 0) {
-	    if (isRegExp(value)) {
+	    if (isRegExp$1(value)) {
 	      return ctx.stylize(RegExp.prototype.toString.call(value), 'regexp');
 	    } else {
 	      return ctx.stylize('[Object]', 'special');
@@ -4805,15 +4831,15 @@
 	function formatPrimitive(ctx, value) {
 	  if (isUndefined(value))
 	    return ctx.stylize('undefined', 'undefined');
-	  if (isString$1(value)) {
+	  if (isString$2(value)) {
 	    var simple = '\'' + JSON.stringify(value).replace(/^"|"$/g, '')
 	                                             .replace(/'/g, "\\'")
 	                                             .replace(/\\"/g, '"') + '\'';
 	    return ctx.stylize(simple, 'string');
 	  }
-	  if (isNumber(value))
+	  if (isNumber$1(value))
 	    return ctx.stylize('' + value, 'number');
-	  if (isBoolean(value))
+	  if (isBoolean$1(value))
 	    return ctx.stylize('' + value, 'boolean');
 	  // For some reason typeof null is "object", so special case here.
 	  if (isNull(value))
@@ -4926,11 +4952,11 @@
 
 	// NOTE: These type checking functions intentionally don't use `instanceof`
 	// because it is fragile and can be easily faked with `Object.create()`.
-	function isArray(ar) {
+	function isArray$2(ar) {
 	  return Array.isArray(ar);
 	}
 
-	function isBoolean(arg) {
+	function isBoolean$1(arg) {
 	  return typeof arg === 'boolean';
 	}
 
@@ -4942,15 +4968,15 @@
 	  return arg == null;
 	}
 
-	function isNumber(arg) {
+	function isNumber$1(arg) {
 	  return typeof arg === 'number';
 	}
 
-	function isString$1(arg) {
+	function isString$2(arg) {
 	  return typeof arg === 'string';
 	}
 
-	function isSymbol$2(arg) {
+	function isSymbol$3(arg) {
 	  return typeof arg === 'symbol';
 	}
 
@@ -4958,28 +4984,28 @@
 	  return arg === void 0;
 	}
 
-	function isRegExp(re) {
-	  return isObject(re) && objectToString(re) === '[object RegExp]';
+	function isRegExp$1(re) {
+	  return isObject(re) && objectToString$1(re) === '[object RegExp]';
 	}
 
 	function isObject(arg) {
 	  return typeof arg === 'object' && arg !== null;
 	}
 
-	function isDate$1(d) {
-	  return isObject(d) && objectToString(d) === '[object Date]';
+	function isDate$2(d) {
+	  return isObject(d) && objectToString$1(d) === '[object Date]';
 	}
 
-	function isError(e) {
+	function isError$1(e) {
 	  return isObject(e) &&
-	      (objectToString(e) === '[object Error]' || e instanceof Error);
+	      (objectToString$1(e) === '[object Error]' || e instanceof Error);
 	}
 
 	function isFunction(arg) {
 	  return typeof arg === 'function';
 	}
 
-	function isPrimitive$4(arg) {
+	function isPrimitive$5(arg) {
 	  return arg === null ||
 	         typeof arg === 'boolean' ||
 	         typeof arg === 'number' ||
@@ -4992,7 +5018,7 @@
 	  return Buffer.isBuffer(maybeBuf);
 	}
 
-	function objectToString(o) {
+	function objectToString$1(o) {
 	  return Object.prototype.toString.call(o);
 	}
 
@@ -5040,21 +5066,21 @@
 	  _extend: _extend,
 	  log: log,
 	  isBuffer: isBuffer,
-	  isPrimitive: isPrimitive$4,
+	  isPrimitive: isPrimitive$5,
 	  isFunction: isFunction,
-	  isError: isError,
-	  isDate: isDate$1,
+	  isError: isError$1,
+	  isDate: isDate$2,
 	  isObject: isObject,
-	  isRegExp: isRegExp,
+	  isRegExp: isRegExp$1,
 	  isUndefined: isUndefined,
-	  isSymbol: isSymbol$2,
-	  isString: isString$1,
-	  isNumber: isNumber,
+	  isSymbol: isSymbol$3,
+	  isString: isString$2,
+	  isNumber: isNumber$1,
 	  isNullOrUndefined: isNullOrUndefined,
 	  isNull: isNull,
-	  isBoolean: isBoolean,
-	  isArray: isArray,
-	  inspect: inspect$3,
+	  isBoolean: isBoolean$1,
+	  isArray: isArray$2,
+	  inspect: inspect$5,
 	  deprecate: deprecate,
 	  format: format$1,
 	  debuglog: debuglog
@@ -5068,777 +5094,745 @@
 		deprecate: deprecate,
 		format: format$1,
 		inherits: inherits$1,
-		inspect: inspect$3,
-		isArray: isArray,
-		isBoolean: isBoolean,
+		inspect: inspect$5,
+		isArray: isArray$2,
+		isBoolean: isBoolean$1,
 		isBuffer: isBuffer,
-		isDate: isDate$1,
-		isError: isError,
+		isDate: isDate$2,
+		isError: isError$1,
 		isFunction: isFunction,
 		isNull: isNull,
 		isNullOrUndefined: isNullOrUndefined,
-		isNumber: isNumber,
+		isNumber: isNumber$1,
 		isObject: isObject,
-		isPrimitive: isPrimitive$4,
-		isRegExp: isRegExp,
-		isString: isString$1,
-		isSymbol: isSymbol$2,
+		isPrimitive: isPrimitive$5,
+		isRegExp: isRegExp$1,
+		isString: isString$2,
+		isSymbol: isSymbol$3,
 		isUndefined: isUndefined,
 		log: log
 	});
 
 	var require$$0 = /*@__PURE__*/getAugmentedNamespace(util$1);
 
-	var util_inspect;
-	var hasRequiredUtil_inspect;
+	var util_inspect = require$$0.inspect;
 
-	function requireUtil_inspect () {
-		if (hasRequiredUtil_inspect) return util_inspect;
-		hasRequiredUtil_inspect = 1;
-		util_inspect = require$$0.inspect;
-		return util_inspect;
+	var hasMap = typeof Map === 'function' && Map.prototype;
+	var mapSizeDescriptor = Object.getOwnPropertyDescriptor && hasMap ? Object.getOwnPropertyDescriptor(Map.prototype, 'size') : null;
+	var mapSize = hasMap && mapSizeDescriptor && typeof mapSizeDescriptor.get === 'function' ? mapSizeDescriptor.get : null;
+	var mapForEach = hasMap && Map.prototype.forEach;
+	var hasSet = typeof Set === 'function' && Set.prototype;
+	var setSizeDescriptor = Object.getOwnPropertyDescriptor && hasSet ? Object.getOwnPropertyDescriptor(Set.prototype, 'size') : null;
+	var setSize = hasSet && setSizeDescriptor && typeof setSizeDescriptor.get === 'function' ? setSizeDescriptor.get : null;
+	var setForEach = hasSet && Set.prototype.forEach;
+	var hasWeakMap = typeof WeakMap === 'function' && WeakMap.prototype;
+	var weakMapHas = hasWeakMap ? WeakMap.prototype.has : null;
+	var hasWeakSet = typeof WeakSet === 'function' && WeakSet.prototype;
+	var weakSetHas = hasWeakSet ? WeakSet.prototype.has : null;
+	var hasWeakRef = typeof WeakRef === 'function' && WeakRef.prototype;
+	var weakRefDeref = hasWeakRef ? WeakRef.prototype.deref : null;
+	var booleanValueOf = Boolean.prototype.valueOf;
+	var objectToString = Object.prototype.toString;
+	var functionToString = Function.prototype.toString;
+	var $match = String.prototype.match;
+	var $slice = String.prototype.slice;
+	var $replace = String.prototype.replace;
+	var $toUpperCase = String.prototype.toUpperCase;
+	var $toLowerCase = String.prototype.toLowerCase;
+	var $test = RegExp.prototype.test;
+	var $concat = Array.prototype.concat;
+	var $join = Array.prototype.join;
+	var $arrSlice = Array.prototype.slice;
+	var $floor$2 = Math.floor;
+	var bigIntValueOf = typeof BigInt === 'function' ? BigInt.prototype.valueOf : null;
+	var gOPS = Object.getOwnPropertySymbols;
+	var symToString = typeof Symbol === 'function' && typeof Symbol.iterator === 'symbol' ? Symbol.prototype.toString : null;
+	var hasShammedSymbols = typeof Symbol === 'function' && typeof Symbol.iterator === 'object';
+	// ie, `has-tostringtag/shams
+	var toStringTag = typeof Symbol === 'function' && Symbol.toStringTag && (typeof Symbol.toStringTag === hasShammedSymbols ? 'object' : 'symbol')
+	    ? Symbol.toStringTag
+	    : null;
+	var isEnumerable = Object.prototype.propertyIsEnumerable;
+
+	var gPO = (typeof Reflect === 'function' ? Reflect.getPrototypeOf : Object.getPrototypeOf) || (
+	    [].__proto__ === Array.prototype // eslint-disable-line no-proto
+	        ? function (O) {
+	            return O.__proto__; // eslint-disable-line no-proto
+	        }
+	        : null
+	);
+
+	function addNumericSeparator(num, str) {
+	    if (
+	        num === Infinity
+	        || num === -Infinity
+	        || num !== num
+	        || (num && num > -1000 && num < 1000)
+	        || $test.call(/e/, str)
+	    ) {
+	        return str;
+	    }
+	    var sepRegex = /[0-9](?=(?:[0-9]{3})+(?![0-9]))/g;
+	    if (typeof num === 'number') {
+	        var int = num < 0 ? -$floor$2(-num) : $floor$2(num); // trunc(num)
+	        if (int !== num) {
+	            var intStr = String(int);
+	            var dec = $slice.call(str, intStr.length + 1);
+	            return $replace.call(intStr, sepRegex, '$&_') + '.' + $replace.call($replace.call(dec, /([0-9]{3})/g, '$&_'), /_$/, '');
+	        }
+	    }
+	    return $replace.call(str, sepRegex, '$&_');
 	}
 
-	var objectInspect;
-	var hasRequiredObjectInspect;
+	var utilInspect = util_inspect;
+	var inspectCustom = utilInspect.custom;
+	var inspectSymbol = isSymbol$2(inspectCustom) ? inspectCustom : null;
 
-	function requireObjectInspect () {
-		if (hasRequiredObjectInspect) return objectInspect;
-		hasRequiredObjectInspect = 1;
-		var hasMap = typeof Map === 'function' && Map.prototype;
-		var mapSizeDescriptor = Object.getOwnPropertyDescriptor && hasMap ? Object.getOwnPropertyDescriptor(Map.prototype, 'size') : null;
-		var mapSize = hasMap && mapSizeDescriptor && typeof mapSizeDescriptor.get === 'function' ? mapSizeDescriptor.get : null;
-		var mapForEach = hasMap && Map.prototype.forEach;
-		var hasSet = typeof Set === 'function' && Set.prototype;
-		var setSizeDescriptor = Object.getOwnPropertyDescriptor && hasSet ? Object.getOwnPropertyDescriptor(Set.prototype, 'size') : null;
-		var setSize = hasSet && setSizeDescriptor && typeof setSizeDescriptor.get === 'function' ? setSizeDescriptor.get : null;
-		var setForEach = hasSet && Set.prototype.forEach;
-		var hasWeakMap = typeof WeakMap === 'function' && WeakMap.prototype;
-		var weakMapHas = hasWeakMap ? WeakMap.prototype.has : null;
-		var hasWeakSet = typeof WeakSet === 'function' && WeakSet.prototype;
-		var weakSetHas = hasWeakSet ? WeakSet.prototype.has : null;
-		var hasWeakRef = typeof WeakRef === 'function' && WeakRef.prototype;
-		var weakRefDeref = hasWeakRef ? WeakRef.prototype.deref : null;
-		var booleanValueOf = Boolean.prototype.valueOf;
-		var objectToString = Object.prototype.toString;
-		var functionToString = Function.prototype.toString;
-		var $match = String.prototype.match;
-		var $slice = String.prototype.slice;
-		var $replace = String.prototype.replace;
-		var $toUpperCase = String.prototype.toUpperCase;
-		var $toLowerCase = String.prototype.toLowerCase;
-		var $test = RegExp.prototype.test;
-		var $concat = Array.prototype.concat;
-		var $join = Array.prototype.join;
-		var $arrSlice = Array.prototype.slice;
-		var $floor = Math.floor;
-		var bigIntValueOf = typeof BigInt === 'function' ? BigInt.prototype.valueOf : null;
-		var gOPS = Object.getOwnPropertySymbols;
-		var symToString = typeof Symbol === 'function' && typeof Symbol.iterator === 'symbol' ? Symbol.prototype.toString : null;
-		var hasShammedSymbols = typeof Symbol === 'function' && typeof Symbol.iterator === 'object';
-		// ie, `has-tostringtag/shams
-		var toStringTag = typeof Symbol === 'function' && Symbol.toStringTag && (typeof Symbol.toStringTag === hasShammedSymbols ? 'object' : 'symbol')
-		    ? Symbol.toStringTag
-		    : null;
-		var isEnumerable = Object.prototype.propertyIsEnumerable;
+	var objectInspect = function inspect_(obj, options, depth, seen) {
+	    var opts = options || {};
 
-		var gPO = (typeof Reflect === 'function' ? Reflect.getPrototypeOf : Object.getPrototypeOf) || (
-		    [].__proto__ === Array.prototype // eslint-disable-line no-proto
-		        ? function (O) {
-		            return O.__proto__; // eslint-disable-line no-proto
-		        }
-		        : null
-		);
+	    if (has(opts, 'quoteStyle') && (opts.quoteStyle !== 'single' && opts.quoteStyle !== 'double')) {
+	        throw new TypeError('option "quoteStyle" must be "single" or "double"');
+	    }
+	    if (
+	        has(opts, 'maxStringLength') && (typeof opts.maxStringLength === 'number'
+	            ? opts.maxStringLength < 0 && opts.maxStringLength !== Infinity
+	            : opts.maxStringLength !== null
+	        )
+	    ) {
+	        throw new TypeError('option "maxStringLength", if provided, must be a positive integer, Infinity, or `null`');
+	    }
+	    var customInspect = has(opts, 'customInspect') ? opts.customInspect : true;
+	    if (typeof customInspect !== 'boolean' && customInspect !== 'symbol') {
+	        throw new TypeError('option "customInspect", if provided, must be `true`, `false`, or `\'symbol\'`');
+	    }
 
-		function addNumericSeparator(num, str) {
-		    if (
-		        num === Infinity
-		        || num === -Infinity
-		        || num !== num
-		        || (num && num > -1000 && num < 1000)
-		        || $test.call(/e/, str)
-		    ) {
-		        return str;
-		    }
-		    var sepRegex = /[0-9](?=(?:[0-9]{3})+(?![0-9]))/g;
-		    if (typeof num === 'number') {
-		        var int = num < 0 ? -$floor(-num) : $floor(num); // trunc(num)
-		        if (int !== num) {
-		            var intStr = String(int);
-		            var dec = $slice.call(str, intStr.length + 1);
-		            return $replace.call(intStr, sepRegex, '$&_') + '.' + $replace.call($replace.call(dec, /([0-9]{3})/g, '$&_'), /_$/, '');
-		        }
-		    }
-		    return $replace.call(str, sepRegex, '$&_');
-		}
+	    if (
+	        has(opts, 'indent')
+	        && opts.indent !== null
+	        && opts.indent !== '\t'
+	        && !(parseInt(opts.indent, 10) === opts.indent && opts.indent > 0)
+	    ) {
+	        throw new TypeError('option "indent" must be "\\t", an integer > 0, or `null`');
+	    }
+	    if (has(opts, 'numericSeparator') && typeof opts.numericSeparator !== 'boolean') {
+	        throw new TypeError('option "numericSeparator", if provided, must be `true` or `false`');
+	    }
+	    var numericSeparator = opts.numericSeparator;
 
-		var utilInspect = requireUtil_inspect();
-		var inspectCustom = utilInspect.custom;
-		var inspectSymbol = isSymbol(inspectCustom) ? inspectCustom : null;
+	    if (typeof obj === 'undefined') {
+	        return 'undefined';
+	    }
+	    if (obj === null) {
+	        return 'null';
+	    }
+	    if (typeof obj === 'boolean') {
+	        return obj ? 'true' : 'false';
+	    }
 
-		objectInspect = function inspect_(obj, options, depth, seen) {
-		    var opts = options || {};
+	    if (typeof obj === 'string') {
+	        return inspectString(obj, opts);
+	    }
+	    if (typeof obj === 'number') {
+	        if (obj === 0) {
+	            return Infinity / obj > 0 ? '0' : '-0';
+	        }
+	        var str = String(obj);
+	        return numericSeparator ? addNumericSeparator(obj, str) : str;
+	    }
+	    if (typeof obj === 'bigint') {
+	        var bigIntStr = String(obj) + 'n';
+	        return numericSeparator ? addNumericSeparator(obj, bigIntStr) : bigIntStr;
+	    }
 
-		    if (has(opts, 'quoteStyle') && (opts.quoteStyle !== 'single' && opts.quoteStyle !== 'double')) {
-		        throw new TypeError('option "quoteStyle" must be "single" or "double"');
-		    }
-		    if (
-		        has(opts, 'maxStringLength') && (typeof opts.maxStringLength === 'number'
-		            ? opts.maxStringLength < 0 && opts.maxStringLength !== Infinity
-		            : opts.maxStringLength !== null
-		        )
-		    ) {
-		        throw new TypeError('option "maxStringLength", if provided, must be a positive integer, Infinity, or `null`');
-		    }
-		    var customInspect = has(opts, 'customInspect') ? opts.customInspect : true;
-		    if (typeof customInspect !== 'boolean' && customInspect !== 'symbol') {
-		        throw new TypeError('option "customInspect", if provided, must be `true`, `false`, or `\'symbol\'`');
-		    }
+	    var maxDepth = typeof opts.depth === 'undefined' ? 5 : opts.depth;
+	    if (typeof depth === 'undefined') { depth = 0; }
+	    if (depth >= maxDepth && maxDepth > 0 && typeof obj === 'object') {
+	        return isArray$1(obj) ? '[Array]' : '[Object]';
+	    }
 
-		    if (
-		        has(opts, 'indent')
-		        && opts.indent !== null
-		        && opts.indent !== '\t'
-		        && !(parseInt(opts.indent, 10) === opts.indent && opts.indent > 0)
-		    ) {
-		        throw new TypeError('option "indent" must be "\\t", an integer > 0, or `null`');
-		    }
-		    if (has(opts, 'numericSeparator') && typeof opts.numericSeparator !== 'boolean') {
-		        throw new TypeError('option "numericSeparator", if provided, must be `true` or `false`');
-		    }
-		    var numericSeparator = opts.numericSeparator;
+	    var indent = getIndent(opts, depth);
 
-		    if (typeof obj === 'undefined') {
-		        return 'undefined';
-		    }
-		    if (obj === null) {
-		        return 'null';
-		    }
-		    if (typeof obj === 'boolean') {
-		        return obj ? 'true' : 'false';
-		    }
+	    if (typeof seen === 'undefined') {
+	        seen = [];
+	    } else if (indexOf(seen, obj) >= 0) {
+	        return '[Circular]';
+	    }
 
-		    if (typeof obj === 'string') {
-		        return inspectString(obj, opts);
-		    }
-		    if (typeof obj === 'number') {
-		        if (obj === 0) {
-		            return Infinity / obj > 0 ? '0' : '-0';
-		        }
-		        var str = String(obj);
-		        return numericSeparator ? addNumericSeparator(obj, str) : str;
-		    }
-		    if (typeof obj === 'bigint') {
-		        var bigIntStr = String(obj) + 'n';
-		        return numericSeparator ? addNumericSeparator(obj, bigIntStr) : bigIntStr;
-		    }
+	    function inspect(value, from, noIndent) {
+	        if (from) {
+	            seen = $arrSlice.call(seen);
+	            seen.push(from);
+	        }
+	        if (noIndent) {
+	            var newOpts = {
+	                depth: opts.depth
+	            };
+	            if (has(opts, 'quoteStyle')) {
+	                newOpts.quoteStyle = opts.quoteStyle;
+	            }
+	            return inspect_(value, newOpts, depth + 1, seen);
+	        }
+	        return inspect_(value, opts, depth + 1, seen);
+	    }
 
-		    var maxDepth = typeof opts.depth === 'undefined' ? 5 : opts.depth;
-		    if (typeof depth === 'undefined') { depth = 0; }
-		    if (depth >= maxDepth && maxDepth > 0 && typeof obj === 'object') {
-		        return isArray(obj) ? '[Array]' : '[Object]';
-		    }
+	    if (typeof obj === 'function' && !isRegExp(obj)) { // in older engines, regexes are callable
+	        var name = nameOf(obj);
+	        var keys = arrObjKeys(obj, inspect);
+	        return '[Function' + (name ? ': ' + name : ' (anonymous)') + ']' + (keys.length > 0 ? ' { ' + $join.call(keys, ', ') + ' }' : '');
+	    }
+	    if (isSymbol$2(obj)) {
+	        var symString = hasShammedSymbols ? $replace.call(String(obj), /^(Symbol\(.*\))_[^)]*$/, '$1') : symToString.call(obj);
+	        return typeof obj === 'object' && !hasShammedSymbols ? markBoxed(symString) : symString;
+	    }
+	    if (isElement(obj)) {
+	        var s = '<' + $toLowerCase.call(String(obj.nodeName));
+	        var attrs = obj.attributes || [];
+	        for (var i = 0; i < attrs.length; i++) {
+	            s += ' ' + attrs[i].name + '=' + wrapQuotes(quote(attrs[i].value), 'double', opts);
+	        }
+	        s += '>';
+	        if (obj.childNodes && obj.childNodes.length) { s += '...'; }
+	        s += '</' + $toLowerCase.call(String(obj.nodeName)) + '>';
+	        return s;
+	    }
+	    if (isArray$1(obj)) {
+	        if (obj.length === 0) { return '[]'; }
+	        var xs = arrObjKeys(obj, inspect);
+	        if (indent && !singleLineValues(xs)) {
+	            return '[' + indentedJoin(xs, indent) + ']';
+	        }
+	        return '[ ' + $join.call(xs, ', ') + ' ]';
+	    }
+	    if (isError(obj)) {
+	        var parts = arrObjKeys(obj, inspect);
+	        if (!('cause' in Error.prototype) && 'cause' in obj && !isEnumerable.call(obj, 'cause')) {
+	            return '{ [' + String(obj) + '] ' + $join.call($concat.call('[cause]: ' + inspect(obj.cause), parts), ', ') + ' }';
+	        }
+	        if (parts.length === 0) { return '[' + String(obj) + ']'; }
+	        return '{ [' + String(obj) + '] ' + $join.call(parts, ', ') + ' }';
+	    }
+	    if (typeof obj === 'object' && customInspect) {
+	        if (inspectSymbol && typeof obj[inspectSymbol] === 'function' && utilInspect) {
+	            return utilInspect(obj, { depth: maxDepth - depth });
+	        } else if (customInspect !== 'symbol' && typeof obj.inspect === 'function') {
+	            return obj.inspect();
+	        }
+	    }
+	    if (isMap(obj)) {
+	        var mapParts = [];
+	        if (mapForEach) {
+	            mapForEach.call(obj, function (value, key) {
+	                mapParts.push(inspect(key, obj, true) + ' => ' + inspect(value, obj));
+	            });
+	        }
+	        return collectionOf('Map', mapSize.call(obj), mapParts, indent);
+	    }
+	    if (isSet(obj)) {
+	        var setParts = [];
+	        if (setForEach) {
+	            setForEach.call(obj, function (value) {
+	                setParts.push(inspect(value, obj));
+	            });
+	        }
+	        return collectionOf('Set', setSize.call(obj), setParts, indent);
+	    }
+	    if (isWeakMap(obj)) {
+	        return weakCollectionOf('WeakMap');
+	    }
+	    if (isWeakSet(obj)) {
+	        return weakCollectionOf('WeakSet');
+	    }
+	    if (isWeakRef(obj)) {
+	        return weakCollectionOf('WeakRef');
+	    }
+	    if (isNumber(obj)) {
+	        return markBoxed(inspect(Number(obj)));
+	    }
+	    if (isBigInt(obj)) {
+	        return markBoxed(inspect(bigIntValueOf.call(obj)));
+	    }
+	    if (isBoolean(obj)) {
+	        return markBoxed(booleanValueOf.call(obj));
+	    }
+	    if (isString$1(obj)) {
+	        return markBoxed(inspect(String(obj)));
+	    }
+	    // note: in IE 8, sometimes `global !== window` but both are the prototypes of each other
+	    /* eslint-env browser */
+	    if (typeof window !== 'undefined' && obj === window) {
+	        return '{ [object Window] }';
+	    }
+	    if (obj === commonjsGlobal) {
+	        return '{ [object globalThis] }';
+	    }
+	    if (!isDate$1(obj) && !isRegExp(obj)) {
+	        var ys = arrObjKeys(obj, inspect);
+	        var isPlainObject = gPO ? gPO(obj) === Object.prototype : obj instanceof Object || obj.constructor === Object;
+	        var protoTag = obj instanceof Object ? '' : 'null prototype';
+	        var stringTag = !isPlainObject && toStringTag && Object(obj) === obj && toStringTag in obj ? $slice.call(toStr$3(obj), 8, -1) : protoTag ? 'Object' : '';
+	        var constructorTag = isPlainObject || typeof obj.constructor !== 'function' ? '' : obj.constructor.name ? obj.constructor.name + ' ' : '';
+	        var tag = constructorTag + (stringTag || protoTag ? '[' + $join.call($concat.call([], stringTag || [], protoTag || []), ': ') + '] ' : '');
+	        if (ys.length === 0) { return tag + '{}'; }
+	        if (indent) {
+	            return tag + '{' + indentedJoin(ys, indent) + '}';
+	        }
+	        return tag + '{ ' + $join.call(ys, ', ') + ' }';
+	    }
+	    return String(obj);
+	};
 
-		    var indent = getIndent(opts, depth);
-
-		    if (typeof seen === 'undefined') {
-		        seen = [];
-		    } else if (indexOf(seen, obj) >= 0) {
-		        return '[Circular]';
-		    }
-
-		    function inspect(value, from, noIndent) {
-		        if (from) {
-		            seen = $arrSlice.call(seen);
-		            seen.push(from);
-		        }
-		        if (noIndent) {
-		            var newOpts = {
-		                depth: opts.depth
-		            };
-		            if (has(opts, 'quoteStyle')) {
-		                newOpts.quoteStyle = opts.quoteStyle;
-		            }
-		            return inspect_(value, newOpts, depth + 1, seen);
-		        }
-		        return inspect_(value, opts, depth + 1, seen);
-		    }
-
-		    if (typeof obj === 'function' && !isRegExp(obj)) { // in older engines, regexes are callable
-		        var name = nameOf(obj);
-		        var keys = arrObjKeys(obj, inspect);
-		        return '[Function' + (name ? ': ' + name : ' (anonymous)') + ']' + (keys.length > 0 ? ' { ' + $join.call(keys, ', ') + ' }' : '');
-		    }
-		    if (isSymbol(obj)) {
-		        var symString = hasShammedSymbols ? $replace.call(String(obj), /^(Symbol\(.*\))_[^)]*$/, '$1') : symToString.call(obj);
-		        return typeof obj === 'object' && !hasShammedSymbols ? markBoxed(symString) : symString;
-		    }
-		    if (isElement(obj)) {
-		        var s = '<' + $toLowerCase.call(String(obj.nodeName));
-		        var attrs = obj.attributes || [];
-		        for (var i = 0; i < attrs.length; i++) {
-		            s += ' ' + attrs[i].name + '=' + wrapQuotes(quote(attrs[i].value), 'double', opts);
-		        }
-		        s += '>';
-		        if (obj.childNodes && obj.childNodes.length) { s += '...'; }
-		        s += '</' + $toLowerCase.call(String(obj.nodeName)) + '>';
-		        return s;
-		    }
-		    if (isArray(obj)) {
-		        if (obj.length === 0) { return '[]'; }
-		        var xs = arrObjKeys(obj, inspect);
-		        if (indent && !singleLineValues(xs)) {
-		            return '[' + indentedJoin(xs, indent) + ']';
-		        }
-		        return '[ ' + $join.call(xs, ', ') + ' ]';
-		    }
-		    if (isError(obj)) {
-		        var parts = arrObjKeys(obj, inspect);
-		        if (!('cause' in Error.prototype) && 'cause' in obj && !isEnumerable.call(obj, 'cause')) {
-		            return '{ [' + String(obj) + '] ' + $join.call($concat.call('[cause]: ' + inspect(obj.cause), parts), ', ') + ' }';
-		        }
-		        if (parts.length === 0) { return '[' + String(obj) + ']'; }
-		        return '{ [' + String(obj) + '] ' + $join.call(parts, ', ') + ' }';
-		    }
-		    if (typeof obj === 'object' && customInspect) {
-		        if (inspectSymbol && typeof obj[inspectSymbol] === 'function' && utilInspect) {
-		            return utilInspect(obj, { depth: maxDepth - depth });
-		        } else if (customInspect !== 'symbol' && typeof obj.inspect === 'function') {
-		            return obj.inspect();
-		        }
-		    }
-		    if (isMap(obj)) {
-		        var mapParts = [];
-		        if (mapForEach) {
-		            mapForEach.call(obj, function (value, key) {
-		                mapParts.push(inspect(key, obj, true) + ' => ' + inspect(value, obj));
-		            });
-		        }
-		        return collectionOf('Map', mapSize.call(obj), mapParts, indent);
-		    }
-		    if (isSet(obj)) {
-		        var setParts = [];
-		        if (setForEach) {
-		            setForEach.call(obj, function (value) {
-		                setParts.push(inspect(value, obj));
-		            });
-		        }
-		        return collectionOf('Set', setSize.call(obj), setParts, indent);
-		    }
-		    if (isWeakMap(obj)) {
-		        return weakCollectionOf('WeakMap');
-		    }
-		    if (isWeakSet(obj)) {
-		        return weakCollectionOf('WeakSet');
-		    }
-		    if (isWeakRef(obj)) {
-		        return weakCollectionOf('WeakRef');
-		    }
-		    if (isNumber(obj)) {
-		        return markBoxed(inspect(Number(obj)));
-		    }
-		    if (isBigInt(obj)) {
-		        return markBoxed(inspect(bigIntValueOf.call(obj)));
-		    }
-		    if (isBoolean(obj)) {
-		        return markBoxed(booleanValueOf.call(obj));
-		    }
-		    if (isString(obj)) {
-		        return markBoxed(inspect(String(obj)));
-		    }
-		    // note: in IE 8, sometimes `global !== window` but both are the prototypes of each other
-		    /* eslint-env browser */
-		    if (typeof window !== 'undefined' && obj === window) {
-		        return '{ [object Window] }';
-		    }
-		    if (obj === commonjsGlobal) {
-		        return '{ [object globalThis] }';
-		    }
-		    if (!isDate(obj) && !isRegExp(obj)) {
-		        var ys = arrObjKeys(obj, inspect);
-		        var isPlainObject = gPO ? gPO(obj) === Object.prototype : obj instanceof Object || obj.constructor === Object;
-		        var protoTag = obj instanceof Object ? '' : 'null prototype';
-		        var stringTag = !isPlainObject && toStringTag && Object(obj) === obj && toStringTag in obj ? $slice.call(toStr(obj), 8, -1) : protoTag ? 'Object' : '';
-		        var constructorTag = isPlainObject || typeof obj.constructor !== 'function' ? '' : obj.constructor.name ? obj.constructor.name + ' ' : '';
-		        var tag = constructorTag + (stringTag || protoTag ? '[' + $join.call($concat.call([], stringTag || [], protoTag || []), ': ') + '] ' : '');
-		        if (ys.length === 0) { return tag + '{}'; }
-		        if (indent) {
-		            return tag + '{' + indentedJoin(ys, indent) + '}';
-		        }
-		        return tag + '{ ' + $join.call(ys, ', ') + ' }';
-		    }
-		    return String(obj);
-		};
-
-		function wrapQuotes(s, defaultStyle, opts) {
-		    var quoteChar = (opts.quoteStyle || defaultStyle) === 'double' ? '"' : "'";
-		    return quoteChar + s + quoteChar;
-		}
-
-		function quote(s) {
-		    return $replace.call(String(s), /"/g, '&quot;');
-		}
-
-		function isArray(obj) { return toStr(obj) === '[object Array]' && (!toStringTag || !(typeof obj === 'object' && toStringTag in obj)); }
-		function isDate(obj) { return toStr(obj) === '[object Date]' && (!toStringTag || !(typeof obj === 'object' && toStringTag in obj)); }
-		function isRegExp(obj) { return toStr(obj) === '[object RegExp]' && (!toStringTag || !(typeof obj === 'object' && toStringTag in obj)); }
-		function isError(obj) { return toStr(obj) === '[object Error]' && (!toStringTag || !(typeof obj === 'object' && toStringTag in obj)); }
-		function isString(obj) { return toStr(obj) === '[object String]' && (!toStringTag || !(typeof obj === 'object' && toStringTag in obj)); }
-		function isNumber(obj) { return toStr(obj) === '[object Number]' && (!toStringTag || !(typeof obj === 'object' && toStringTag in obj)); }
-		function isBoolean(obj) { return toStr(obj) === '[object Boolean]' && (!toStringTag || !(typeof obj === 'object' && toStringTag in obj)); }
-
-		// Symbol and BigInt do have Symbol.toStringTag by spec, so that can't be used to eliminate false positives
-		function isSymbol(obj) {
-		    if (hasShammedSymbols) {
-		        return obj && typeof obj === 'object' && obj instanceof Symbol;
-		    }
-		    if (typeof obj === 'symbol') {
-		        return true;
-		    }
-		    if (!obj || typeof obj !== 'object' || !symToString) {
-		        return false;
-		    }
-		    try {
-		        symToString.call(obj);
-		        return true;
-		    } catch (e) {}
-		    return false;
-		}
-
-		function isBigInt(obj) {
-		    if (!obj || typeof obj !== 'object' || !bigIntValueOf) {
-		        return false;
-		    }
-		    try {
-		        bigIntValueOf.call(obj);
-		        return true;
-		    } catch (e) {}
-		    return false;
-		}
-
-		var hasOwn = Object.prototype.hasOwnProperty || function (key) { return key in this; };
-		function has(obj, key) {
-		    return hasOwn.call(obj, key);
-		}
-
-		function toStr(obj) {
-		    return objectToString.call(obj);
-		}
-
-		function nameOf(f) {
-		    if (f.name) { return f.name; }
-		    var m = $match.call(functionToString.call(f), /^function\s*([\w$]+)/);
-		    if (m) { return m[1]; }
-		    return null;
-		}
-
-		function indexOf(xs, x) {
-		    if (xs.indexOf) { return xs.indexOf(x); }
-		    for (var i = 0, l = xs.length; i < l; i++) {
-		        if (xs[i] === x) { return i; }
-		    }
-		    return -1;
-		}
-
-		function isMap(x) {
-		    if (!mapSize || !x || typeof x !== 'object') {
-		        return false;
-		    }
-		    try {
-		        mapSize.call(x);
-		        try {
-		            setSize.call(x);
-		        } catch (s) {
-		            return true;
-		        }
-		        return x instanceof Map; // core-js workaround, pre-v2.5.0
-		    } catch (e) {}
-		    return false;
-		}
-
-		function isWeakMap(x) {
-		    if (!weakMapHas || !x || typeof x !== 'object') {
-		        return false;
-		    }
-		    try {
-		        weakMapHas.call(x, weakMapHas);
-		        try {
-		            weakSetHas.call(x, weakSetHas);
-		        } catch (s) {
-		            return true;
-		        }
-		        return x instanceof WeakMap; // core-js workaround, pre-v2.5.0
-		    } catch (e) {}
-		    return false;
-		}
-
-		function isWeakRef(x) {
-		    if (!weakRefDeref || !x || typeof x !== 'object') {
-		        return false;
-		    }
-		    try {
-		        weakRefDeref.call(x);
-		        return true;
-		    } catch (e) {}
-		    return false;
-		}
-
-		function isSet(x) {
-		    if (!setSize || !x || typeof x !== 'object') {
-		        return false;
-		    }
-		    try {
-		        setSize.call(x);
-		        try {
-		            mapSize.call(x);
-		        } catch (m) {
-		            return true;
-		        }
-		        return x instanceof Set; // core-js workaround, pre-v2.5.0
-		    } catch (e) {}
-		    return false;
-		}
-
-		function isWeakSet(x) {
-		    if (!weakSetHas || !x || typeof x !== 'object') {
-		        return false;
-		    }
-		    try {
-		        weakSetHas.call(x, weakSetHas);
-		        try {
-		            weakMapHas.call(x, weakMapHas);
-		        } catch (s) {
-		            return true;
-		        }
-		        return x instanceof WeakSet; // core-js workaround, pre-v2.5.0
-		    } catch (e) {}
-		    return false;
-		}
-
-		function isElement(x) {
-		    if (!x || typeof x !== 'object') { return false; }
-		    if (typeof HTMLElement !== 'undefined' && x instanceof HTMLElement) {
-		        return true;
-		    }
-		    return typeof x.nodeName === 'string' && typeof x.getAttribute === 'function';
-		}
-
-		function inspectString(str, opts) {
-		    if (str.length > opts.maxStringLength) {
-		        var remaining = str.length - opts.maxStringLength;
-		        var trailer = '... ' + remaining + ' more character' + (remaining > 1 ? 's' : '');
-		        return inspectString($slice.call(str, 0, opts.maxStringLength), opts) + trailer;
-		    }
-		    // eslint-disable-next-line no-control-regex
-		    var s = $replace.call($replace.call(str, /(['\\])/g, '\\$1'), /[\x00-\x1f]/g, lowbyte);
-		    return wrapQuotes(s, 'single', opts);
-		}
-
-		function lowbyte(c) {
-		    var n = c.charCodeAt(0);
-		    var x = {
-		        8: 'b',
-		        9: 't',
-		        10: 'n',
-		        12: 'f',
-		        13: 'r'
-		    }[n];
-		    if (x) { return '\\' + x; }
-		    return '\\x' + (n < 0x10 ? '0' : '') + $toUpperCase.call(n.toString(16));
-		}
-
-		function markBoxed(str) {
-		    return 'Object(' + str + ')';
-		}
-
-		function weakCollectionOf(type) {
-		    return type + ' { ? }';
-		}
-
-		function collectionOf(type, size, entries, indent) {
-		    var joinedEntries = indent ? indentedJoin(entries, indent) : $join.call(entries, ', ');
-		    return type + ' (' + size + ') {' + joinedEntries + '}';
-		}
-
-		function singleLineValues(xs) {
-		    for (var i = 0; i < xs.length; i++) {
-		        if (indexOf(xs[i], '\n') >= 0) {
-		            return false;
-		        }
-		    }
-		    return true;
-		}
-
-		function getIndent(opts, depth) {
-		    var baseIndent;
-		    if (opts.indent === '\t') {
-		        baseIndent = '\t';
-		    } else if (typeof opts.indent === 'number' && opts.indent > 0) {
-		        baseIndent = $join.call(Array(opts.indent + 1), ' ');
-		    } else {
-		        return null;
-		    }
-		    return {
-		        base: baseIndent,
-		        prev: $join.call(Array(depth + 1), baseIndent)
-		    };
-		}
-
-		function indentedJoin(xs, indent) {
-		    if (xs.length === 0) { return ''; }
-		    var lineJoiner = '\n' + indent.prev + indent.base;
-		    return lineJoiner + $join.call(xs, ',' + lineJoiner) + '\n' + indent.prev;
-		}
-
-		function arrObjKeys(obj, inspect) {
-		    var isArr = isArray(obj);
-		    var xs = [];
-		    if (isArr) {
-		        xs.length = obj.length;
-		        for (var i = 0; i < obj.length; i++) {
-		            xs[i] = has(obj, i) ? inspect(obj[i], obj) : '';
-		        }
-		    }
-		    var syms = typeof gOPS === 'function' ? gOPS(obj) : [];
-		    var symMap;
-		    if (hasShammedSymbols) {
-		        symMap = {};
-		        for (var k = 0; k < syms.length; k++) {
-		            symMap['$' + syms[k]] = syms[k];
-		        }
-		    }
-
-		    for (var key in obj) { // eslint-disable-line no-restricted-syntax
-		        if (!has(obj, key)) { continue; } // eslint-disable-line no-restricted-syntax, no-continue
-		        if (isArr && String(Number(key)) === key && key < obj.length) { continue; } // eslint-disable-line no-restricted-syntax, no-continue
-		        if (hasShammedSymbols && symMap['$' + key] instanceof Symbol) {
-		            // this is to prevent shammed Symbols, which are stored as strings, from being included in the string key section
-		            continue; // eslint-disable-line no-restricted-syntax, no-continue
-		        } else if ($test.call(/[^\w$]/, key)) {
-		            xs.push(inspect(key, obj) + ': ' + inspect(obj[key], obj));
-		        } else {
-		            xs.push(key + ': ' + inspect(obj[key], obj));
-		        }
-		    }
-		    if (typeof gOPS === 'function') {
-		        for (var j = 0; j < syms.length; j++) {
-		            if (isEnumerable.call(obj, syms[j])) {
-		                xs.push('[' + inspect(syms[j]) + ']: ' + inspect(obj[syms[j]], obj));
-		            }
-		        }
-		    }
-		    return xs;
-		}
-		return objectInspect;
+	function wrapQuotes(s, defaultStyle, opts) {
+	    var quoteChar = (opts.quoteStyle || defaultStyle) === 'double' ? '"' : "'";
+	    return quoteChar + s + quoteChar;
 	}
 
-	var sideChannel;
-	var hasRequiredSideChannel;
+	function quote(s) {
+	    return $replace.call(String(s), /"/g, '&quot;');
+	}
 
-	function requireSideChannel () {
-		if (hasRequiredSideChannel) return sideChannel;
-		hasRequiredSideChannel = 1;
+	function isArray$1(obj) { return toStr$3(obj) === '[object Array]' && (!toStringTag || !(typeof obj === 'object' && toStringTag in obj)); }
+	function isDate$1(obj) { return toStr$3(obj) === '[object Date]' && (!toStringTag || !(typeof obj === 'object' && toStringTag in obj)); }
+	function isRegExp(obj) { return toStr$3(obj) === '[object RegExp]' && (!toStringTag || !(typeof obj === 'object' && toStringTag in obj)); }
+	function isError(obj) { return toStr$3(obj) === '[object Error]' && (!toStringTag || !(typeof obj === 'object' && toStringTag in obj)); }
+	function isString$1(obj) { return toStr$3(obj) === '[object String]' && (!toStringTag || !(typeof obj === 'object' && toStringTag in obj)); }
+	function isNumber(obj) { return toStr$3(obj) === '[object Number]' && (!toStringTag || !(typeof obj === 'object' && toStringTag in obj)); }
+	function isBoolean(obj) { return toStr$3(obj) === '[object Boolean]' && (!toStringTag || !(typeof obj === 'object' && toStringTag in obj)); }
 
-		var GetIntrinsic = getIntrinsic;
-		var callBound = callBound$2;
-		var inspect = requireObjectInspect();
+	// Symbol and BigInt do have Symbol.toStringTag by spec, so that can't be used to eliminate false positives
+	function isSymbol$2(obj) {
+	    if (hasShammedSymbols) {
+	        return obj && typeof obj === 'object' && obj instanceof Symbol;
+	    }
+	    if (typeof obj === 'symbol') {
+	        return true;
+	    }
+	    if (!obj || typeof obj !== 'object' || !symToString) {
+	        return false;
+	    }
+	    try {
+	        symToString.call(obj);
+	        return true;
+	    } catch (e) {}
+	    return false;
+	}
 
-		var $TypeError = GetIntrinsic('%TypeError%');
-		var $WeakMap = GetIntrinsic('%WeakMap%', true);
-		var $Map = GetIntrinsic('%Map%', true);
+	function isBigInt(obj) {
+	    if (!obj || typeof obj !== 'object' || !bigIntValueOf) {
+	        return false;
+	    }
+	    try {
+	        bigIntValueOf.call(obj);
+	        return true;
+	    } catch (e) {}
+	    return false;
+	}
 
-		var $weakMapGet = callBound('WeakMap.prototype.get', true);
-		var $weakMapSet = callBound('WeakMap.prototype.set', true);
-		var $weakMapHas = callBound('WeakMap.prototype.has', true);
-		var $mapGet = callBound('Map.prototype.get', true);
-		var $mapSet = callBound('Map.prototype.set', true);
-		var $mapHas = callBound('Map.prototype.has', true);
+	var hasOwn$6 = Object.prototype.hasOwnProperty || function (key) { return key in this; };
+	function has(obj, key) {
+	    return hasOwn$6.call(obj, key);
+	}
 
-		/*
-		 * This function traverses the list returning the node corresponding to the
-		 * given key.
-		 *
-		 * That node is also moved to the head of the list, so that if it's accessed
-		 * again we don't need to traverse the whole list. By doing so, all the recently
-		 * used nodes can be accessed relatively quickly.
-		 */
-		var listGetNode = function (list, key) { // eslint-disable-line consistent-return
-			for (var prev = list, curr; (curr = prev.next) !== null; prev = curr) {
-				if (curr.key === key) {
-					prev.next = curr.next;
-					curr.next = list.next;
-					list.next = curr; // eslint-disable-line no-param-reassign
-					return curr;
+	function toStr$3(obj) {
+	    return objectToString.call(obj);
+	}
+
+	function nameOf(f) {
+	    if (f.name) { return f.name; }
+	    var m = $match.call(functionToString.call(f), /^function\s*([\w$]+)/);
+	    if (m) { return m[1]; }
+	    return null;
+	}
+
+	function indexOf(xs, x) {
+	    if (xs.indexOf) { return xs.indexOf(x); }
+	    for (var i = 0, l = xs.length; i < l; i++) {
+	        if (xs[i] === x) { return i; }
+	    }
+	    return -1;
+	}
+
+	function isMap(x) {
+	    if (!mapSize || !x || typeof x !== 'object') {
+	        return false;
+	    }
+	    try {
+	        mapSize.call(x);
+	        try {
+	            setSize.call(x);
+	        } catch (s) {
+	            return true;
+	        }
+	        return x instanceof Map; // core-js workaround, pre-v2.5.0
+	    } catch (e) {}
+	    return false;
+	}
+
+	function isWeakMap(x) {
+	    if (!weakMapHas || !x || typeof x !== 'object') {
+	        return false;
+	    }
+	    try {
+	        weakMapHas.call(x, weakMapHas);
+	        try {
+	            weakSetHas.call(x, weakSetHas);
+	        } catch (s) {
+	            return true;
+	        }
+	        return x instanceof WeakMap; // core-js workaround, pre-v2.5.0
+	    } catch (e) {}
+	    return false;
+	}
+
+	function isWeakRef(x) {
+	    if (!weakRefDeref || !x || typeof x !== 'object') {
+	        return false;
+	    }
+	    try {
+	        weakRefDeref.call(x);
+	        return true;
+	    } catch (e) {}
+	    return false;
+	}
+
+	function isSet(x) {
+	    if (!setSize || !x || typeof x !== 'object') {
+	        return false;
+	    }
+	    try {
+	        setSize.call(x);
+	        try {
+	            mapSize.call(x);
+	        } catch (m) {
+	            return true;
+	        }
+	        return x instanceof Set; // core-js workaround, pre-v2.5.0
+	    } catch (e) {}
+	    return false;
+	}
+
+	function isWeakSet(x) {
+	    if (!weakSetHas || !x || typeof x !== 'object') {
+	        return false;
+	    }
+	    try {
+	        weakSetHas.call(x, weakSetHas);
+	        try {
+	            weakMapHas.call(x, weakMapHas);
+	        } catch (s) {
+	            return true;
+	        }
+	        return x instanceof WeakSet; // core-js workaround, pre-v2.5.0
+	    } catch (e) {}
+	    return false;
+	}
+
+	function isElement(x) {
+	    if (!x || typeof x !== 'object') { return false; }
+	    if (typeof HTMLElement !== 'undefined' && x instanceof HTMLElement) {
+	        return true;
+	    }
+	    return typeof x.nodeName === 'string' && typeof x.getAttribute === 'function';
+	}
+
+	function inspectString(str, opts) {
+	    if (str.length > opts.maxStringLength) {
+	        var remaining = str.length - opts.maxStringLength;
+	        var trailer = '... ' + remaining + ' more character' + (remaining > 1 ? 's' : '');
+	        return inspectString($slice.call(str, 0, opts.maxStringLength), opts) + trailer;
+	    }
+	    // eslint-disable-next-line no-control-regex
+	    var s = $replace.call($replace.call(str, /(['\\])/g, '\\$1'), /[\x00-\x1f]/g, lowbyte);
+	    return wrapQuotes(s, 'single', opts);
+	}
+
+	function lowbyte(c) {
+	    var n = c.charCodeAt(0);
+	    var x = {
+	        8: 'b',
+	        9: 't',
+	        10: 'n',
+	        12: 'f',
+	        13: 'r'
+	    }[n];
+	    if (x) { return '\\' + x; }
+	    return '\\x' + (n < 0x10 ? '0' : '') + $toUpperCase.call(n.toString(16));
+	}
+
+	function markBoxed(str) {
+	    return 'Object(' + str + ')';
+	}
+
+	function weakCollectionOf(type) {
+	    return type + ' { ? }';
+	}
+
+	function collectionOf(type, size, entries, indent) {
+	    var joinedEntries = indent ? indentedJoin(entries, indent) : $join.call(entries, ', ');
+	    return type + ' (' + size + ') {' + joinedEntries + '}';
+	}
+
+	function singleLineValues(xs) {
+	    for (var i = 0; i < xs.length; i++) {
+	        if (indexOf(xs[i], '\n') >= 0) {
+	            return false;
+	        }
+	    }
+	    return true;
+	}
+
+	function getIndent(opts, depth) {
+	    var baseIndent;
+	    if (opts.indent === '\t') {
+	        baseIndent = '\t';
+	    } else if (typeof opts.indent === 'number' && opts.indent > 0) {
+	        baseIndent = $join.call(Array(opts.indent + 1), ' ');
+	    } else {
+	        return null;
+	    }
+	    return {
+	        base: baseIndent,
+	        prev: $join.call(Array(depth + 1), baseIndent)
+	    };
+	}
+
+	function indentedJoin(xs, indent) {
+	    if (xs.length === 0) { return ''; }
+	    var lineJoiner = '\n' + indent.prev + indent.base;
+	    return lineJoiner + $join.call(xs, ',' + lineJoiner) + '\n' + indent.prev;
+	}
+
+	function arrObjKeys(obj, inspect) {
+	    var isArr = isArray$1(obj);
+	    var xs = [];
+	    if (isArr) {
+	        xs.length = obj.length;
+	        for (var i = 0; i < obj.length; i++) {
+	            xs[i] = has(obj, i) ? inspect(obj[i], obj) : '';
+	        }
+	    }
+	    var syms = typeof gOPS === 'function' ? gOPS(obj) : [];
+	    var symMap;
+	    if (hasShammedSymbols) {
+	        symMap = {};
+	        for (var k = 0; k < syms.length; k++) {
+	            symMap['$' + syms[k]] = syms[k];
+	        }
+	    }
+
+	    for (var key in obj) { // eslint-disable-line no-restricted-syntax
+	        if (!has(obj, key)) { continue; } // eslint-disable-line no-restricted-syntax, no-continue
+	        if (isArr && String(Number(key)) === key && key < obj.length) { continue; } // eslint-disable-line no-restricted-syntax, no-continue
+	        if (hasShammedSymbols && symMap['$' + key] instanceof Symbol) {
+	            // this is to prevent shammed Symbols, which are stored as strings, from being included in the string key section
+	            continue; // eslint-disable-line no-restricted-syntax, no-continue
+	        } else if ($test.call(/[^\w$]/, key)) {
+	            xs.push(inspect(key, obj) + ': ' + inspect(obj[key], obj));
+	        } else {
+	            xs.push(key + ': ' + inspect(obj[key], obj));
+	        }
+	    }
+	    if (typeof gOPS === 'function') {
+	        for (var j = 0; j < syms.length; j++) {
+	            if (isEnumerable.call(obj, syms[j])) {
+	                xs.push('[' + inspect(syms[j]) + ']: ' + inspect(obj[syms[j]], obj));
+	            }
+	        }
+	    }
+	    return xs;
+	}
+
+	var GetIntrinsic$a = getIntrinsic;
+	var callBound$2 = callBound$4;
+	var inspect$4 = objectInspect;
+
+	var $TypeError$p = type;
+	var $WeakMap = GetIntrinsic$a('%WeakMap%', true);
+	var $Map = GetIntrinsic$a('%Map%', true);
+
+	var $weakMapGet = callBound$2('WeakMap.prototype.get', true);
+	var $weakMapSet = callBound$2('WeakMap.prototype.set', true);
+	var $weakMapHas = callBound$2('WeakMap.prototype.has', true);
+	var $mapGet = callBound$2('Map.prototype.get', true);
+	var $mapSet = callBound$2('Map.prototype.set', true);
+	var $mapHas = callBound$2('Map.prototype.has', true);
+
+	/*
+	* This function traverses the list returning the node corresponding to the given key.
+	*
+	* That node is also moved to the head of the list, so that if it's accessed again we don't need to traverse the whole list. By doing so, all the recently used nodes can be accessed relatively quickly.
+	*/
+	/** @type {import('.').listGetNode} */
+	var listGetNode = function (list, key) { // eslint-disable-line consistent-return
+		/** @type {typeof list | NonNullable<(typeof list)['next']>} */
+		var prev = list;
+		/** @type {(typeof list)['next']} */
+		var curr;
+		for (; (curr = prev.next) !== null; prev = curr) {
+			if (curr.key === key) {
+				prev.next = curr.next;
+				// eslint-disable-next-line no-extra-parens
+				curr.next = /** @type {NonNullable<typeof list.next>} */ (list.next);
+				list.next = curr; // eslint-disable-line no-param-reassign
+				return curr;
+			}
+		}
+	};
+
+	/** @type {import('.').listGet} */
+	var listGet = function (objects, key) {
+		var node = listGetNode(objects, key);
+		return node && node.value;
+	};
+	/** @type {import('.').listSet} */
+	var listSet = function (objects, key, value) {
+		var node = listGetNode(objects, key);
+		if (node) {
+			node.value = value;
+		} else {
+			// Prepend the new node to the beginning of the list
+			objects.next = /** @type {import('.').ListNode<typeof value>} */ ({ // eslint-disable-line no-param-reassign, no-extra-parens
+				key: key,
+				next: objects.next,
+				value: value
+			});
+		}
+	};
+	/** @type {import('.').listHas} */
+	var listHas = function (objects, key) {
+		return !!listGetNode(objects, key);
+	};
+
+	/** @type {import('.')} */
+	var sideChannel = function getSideChannel() {
+		/** @type {WeakMap<object, unknown>} */ var $wm;
+		/** @type {Map<object, unknown>} */ var $m;
+		/** @type {import('.').RootNode<unknown>} */ var $o;
+
+		/** @type {import('.').Channel} */
+		var channel = {
+			assert: function (key) {
+				if (!channel.has(key)) {
+					throw new $TypeError$p('Side channel does not contain ' + inspect$4(key));
+				}
+			},
+			get: function (key) { // eslint-disable-line consistent-return
+				if ($WeakMap && key && (typeof key === 'object' || typeof key === 'function')) {
+					if ($wm) {
+						return $weakMapGet($wm, key);
+					}
+				} else if ($Map) {
+					if ($m) {
+						return $mapGet($m, key);
+					}
+				} else {
+					if ($o) { // eslint-disable-line no-lonely-if
+						return listGet($o, key);
+					}
+				}
+			},
+			has: function (key) {
+				if ($WeakMap && key && (typeof key === 'object' || typeof key === 'function')) {
+					if ($wm) {
+						return $weakMapHas($wm, key);
+					}
+				} else if ($Map) {
+					if ($m) {
+						return $mapHas($m, key);
+					}
+				} else {
+					if ($o) { // eslint-disable-line no-lonely-if
+						return listHas($o, key);
+					}
+				}
+				return false;
+			},
+			set: function (key, value) {
+				if ($WeakMap && key && (typeof key === 'object' || typeof key === 'function')) {
+					if (!$wm) {
+						$wm = new $WeakMap();
+					}
+					$weakMapSet($wm, key, value);
+				} else if ($Map) {
+					if (!$m) {
+						$m = new $Map();
+					}
+					$mapSet($m, key, value);
+				} else {
+					if (!$o) {
+						// Initialize the linked list as an empty node, so that we don't have to special-case handling of the first node: we can always refer to it as (previous node).next, instead of something like (list).head
+						$o = { key: {}, next: null };
+					}
+					listSet($o, key, value);
 				}
 			}
 		};
+		return channel;
+	};
 
-		var listGet = function (objects, key) {
-			var node = listGetNode(objects, key);
-			return node && node.value;
-		};
-		var listSet = function (objects, key, value) {
-			var node = listGetNode(objects, key);
-			if (node) {
-				node.value = value;
-			} else {
-				// Prepend the new node to the beginning of the list
-				objects.next = { // eslint-disable-line no-param-reassign
-					key: key,
-					next: objects.next,
-					value: value
-				};
+	var hasOwn$5 = hasown;
+	var channel = sideChannel();
+
+	var $TypeError$o = type;
+
+	var SLOT$1 = {
+		assert: function (O, slot) {
+			if (!O || (typeof O !== 'object' && typeof O !== 'function')) {
+				throw new $TypeError$o('`O` is not an object');
 			}
-		};
-		var listHas = function (objects, key) {
-			return !!listGetNode(objects, key);
-		};
-
-		sideChannel = function getSideChannel() {
-			var $wm;
-			var $m;
-			var $o;
-			var channel = {
-				assert: function (key) {
-					if (!channel.has(key)) {
-						throw new $TypeError('Side channel does not contain ' + inspect(key));
-					}
-				},
-				get: function (key) { // eslint-disable-line consistent-return
-					if ($WeakMap && key && (typeof key === 'object' || typeof key === 'function')) {
-						if ($wm) {
-							return $weakMapGet($wm, key);
-						}
-					} else if ($Map) {
-						if ($m) {
-							return $mapGet($m, key);
-						}
-					} else {
-						if ($o) { // eslint-disable-line no-lonely-if
-							return listGet($o, key);
-						}
-					}
-				},
-				has: function (key) {
-					if ($WeakMap && key && (typeof key === 'object' || typeof key === 'function')) {
-						if ($wm) {
-							return $weakMapHas($wm, key);
-						}
-					} else if ($Map) {
-						if ($m) {
-							return $mapHas($m, key);
-						}
-					} else {
-						if ($o) { // eslint-disable-line no-lonely-if
-							return listHas($o, key);
-						}
-					}
-					return false;
-				},
-				set: function (key, value) {
-					if ($WeakMap && key && (typeof key === 'object' || typeof key === 'function')) {
-						if (!$wm) {
-							$wm = new $WeakMap();
-						}
-						$weakMapSet($wm, key, value);
-					} else if ($Map) {
-						if (!$m) {
-							$m = new $Map();
-						}
-						$mapSet($m, key, value);
-					} else {
-						if (!$o) {
-							/*
-							 * Initialize the linked list as an empty node, so that we don't have
-							 * to special-case handling of the first node: we can always refer to
-							 * it as (previous node).next, instead of something like (list).head
-							 */
-							$o = { key: {}, next: null };
-						}
-						listSet($o, key, value);
-					}
-				}
-			};
-			return channel;
-		};
-		return sideChannel;
-	}
-
-	var internalSlot;
-	var hasRequiredInternalSlot;
-
-	function requireInternalSlot () {
-		if (hasRequiredInternalSlot) return internalSlot;
-		hasRequiredInternalSlot = 1;
-
-		var GetIntrinsic = getIntrinsic;
-		var hasOwn = requireHasown();
-		var channel = requireSideChannel()();
-
-		var $TypeError = GetIntrinsic('%TypeError%');
-
-		var SLOT = {
-			assert: function (O, slot) {
-				if (!O || (typeof O !== 'object' && typeof O !== 'function')) {
-					throw new $TypeError('`O` is not an object');
-				}
-				if (typeof slot !== 'string') {
-					throw new $TypeError('`slot` must be a string');
-				}
-				channel.assert(O);
-				if (!SLOT.has(O, slot)) {
-					throw new $TypeError('`' + slot + '` is not present on `O`');
-				}
-			},
-			get: function (O, slot) {
-				if (!O || (typeof O !== 'object' && typeof O !== 'function')) {
-					throw new $TypeError('`O` is not an object');
-				}
-				if (typeof slot !== 'string') {
-					throw new $TypeError('`slot` must be a string');
-				}
-				var slots = channel.get(O);
-				return slots && slots['$' + slot];
-			},
-			has: function (O, slot) {
-				if (!O || (typeof O !== 'object' && typeof O !== 'function')) {
-					throw new $TypeError('`O` is not an object');
-				}
-				if (typeof slot !== 'string') {
-					throw new $TypeError('`slot` must be a string');
-				}
-				var slots = channel.get(O);
-				return !!slots && hasOwn(slots, '$' + slot);
-			},
-			set: function (O, slot, V) {
-				if (!O || (typeof O !== 'object' && typeof O !== 'function')) {
-					throw new $TypeError('`O` is not an object');
-				}
-				if (typeof slot !== 'string') {
-					throw new $TypeError('`slot` must be a string');
-				}
-				var slots = channel.get(O);
-				if (!slots) {
-					slots = {};
-					channel.set(O, slots);
-				}
-				slots['$' + slot] = V;
+			if (typeof slot !== 'string') {
+				throw new $TypeError$o('`slot` must be a string');
 			}
-		};
-
-		if (Object.freeze) {
-			Object.freeze(SLOT);
+			channel.assert(O);
+			if (!SLOT$1.has(O, slot)) {
+				throw new $TypeError$o('`' + slot + '` is not present on `O`');
+			}
+		},
+		get: function (O, slot) {
+			if (!O || (typeof O !== 'object' && typeof O !== 'function')) {
+				throw new $TypeError$o('`O` is not an object');
+			}
+			if (typeof slot !== 'string') {
+				throw new $TypeError$o('`slot` must be a string');
+			}
+			var slots = channel.get(O);
+			return slots && slots['$' + slot];
+		},
+		has: function (O, slot) {
+			if (!O || (typeof O !== 'object' && typeof O !== 'function')) {
+				throw new $TypeError$o('`O` is not an object');
+			}
+			if (typeof slot !== 'string') {
+				throw new $TypeError$o('`slot` must be a string');
+			}
+			var slots = channel.get(O);
+			return !!slots && hasOwn$5(slots, '$' + slot);
+		},
+		set: function (O, slot, V) {
+			if (!O || (typeof O !== 'object' && typeof O !== 'function')) {
+				throw new $TypeError$o('`O` is not an object');
+			}
+			if (typeof slot !== 'string') {
+				throw new $TypeError$o('`slot` must be a string');
+			}
+			var slots = channel.get(O);
+			if (!slots) {
+				slots = {};
+				channel.set(O, slots);
+			}
+			slots['$' + slot] = V;
 		}
+	};
 
-		internalSlot = SLOT;
-		return internalSlot;
+	if (Object.freeze) {
+		Object.freeze(SLOT$1);
 	}
 
-	var GetIntrinsic$i = getIntrinsic;
+	var internalSlot = SLOT$1;
 
-	var $SyntaxError$1 = GetIntrinsic$i('%SyntaxError%');
+	var $SyntaxError$2 = syntax;
 
-	var SLOT = requireInternalSlot();
+	var SLOT = internalSlot;
 
 	// https://262.ecma-international.org/7.0/#sec-completion-record-specification-type
 
@@ -5847,7 +5841,7 @@
 			return new CompletionRecord(type, value);
 		}
 		if (type !== 'normal' && type !== 'break' && type !== 'continue' && type !== 'return' && type !== 'throw') {
-			throw new $SyntaxError$1('Assertion failed: `type` must be one of "normal", "break", "continue", "return", or "throw"');
+			throw new $SyntaxError$2('Assertion failed: `type` must be one of "normal", "break", "continue", "return", or "throw"');
 		}
 		SLOT.set(this, '[[Type]]', type);
 		SLOT.set(this, '[[Value]]', value);
@@ -5872,14 +5866,14 @@
 		if (type === 'throw') {
 			throw value;
 		}
-		throw new $SyntaxError$1('Completion Record is not of type "normal" or "throw": other types not supported');
+		throw new $SyntaxError$2('Completion Record is not of type "normal" or "throw": other types not supported');
 	};
 
 	CompletionRecord$1.prototype['!'] = function assert() {
 		var type = SLOT.get(this, '[[Type]]');
 
 		if (type !== 'normal') {
-			throw new $SyntaxError$1('Assertion failed: Completion Record is not of type "normal"');
+			throw new $SyntaxError$2('Assertion failed: Completion Record is not of type "normal"');
 		}
 		return SLOT.get(this, '[[Value]]');
 	};
@@ -5890,54 +5884,104 @@
 
 	// https://262.ecma-international.org/6.0/#sec-ispropertykey
 
-	var IsPropertyKey$4 = function IsPropertyKey(argument) {
+	var IsPropertyKey$9 = function IsPropertyKey(argument) {
 		return typeof argument === 'string' || typeof argument === 'symbol';
 	};
 
-	var IsPropertyKey$5 = /*@__PURE__*/getDefaultExportFromCjs(IsPropertyKey$4);
+	var IsPropertyKey$a = /*@__PURE__*/getDefaultExportFromCjs(IsPropertyKey$9);
 
-	var isPropertyDescriptor;
-	var hasRequiredIsPropertyDescriptor;
+	var $TypeError$n = type;
 
-	function requireIsPropertyDescriptor () {
-		if (hasRequiredIsPropertyDescriptor) return isPropertyDescriptor;
-		hasRequiredIsPropertyDescriptor = 1;
+	var hasOwn$4 = hasown;
 
-		var GetIntrinsic = getIntrinsic;
+	var allowed = {
+		__proto__: null,
+		'[[Configurable]]': true,
+		'[[Enumerable]]': true,
+		'[[Get]]': true,
+		'[[Set]]': true,
+		'[[Value]]': true,
+		'[[Writable]]': true
+	};
 
-		var hasOwn = requireHasown();
-		var $TypeError = GetIntrinsic('%TypeError%');
+	// https://262.ecma-international.org/6.0/#sec-property-descriptor-specification-type
 
-		isPropertyDescriptor = function IsPropertyDescriptor(ES, Desc) {
-			if (ES.Type(Desc) !== 'Object') {
+	var propertyDescriptor = function isPropertyDescriptor(Desc) {
+		if (!Desc || typeof Desc !== 'object') {
+			return false;
+		}
+
+		for (var key in Desc) { // eslint-disable-line
+			if (hasOwn$4(Desc, key) && !allowed[key]) {
 				return false;
 			}
-			var allowed = {
-				'[[Configurable]]': true,
-				'[[Enumerable]]': true,
-				'[[Get]]': true,
-				'[[Set]]': true,
-				'[[Value]]': true,
-				'[[Writable]]': true
-			};
+		}
 
-			for (var key in Desc) { // eslint-disable-line no-restricted-syntax
-				if (hasOwn(Desc, key) && !allowed[key]) {
-					return false;
-				}
-			}
+		var isData = hasOwn$4(Desc, '[[Value]]') || hasOwn$4(Desc, '[[Writable]]');
+		var IsAccessor = hasOwn$4(Desc, '[[Get]]') || hasOwn$4(Desc, '[[Set]]');
+		if (isData && IsAccessor) {
+			throw new $TypeError$n('Property Descriptors may not be both accessor and data descriptors');
+		}
+		return true;
+	};
 
-			if (ES.IsDataDescriptor(Desc) && ES.IsAccessorDescriptor(Desc)) {
-				throw new $TypeError('Property Descriptors may not be both accessor and data descriptors');
-			}
-			return true;
+	var $TypeError$m = type;
+
+	var hasOwn$3 = hasown;
+
+	var isPropertyDescriptor$6 = propertyDescriptor;
+
+	// https://262.ecma-international.org/5.1/#sec-8.10.1
+
+	var IsAccessorDescriptor$3 = function IsAccessorDescriptor(Desc) {
+		if (typeof Desc === 'undefined') {
+			return false;
+		}
+
+		if (!isPropertyDescriptor$6(Desc)) {
+			throw new $TypeError$m('Assertion failed: `Desc` must be a Property Descriptor');
+		}
+
+		if (!hasOwn$3(Desc, '[[Get]]') && !hasOwn$3(Desc, '[[Set]]')) {
+			return false;
+		}
+
+		return true;
+	};
+
+	var isPrimitive$4;
+	var hasRequiredIsPrimitive;
+
+	function requireIsPrimitive () {
+		if (hasRequiredIsPrimitive) return isPrimitive$4;
+		hasRequiredIsPrimitive = 1;
+
+		isPrimitive$4 = function isPrimitive(value) {
+			return value === null || (typeof value !== 'function' && typeof value !== 'object');
 		};
-		return isPropertyDescriptor;
+		return isPrimitive$4;
 	}
+
+	var GetIntrinsic$9 = getIntrinsic;
+
+	var $preventExtensions = GetIntrinsic$9('%Object.preventExtensions%', true);
+	var $isExtensible = GetIntrinsic$9('%Object.isExtensible%', true);
+
+	var isPrimitive$3 = requireIsPrimitive();
+
+	// https://262.ecma-international.org/6.0/#sec-isextensible-o
+
+	var IsExtensible$1 = $preventExtensions
+		? function IsExtensible(obj) {
+			return !isPrimitive$3(obj) && $isExtensible(obj);
+		}
+		: function IsExtensible(obj) {
+			return !isPrimitive$3(obj);
+		};
 
 	// https://262.ecma-international.org/5.1/#sec-8
 
-	var Type$b = function Type(x) {
+	var Type$e = function Type(x) {
 		if (x === null) {
 			return 'Null';
 		}
@@ -5958,11 +6002,11 @@
 		}
 	};
 
-	var ES5Type = Type$b;
+	var ES5Type = Type$e;
 
 	// https://262.ecma-international.org/11.0/#sec-ecmascript-data-types-and-values
 
-	var Type$9 = function Type(x) {
+	var Type$c = function Type(x) {
 		if (typeof x === 'symbol') {
 			return 'Symbol';
 		}
@@ -5972,264 +6016,11 @@
 		return ES5Type(x);
 	};
 
-	var Type$a = /*@__PURE__*/getDefaultExportFromCjs(Type$9);
+	var Type$d = /*@__PURE__*/getDefaultExportFromCjs(Type$c);
 
-	var _isNaN = Number.isNaN || function isNaN(a) {
-		return a !== a;
-	};
+	// http://262.ecma-international.org/5.1/#sec-9.2
 
-	var $isNaN$3 = _isNaN;
-
-	var _isFinite = function (x) { return (typeof x === 'number' || typeof x === 'bigint') && !$isNaN$3(x) && x !== Infinity && x !== -Infinity; };
-
-	var GetIntrinsic$h = getIntrinsic;
-
-	var $abs$1 = GetIntrinsic$h('%Math.abs%');
-	var $floor$1 = GetIntrinsic$h('%Math.floor%');
-
-	var $isNaN$2 = _isNaN;
-	var $isFinite$1 = _isFinite;
-
-	var isInteger$2 = function isInteger(argument) {
-		if (typeof argument !== 'number' || $isNaN$2(argument) || !$isFinite$1(argument)) {
-			return false;
-		}
-		var absValue = $abs$1(argument);
-		return $floor$1(absValue) === absValue;
-	};
-
-	var isMatchRecord;
-	var hasRequiredIsMatchRecord;
-
-	function requireIsMatchRecord () {
-		if (hasRequiredIsMatchRecord) return isMatchRecord;
-		hasRequiredIsMatchRecord = 1;
-
-		var hasOwn = requireHasown();
-
-		// https://262.ecma-international.org/13.0/#sec-match-records
-
-		isMatchRecord = function isMatchRecord(record) {
-			return (
-				hasOwn(record, '[[StartIndex]]')
-		        && hasOwn(record, '[[EndIndex]]')
-		        && record['[[StartIndex]]'] >= 0
-		        && record['[[EndIndex]]'] >= record['[[StartIndex]]']
-		        && String(parseInt(record['[[StartIndex]]'], 10)) === String(record['[[StartIndex]]'])
-		        && String(parseInt(record['[[EndIndex]]'], 10)) === String(record['[[EndIndex]]'])
-			);
-		};
-		return isMatchRecord;
-	}
-
-	var assertRecord;
-	var hasRequiredAssertRecord;
-
-	function requireAssertRecord () {
-		if (hasRequiredAssertRecord) return assertRecord;
-		hasRequiredAssertRecord = 1;
-
-		var GetIntrinsic = getIntrinsic;
-
-		var $TypeError = GetIntrinsic('%TypeError%');
-		var $SyntaxError = GetIntrinsic('%SyntaxError%');
-
-		var hasOwn = requireHasown();
-		var isInteger = isInteger$2;
-
-		var isMatchRecord = requireIsMatchRecord();
-
-		var predicates = {
-			// https://262.ecma-international.org/6.0/#sec-property-descriptor-specification-type
-			'Property Descriptor': function isPropertyDescriptor(Desc) {
-				var allowed = {
-					'[[Configurable]]': true,
-					'[[Enumerable]]': true,
-					'[[Get]]': true,
-					'[[Set]]': true,
-					'[[Value]]': true,
-					'[[Writable]]': true
-				};
-
-				if (!Desc) {
-					return false;
-				}
-				for (var key in Desc) { // eslint-disable-line
-					if (hasOwn(Desc, key) && !allowed[key]) {
-						return false;
-					}
-				}
-
-				var isData = hasOwn(Desc, '[[Value]]');
-				var IsAccessor = hasOwn(Desc, '[[Get]]') || hasOwn(Desc, '[[Set]]');
-				if (isData && IsAccessor) {
-					throw new $TypeError('Property Descriptors may not be both accessor and data descriptors');
-				}
-				return true;
-			},
-			// https://262.ecma-international.org/13.0/#sec-match-records
-			'Match Record': isMatchRecord,
-			'Iterator Record': function isIteratorRecord(value) {
-				return hasOwn(value, '[[Iterator]]') && hasOwn(value, '[[NextMethod]]') && hasOwn(value, '[[Done]]');
-			},
-			'PromiseCapability Record': function isPromiseCapabilityRecord(value) {
-				return !!value
-					&& hasOwn(value, '[[Resolve]]')
-					&& typeof value['[[Resolve]]'] === 'function'
-					&& hasOwn(value, '[[Reject]]')
-					&& typeof value['[[Reject]]'] === 'function'
-					&& hasOwn(value, '[[Promise]]')
-					&& value['[[Promise]]']
-					&& typeof value['[[Promise]]'].then === 'function';
-			},
-			'AsyncGeneratorRequest Record': function isAsyncGeneratorRequestRecord(value) {
-				return !!value
-					&& hasOwn(value, '[[Completion]]') // TODO: confirm is a completion record
-					&& hasOwn(value, '[[Capability]]')
-					&& predicates['PromiseCapability Record'](value['[[Capability]]']);
-			},
-			'RegExp Record': function isRegExpRecord(value) {
-				return value
-					&& hasOwn(value, '[[IgnoreCase]]')
-					&& typeof value['[[IgnoreCase]]'] === 'boolean'
-					&& hasOwn(value, '[[Multiline]]')
-					&& typeof value['[[Multiline]]'] === 'boolean'
-					&& hasOwn(value, '[[DotAll]]')
-					&& typeof value['[[DotAll]]'] === 'boolean'
-					&& hasOwn(value, '[[Unicode]]')
-					&& typeof value['[[Unicode]]'] === 'boolean'
-					&& hasOwn(value, '[[CapturingGroupsCount]]')
-					&& typeof value['[[CapturingGroupsCount]]'] === 'number'
-					&& isInteger(value['[[CapturingGroupsCount]]'])
-					&& value['[[CapturingGroupsCount]]'] >= 0;
-			}
-		};
-
-		assertRecord = function assertRecord(Type, recordType, argumentName, value) {
-			var predicate = predicates[recordType];
-			if (typeof predicate !== 'function') {
-				throw new $SyntaxError('unknown record type: ' + recordType);
-			}
-			if (Type(value) !== 'Object' || !predicate(value)) {
-				throw new $TypeError(argumentName + ' must be a ' + recordType);
-			}
-		};
-		return assertRecord;
-	}
-
-	var IsAccessorDescriptor;
-	var hasRequiredIsAccessorDescriptor;
-
-	function requireIsAccessorDescriptor () {
-		if (hasRequiredIsAccessorDescriptor) return IsAccessorDescriptor;
-		hasRequiredIsAccessorDescriptor = 1;
-
-		var hasOwn = requireHasown();
-
-		var Type = Type$9;
-
-		var assertRecord = requireAssertRecord();
-
-		// https://262.ecma-international.org/5.1/#sec-8.10.1
-
-		IsAccessorDescriptor = function IsAccessorDescriptor(Desc) {
-			if (typeof Desc === 'undefined') {
-				return false;
-			}
-
-			assertRecord(Type, 'Property Descriptor', 'Desc', Desc);
-
-			if (!hasOwn(Desc, '[[Get]]') && !hasOwn(Desc, '[[Set]]')) {
-				return false;
-			}
-
-			return true;
-		};
-		return IsAccessorDescriptor;
-	}
-
-	var IsDataDescriptor;
-	var hasRequiredIsDataDescriptor;
-
-	function requireIsDataDescriptor () {
-		if (hasRequiredIsDataDescriptor) return IsDataDescriptor;
-		hasRequiredIsDataDescriptor = 1;
-
-		var hasOwn = requireHasown();
-
-		var Type = Type$9;
-
-		var assertRecord = requireAssertRecord();
-
-		// https://262.ecma-international.org/5.1/#sec-8.10.2
-
-		IsDataDescriptor = function IsDataDescriptor(Desc) {
-			if (typeof Desc === 'undefined') {
-				return false;
-			}
-
-			assertRecord(Type, 'Property Descriptor', 'Desc', Desc);
-
-			if (!hasOwn(Desc, '[[Value]]') && !hasOwn(Desc, '[[Writable]]')) {
-				return false;
-			}
-
-			return true;
-		};
-		return IsDataDescriptor;
-	}
-
-	var isPrimitive$3;
-	var hasRequiredIsPrimitive;
-
-	function requireIsPrimitive () {
-		if (hasRequiredIsPrimitive) return isPrimitive$3;
-		hasRequiredIsPrimitive = 1;
-
-		isPrimitive$3 = function isPrimitive(value) {
-			return value === null || (typeof value !== 'function' && typeof value !== 'object');
-		};
-		return isPrimitive$3;
-	}
-
-	var IsExtensible;
-	var hasRequiredIsExtensible;
-
-	function requireIsExtensible () {
-		if (hasRequiredIsExtensible) return IsExtensible;
-		hasRequiredIsExtensible = 1;
-
-		var GetIntrinsic = getIntrinsic;
-
-		var $preventExtensions = GetIntrinsic('%Object.preventExtensions%', true);
-		var $isExtensible = GetIntrinsic('%Object.isExtensible%', true);
-
-		var isPrimitive = requireIsPrimitive();
-
-		// https://262.ecma-international.org/6.0/#sec-isextensible-o
-
-		IsExtensible = $preventExtensions
-			? function IsExtensible(obj) {
-				return !isPrimitive(obj) && $isExtensible(obj);
-			}
-			: function IsExtensible(obj) {
-				return !isPrimitive(obj);
-			};
-		return IsExtensible;
-	}
-
-	var ToBoolean$1;
-	var hasRequiredToBoolean;
-
-	function requireToBoolean () {
-		if (hasRequiredToBoolean) return ToBoolean$1;
-		hasRequiredToBoolean = 1;
-
-		// http://262.ecma-international.org/5.1/#sec-9.2
-
-		ToBoolean$1 = function ToBoolean(value) { return !!value; };
-		return ToBoolean$1;
-	}
+	var ToBoolean$2 = function ToBoolean(value) { return !!value; };
 
 	var fnToStr = Function.prototype.toString;
 	var reflectApply = typeof Reflect === 'object' && Reflect !== null && Reflect.apply;
@@ -6331,433 +6122,274 @@
 			return tryFunctionObject(value);
 		};
 
-	var IsCallable$2;
-	var hasRequiredIsCallable;
+	// http://262.ecma-international.org/5.1/#sec-9.11
 
-	function requireIsCallable () {
-		if (hasRequiredIsCallable) return IsCallable$2;
-		hasRequiredIsCallable = 1;
+	var IsCallable$3 = isCallable$1;
 
-		// http://262.ecma-international.org/5.1/#sec-9.11
+	var hasOwn$2 = hasown;
 
-		IsCallable$2 = isCallable$1;
-		return IsCallable$2;
-	}
+	var $TypeError$l = type;
 
-	var ToPropertyDescriptor;
-	var hasRequiredToPropertyDescriptor;
+	var Type$b = Type$c;
+	var ToBoolean$1 = ToBoolean$2;
+	var IsCallable$2 = IsCallable$3;
 
-	function requireToPropertyDescriptor () {
-		if (hasRequiredToPropertyDescriptor) return ToPropertyDescriptor;
-		hasRequiredToPropertyDescriptor = 1;
+	// https://262.ecma-international.org/5.1/#sec-8.10.5
 
-		var hasOwn = requireHasown();
+	var ToPropertyDescriptor$1 = function ToPropertyDescriptor(Obj) {
+		if (Type$b(Obj) !== 'Object') {
+			throw new $TypeError$l('ToPropertyDescriptor requires an object');
+		}
 
-		var GetIntrinsic = getIntrinsic;
-
-		var $TypeError = GetIntrinsic('%TypeError%');
-
-		var Type = Type$9;
-		var ToBoolean = requireToBoolean();
-		var IsCallable = requireIsCallable();
-
-		// https://262.ecma-international.org/5.1/#sec-8.10.5
-
-		ToPropertyDescriptor = function ToPropertyDescriptor(Obj) {
-			if (Type(Obj) !== 'Object') {
-				throw new $TypeError('ToPropertyDescriptor requires an object');
+		var desc = {};
+		if (hasOwn$2(Obj, 'enumerable')) {
+			desc['[[Enumerable]]'] = ToBoolean$1(Obj.enumerable);
+		}
+		if (hasOwn$2(Obj, 'configurable')) {
+			desc['[[Configurable]]'] = ToBoolean$1(Obj.configurable);
+		}
+		if (hasOwn$2(Obj, 'value')) {
+			desc['[[Value]]'] = Obj.value;
+		}
+		if (hasOwn$2(Obj, 'writable')) {
+			desc['[[Writable]]'] = ToBoolean$1(Obj.writable);
+		}
+		if (hasOwn$2(Obj, 'get')) {
+			var getter = Obj.get;
+			if (typeof getter !== 'undefined' && !IsCallable$2(getter)) {
+				throw new $TypeError$l('getter must be a function');
 			}
+			desc['[[Get]]'] = getter;
+		}
+		if (hasOwn$2(Obj, 'set')) {
+			var setter = Obj.set;
+			if (typeof setter !== 'undefined' && !IsCallable$2(setter)) {
+				throw new $TypeError$l('setter must be a function');
+			}
+			desc['[[Set]]'] = setter;
+		}
 
-			var desc = {};
-			if (hasOwn(Obj, 'enumerable')) {
-				desc['[[Enumerable]]'] = ToBoolean(Obj.enumerable);
-			}
-			if (hasOwn(Obj, 'configurable')) {
-				desc['[[Configurable]]'] = ToBoolean(Obj.configurable);
-			}
-			if (hasOwn(Obj, 'value')) {
-				desc['[[Value]]'] = Obj.value;
-			}
-			if (hasOwn(Obj, 'writable')) {
-				desc['[[Writable]]'] = ToBoolean(Obj.writable);
-			}
-			if (hasOwn(Obj, 'get')) {
-				var getter = Obj.get;
-				if (typeof getter !== 'undefined' && !IsCallable(getter)) {
-					throw new $TypeError('getter must be a function');
-				}
-				desc['[[Get]]'] = getter;
-			}
-			if (hasOwn(Obj, 'set')) {
-				var setter = Obj.set;
-				if (typeof setter !== 'undefined' && !IsCallable(setter)) {
-					throw new $TypeError('setter must be a function');
-				}
-				desc['[[Set]]'] = setter;
-			}
+		if ((hasOwn$2(desc, '[[Get]]') || hasOwn$2(desc, '[[Set]]')) && (hasOwn$2(desc, '[[Value]]') || hasOwn$2(desc, '[[Writable]]'))) {
+			throw new $TypeError$l('Invalid property descriptor. Cannot both specify accessors and a value or writable attribute');
+		}
+		return desc;
+	};
 
-			if ((hasOwn(desc, '[[Get]]') || hasOwn(desc, '[[Set]]')) && (hasOwn(desc, '[[Value]]') || hasOwn(desc, '[[Writable]]'))) {
-				throw new $TypeError('Invalid property descriptor. Cannot both specify accessors and a value or writable attribute');
-			}
-			return desc;
-		};
-		return ToPropertyDescriptor;
-	}
+	var _isNaN = Number.isNaN || function isNaN(a) {
+		return a !== a;
+	};
 
-	var $isNaN$1 = _isNaN;
+	var $isNaN$3 = _isNaN;
 
 	// http://262.ecma-international.org/5.1/#sec-9.12
 
-	var SameValue = function SameValue(x, y) {
+	var SameValue$2 = function SameValue(x, y) {
 		if (x === y) { // 0 === -0, but they are not identical.
 			if (x === 0) { return 1 / x === 1 / y; }
 			return true;
 		}
-		return $isNaN$1(x) && $isNaN$1(y);
+		return $isNaN$3(x) && $isNaN$3(y);
 	};
 
-	var SameValue$1 = /*@__PURE__*/getDefaultExportFromCjs(SameValue);
+	var SameValue$3 = /*@__PURE__*/getDefaultExportFromCjs(SameValue$2);
 
-	var DefineOwnProperty;
-	var hasRequiredDefineOwnProperty;
+	var hasPropertyDescriptors = hasPropertyDescriptors_1;
 
-	function requireDefineOwnProperty () {
-		if (hasRequiredDefineOwnProperty) return DefineOwnProperty;
-		hasRequiredDefineOwnProperty = 1;
+	var $defineProperty = requireEsDefineProperty();
 
-		var hasPropertyDescriptors = hasPropertyDescriptors_1;
+	var hasArrayLengthDefineBug = hasPropertyDescriptors.hasArrayLengthDefineBug();
 
-		var GetIntrinsic = getIntrinsic;
+	// eslint-disable-next-line global-require
+	var isArray = hasArrayLengthDefineBug && IsArray$5;
 
-		var $defineProperty = hasPropertyDescriptors() && GetIntrinsic('%Object.defineProperty%', true);
+	var callBound$1 = callBound$4;
 
-		var hasArrayLengthDefineBug = hasPropertyDescriptors.hasArrayLengthDefineBug();
+	var $isEnumerable$1 = callBound$1('Object.prototype.propertyIsEnumerable');
 
-		// eslint-disable-next-line global-require
-		var isArray = hasArrayLengthDefineBug && IsArray$4;
-
-		var callBound = callBound$2;
-
-		var $isEnumerable = callBound('Object.prototype.propertyIsEnumerable');
-
-		// eslint-disable-next-line max-params
-		DefineOwnProperty = function DefineOwnProperty(IsDataDescriptor, SameValue, FromPropertyDescriptor, O, P, desc) {
-			if (!$defineProperty) {
-				if (!IsDataDescriptor(desc)) {
-					// ES3 does not support getters/setters
-					return false;
-				}
-				if (!desc['[[Configurable]]'] || !desc['[[Writable]]']) {
-					return false;
-				}
-
-				// fallback for ES3
-				if (P in O && $isEnumerable(O, P) !== !!desc['[[Enumerable]]']) {
-					// a non-enumerable existing property
-					return false;
-				}
-
-				// property does not exist at all, or exists but is enumerable
-				var V = desc['[[Value]]'];
-				// eslint-disable-next-line no-param-reassign
-				O[P] = V; // will use [[Define]]
-				return SameValue(O[P], V);
+	// eslint-disable-next-line max-params
+	var DefineOwnProperty$1 = function DefineOwnProperty(IsDataDescriptor, SameValue, FromPropertyDescriptor, O, P, desc) {
+		if (!$defineProperty) {
+			if (!IsDataDescriptor(desc)) {
+				// ES3 does not support getters/setters
+				return false;
 			}
-			if (
-				hasArrayLengthDefineBug
-				&& P === 'length'
-				&& '[[Value]]' in desc
-				&& isArray(O)
-				&& O.length !== desc['[[Value]]']
-			) {
-				// eslint-disable-next-line no-param-reassign
-				O.length = desc['[[Value]]'];
-				return O.length === desc['[[Value]]'];
-			}
-
-			$defineProperty(O, P, FromPropertyDescriptor(desc));
-			return true;
-		};
-		return DefineOwnProperty;
-	}
-
-	var isFullyPopulatedPropertyDescriptor;
-	var hasRequiredIsFullyPopulatedPropertyDescriptor;
-
-	function requireIsFullyPopulatedPropertyDescriptor () {
-		if (hasRequiredIsFullyPopulatedPropertyDescriptor) return isFullyPopulatedPropertyDescriptor;
-		hasRequiredIsFullyPopulatedPropertyDescriptor = 1;
-
-		isFullyPopulatedPropertyDescriptor = function isFullyPopulatedPropertyDescriptor(ES, Desc) {
-			return !!Desc
-				&& typeof Desc === 'object'
-				&& '[[Enumerable]]' in Desc
-				&& '[[Configurable]]' in Desc
-				&& (ES.IsAccessorDescriptor(Desc) || ES.IsDataDescriptor(Desc));
-		};
-		return isFullyPopulatedPropertyDescriptor;
-	}
-
-	var fromPropertyDescriptor;
-	var hasRequiredFromPropertyDescriptor$1;
-
-	function requireFromPropertyDescriptor$1 () {
-		if (hasRequiredFromPropertyDescriptor$1) return fromPropertyDescriptor;
-		hasRequiredFromPropertyDescriptor$1 = 1;
-
-		fromPropertyDescriptor = function fromPropertyDescriptor(Desc) {
-			if (typeof Desc === 'undefined') {
-				return Desc;
-			}
-			var obj = {};
-			if ('[[Value]]' in Desc) {
-				obj.value = Desc['[[Value]]'];
-			}
-			if ('[[Writable]]' in Desc) {
-				obj.writable = !!Desc['[[Writable]]'];
-			}
-			if ('[[Get]]' in Desc) {
-				obj.get = Desc['[[Get]]'];
-			}
-			if ('[[Set]]' in Desc) {
-				obj.set = Desc['[[Set]]'];
-			}
-			if ('[[Enumerable]]' in Desc) {
-				obj.enumerable = !!Desc['[[Enumerable]]'];
-			}
-			if ('[[Configurable]]' in Desc) {
-				obj.configurable = !!Desc['[[Configurable]]'];
-			}
-			return obj;
-		};
-		return fromPropertyDescriptor;
-	}
-
-	var FromPropertyDescriptor;
-	var hasRequiredFromPropertyDescriptor;
-
-	function requireFromPropertyDescriptor () {
-		if (hasRequiredFromPropertyDescriptor) return FromPropertyDescriptor;
-		hasRequiredFromPropertyDescriptor = 1;
-
-		var assertRecord = requireAssertRecord();
-		var fromPropertyDescriptor = requireFromPropertyDescriptor$1();
-
-		var Type = Type$9;
-
-		// https://262.ecma-international.org/6.0/#sec-frompropertydescriptor
-
-		FromPropertyDescriptor = function FromPropertyDescriptor(Desc) {
-			if (typeof Desc !== 'undefined') {
-				assertRecord(Type, 'Property Descriptor', 'Desc', Desc);
-			}
-
-			return fromPropertyDescriptor(Desc);
-		};
-		return FromPropertyDescriptor;
-	}
-
-	var IsGenericDescriptor;
-	var hasRequiredIsGenericDescriptor;
-
-	function requireIsGenericDescriptor () {
-		if (hasRequiredIsGenericDescriptor) return IsGenericDescriptor;
-		hasRequiredIsGenericDescriptor = 1;
-
-		var assertRecord = requireAssertRecord();
-
-		var IsAccessorDescriptor = requireIsAccessorDescriptor();
-		var IsDataDescriptor = requireIsDataDescriptor();
-		var Type = Type$9;
-
-		// https://262.ecma-international.org/6.0/#sec-isgenericdescriptor
-
-		IsGenericDescriptor = function IsGenericDescriptor(Desc) {
-			if (typeof Desc === 'undefined') {
+			if (!desc['[[Configurable]]'] || !desc['[[Writable]]']) {
 				return false;
 			}
 
-			assertRecord(Type, 'Property Descriptor', 'Desc', Desc);
-
-			if (!IsAccessorDescriptor(Desc) && !IsDataDescriptor(Desc)) {
-				return true;
+			// fallback for ES3
+			if (P in O && $isEnumerable$1(O, P) !== !!desc['[[Enumerable]]']) {
+				// a non-enumerable existing property
+				return false;
 			}
 
+			// property does not exist at all, or exists but is enumerable
+			var V = desc['[[Value]]'];
+			// eslint-disable-next-line no-param-reassign
+			O[P] = V; // will use [[Define]]
+			return SameValue(O[P], V);
+		}
+		if (
+			hasArrayLengthDefineBug
+			&& P === 'length'
+			&& '[[Value]]' in desc
+			&& isArray(O)
+			&& O.length !== desc['[[Value]]']
+		) {
+			// eslint-disable-next-line no-param-reassign
+			O.length = desc['[[Value]]'];
+			return O.length === desc['[[Value]]'];
+		}
+
+		$defineProperty(O, P, FromPropertyDescriptor(desc));
+		return true;
+	};
+
+	var isPropertyDescriptor$5 = propertyDescriptor;
+
+	var isFullyPopulatedPropertyDescriptor$1 = function isFullyPopulatedPropertyDescriptor(ES, Desc) {
+		return isPropertyDescriptor$5(Desc)
+			&& typeof Desc === 'object'
+			&& '[[Enumerable]]' in Desc
+			&& '[[Configurable]]' in Desc
+			&& (ES.IsAccessorDescriptor(Desc) || ES.IsDataDescriptor(Desc));
+	};
+
+	var fromPropertyDescriptor$1 = function fromPropertyDescriptor(Desc) {
+		if (typeof Desc === 'undefined') {
+			return Desc;
+		}
+		var obj = {};
+		if ('[[Value]]' in Desc) {
+			obj.value = Desc['[[Value]]'];
+		}
+		if ('[[Writable]]' in Desc) {
+			obj.writable = !!Desc['[[Writable]]'];
+		}
+		if ('[[Get]]' in Desc) {
+			obj.get = Desc['[[Get]]'];
+		}
+		if ('[[Set]]' in Desc) {
+			obj.set = Desc['[[Set]]'];
+		}
+		if ('[[Enumerable]]' in Desc) {
+			obj.enumerable = !!Desc['[[Enumerable]]'];
+		}
+		if ('[[Configurable]]' in Desc) {
+			obj.configurable = !!Desc['[[Configurable]]'];
+		}
+		return obj;
+	};
+
+	var $TypeError$k = type;
+
+	var isPropertyDescriptor$4 = propertyDescriptor;
+	var fromPropertyDescriptor = fromPropertyDescriptor$1;
+
+	// https://262.ecma-international.org/6.0/#sec-frompropertydescriptor
+
+	var FromPropertyDescriptor$1 = function FromPropertyDescriptor(Desc) {
+		if (typeof Desc !== 'undefined' && !isPropertyDescriptor$4(Desc)) {
+			throw new $TypeError$k('Assertion failed: `Desc` must be a Property Descriptor');
+		}
+
+		return fromPropertyDescriptor(Desc);
+	};
+
+	var $TypeError$j = type;
+
+	var hasOwn$1 = hasown;
+
+	var isPropertyDescriptor$3 = propertyDescriptor;
+
+	// https://262.ecma-international.org/5.1/#sec-8.10.2
+
+	var IsDataDescriptor$2 = function IsDataDescriptor(Desc) {
+		if (typeof Desc === 'undefined') {
 			return false;
-		};
-		return IsGenericDescriptor;
-	}
+		}
 
-	var ValidateAndApplyPropertyDescriptor;
-	var hasRequiredValidateAndApplyPropertyDescriptor;
+		if (!isPropertyDescriptor$3(Desc)) {
+			throw new $TypeError$j('Assertion failed: `Desc` must be a Property Descriptor');
+		}
 
-	function requireValidateAndApplyPropertyDescriptor () {
-		if (hasRequiredValidateAndApplyPropertyDescriptor) return ValidateAndApplyPropertyDescriptor;
-		hasRequiredValidateAndApplyPropertyDescriptor = 1;
+		if (!hasOwn$1(Desc, '[[Value]]') && !hasOwn$1(Desc, '[[Writable]]')) {
+			return false;
+		}
 
-		var GetIntrinsic = getIntrinsic;
+		return true;
+	};
 
-		var $TypeError = GetIntrinsic('%TypeError%');
+	var $TypeError$i = type;
 
-		var DefineOwnProperty = requireDefineOwnProperty();
-		var isFullyPopulatedPropertyDescriptor = requireIsFullyPopulatedPropertyDescriptor();
-		var isPropertyDescriptor = requireIsPropertyDescriptor();
+	var IsAccessorDescriptor$2 = IsAccessorDescriptor$3;
+	var IsDataDescriptor$1 = IsDataDescriptor$2;
 
-		var FromPropertyDescriptor = requireFromPropertyDescriptor();
-		var IsAccessorDescriptor = requireIsAccessorDescriptor();
-		var IsDataDescriptor = requireIsDataDescriptor();
-		var IsGenericDescriptor = requireIsGenericDescriptor();
-		var IsPropertyKey = IsPropertyKey$4;
-		var SameValue$1 = SameValue;
-		var Type = Type$9;
+	var isPropertyDescriptor$2 = propertyDescriptor;
 
-		// https://262.ecma-international.org/13.0/#sec-validateandapplypropertydescriptor
+	// https://262.ecma-international.org/6.0/#sec-isgenericdescriptor
 
-		// see https://github.com/tc39/ecma262/pull/2468 for ES2022 changes
+	var IsGenericDescriptor$1 = function IsGenericDescriptor(Desc) {
+		if (typeof Desc === 'undefined') {
+			return false;
+		}
 
-		// eslint-disable-next-line max-lines-per-function, max-statements
-		ValidateAndApplyPropertyDescriptor = function ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, current) {
-			var oType = Type(O);
-			if (oType !== 'Undefined' && oType !== 'Object') {
-				throw new $TypeError('Assertion failed: O must be undefined or an Object');
+		if (!isPropertyDescriptor$2(Desc)) {
+			throw new $TypeError$i('Assertion failed: `Desc` must be a Property Descriptor');
+		}
+
+		if (!IsAccessorDescriptor$2(Desc) && !IsDataDescriptor$1(Desc)) {
+			return true;
+		}
+
+		return false;
+	};
+
+	var $TypeError$h = type;
+
+	var DefineOwnProperty = DefineOwnProperty$1;
+	var isFullyPopulatedPropertyDescriptor = isFullyPopulatedPropertyDescriptor$1;
+	var isPropertyDescriptor$1 = propertyDescriptor;
+
+	var FromPropertyDescriptor = FromPropertyDescriptor$1;
+	var IsAccessorDescriptor$1 = IsAccessorDescriptor$3;
+	var IsDataDescriptor = IsDataDescriptor$2;
+	var IsGenericDescriptor = IsGenericDescriptor$1;
+	var IsPropertyKey$8 = IsPropertyKey$9;
+	var SameValue$1 = SameValue$2;
+	var Type$a = Type$c;
+
+	// https://262.ecma-international.org/13.0/#sec-validateandapplypropertydescriptor
+
+	// see https://github.com/tc39/ecma262/pull/2468 for ES2022 changes
+
+	// eslint-disable-next-line max-lines-per-function, max-statements
+	var ValidateAndApplyPropertyDescriptor$1 = function ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, current) {
+		var oType = Type$a(O);
+		if (oType !== 'Undefined' && oType !== 'Object') {
+			throw new $TypeError$h('Assertion failed: O must be undefined or an Object');
+		}
+		if (!IsPropertyKey$8(P)) {
+			throw new $TypeError$h('Assertion failed: P must be a Property Key');
+		}
+		if (typeof extensible !== 'boolean') {
+			throw new $TypeError$h('Assertion failed: extensible must be a Boolean');
+		}
+		if (!isPropertyDescriptor$1(Desc)) {
+			throw new $TypeError$h('Assertion failed: Desc must be a Property Descriptor');
+		}
+		if (typeof current !== 'undefined' && !isPropertyDescriptor$1(current)) {
+			throw new $TypeError$h('Assertion failed: current must be a Property Descriptor, or undefined');
+		}
+
+		if (typeof current === 'undefined') { // step 2
+			if (!extensible) {
+				return false; // step 2.a
 			}
-			if (!IsPropertyKey(P)) {
-				throw new $TypeError('Assertion failed: P must be a Property Key');
+			if (oType === 'Undefined') {
+				return true; // step 2.b
 			}
-			if (Type(extensible) !== 'Boolean') {
-				throw new $TypeError('Assertion failed: extensible must be a Boolean');
-			}
-			if (!isPropertyDescriptor({
-				Type: Type,
-				IsDataDescriptor: IsDataDescriptor,
-				IsAccessorDescriptor: IsAccessorDescriptor
-			}, Desc)) {
-				throw new $TypeError('Assertion failed: Desc must be a Property Descriptor');
-			}
-			if (Type(current) !== 'Undefined' && !isPropertyDescriptor({
-				Type: Type,
-				IsDataDescriptor: IsDataDescriptor,
-				IsAccessorDescriptor: IsAccessorDescriptor
-			}, current)) {
-				throw new $TypeError('Assertion failed: current must be a Property Descriptor, or undefined');
-			}
-
-			if (Type(current) === 'Undefined') { // step 2
-				if (!extensible) {
-					return false; // step 2.a
-				}
-				if (oType === 'Undefined') {
-					return true; // step 2.b
-				}
-				if (IsAccessorDescriptor(Desc)) { // step 2.c
-					return DefineOwnProperty(
-						IsDataDescriptor,
-						SameValue$1,
-						FromPropertyDescriptor,
-						O,
-						P,
-						Desc
-					);
-				}
-				// step 2.d
-				return DefineOwnProperty(
-					IsDataDescriptor,
-					SameValue$1,
-					FromPropertyDescriptor,
-					O,
-					P,
-					{
-						'[[Configurable]]': !!Desc['[[Configurable]]'],
-						'[[Enumerable]]': !!Desc['[[Enumerable]]'],
-						'[[Value]]': Desc['[[Value]]'],
-						'[[Writable]]': !!Desc['[[Writable]]']
-					}
-				);
-			}
-
-			// 3. Assert: current is a fully populated Property Descriptor.
-			if (!isFullyPopulatedPropertyDescriptor({
-				IsAccessorDescriptor: IsAccessorDescriptor,
-				IsDataDescriptor: IsDataDescriptor
-			}, current)) {
-				throw new $TypeError('`current`, when present, must be a fully populated and valid Property Descriptor');
-			}
-
-			// 4. If every field in Desc is absent, return true.
-			// this can't really match the assertion that it's a Property Descriptor in our JS implementation
-
-			// 5. If current.[[Configurable]] is false, then
-			if (!current['[[Configurable]]']) {
-				if ('[[Configurable]]' in Desc && Desc['[[Configurable]]']) {
-					// step 5.a
-					return false;
-				}
-				if ('[[Enumerable]]' in Desc && !SameValue$1(Desc['[[Enumerable]]'], current['[[Enumerable]]'])) {
-					// step 5.b
-					return false;
-				}
-				if (!IsGenericDescriptor(Desc) && !SameValue$1(IsAccessorDescriptor(Desc), IsAccessorDescriptor(current))) {
-					// step 5.c
-					return false;
-				}
-				if (IsAccessorDescriptor(current)) { // step 5.d
-					if ('[[Get]]' in Desc && !SameValue$1(Desc['[[Get]]'], current['[[Get]]'])) {
-						return false;
-					}
-					if ('[[Set]]' in Desc && !SameValue$1(Desc['[[Set]]'], current['[[Set]]'])) {
-						return false;
-					}
-				} else if (!current['[[Writable]]']) { // step 5.e
-					if ('[[Writable]]' in Desc && Desc['[[Writable]]']) {
-						return false;
-					}
-					if ('[[Value]]' in Desc && !SameValue$1(Desc['[[Value]]'], current['[[Value]]'])) {
-						return false;
-					}
-				}
-			}
-
-			// 6. If O is not undefined, then
-			if (oType !== 'Undefined') {
-				var configurable;
-				var enumerable;
-				if (IsDataDescriptor(current) && IsAccessorDescriptor(Desc)) { // step 6.a
-					configurable = ('[[Configurable]]' in Desc ? Desc : current)['[[Configurable]]'];
-					enumerable = ('[[Enumerable]]' in Desc ? Desc : current)['[[Enumerable]]'];
-					// Replace the property named P of object O with an accessor property having [[Configurable]] and [[Enumerable]] attributes as described by current and each other attribute set to its default value.
-					return DefineOwnProperty(
-						IsDataDescriptor,
-						SameValue$1,
-						FromPropertyDescriptor,
-						O,
-						P,
-						{
-							'[[Configurable]]': !!configurable,
-							'[[Enumerable]]': !!enumerable,
-							'[[Get]]': ('[[Get]]' in Desc ? Desc : current)['[[Get]]'],
-							'[[Set]]': ('[[Set]]' in Desc ? Desc : current)['[[Set]]']
-						}
-					);
-				} else if (IsAccessorDescriptor(current) && IsDataDescriptor(Desc)) {
-					configurable = ('[[Configurable]]' in Desc ? Desc : current)['[[Configurable]]'];
-					enumerable = ('[[Enumerable]]' in Desc ? Desc : current)['[[Enumerable]]'];
-					// i. Replace the property named P of object O with a data property having [[Configurable]] and [[Enumerable]] attributes as described by current and each other attribute set to its default value.
-					return DefineOwnProperty(
-						IsDataDescriptor,
-						SameValue$1,
-						FromPropertyDescriptor,
-						O,
-						P,
-						{
-							'[[Configurable]]': !!configurable,
-							'[[Enumerable]]': !!enumerable,
-							'[[Value]]': ('[[Value]]' in Desc ? Desc : current)['[[Value]]'],
-							'[[Writable]]': !!('[[Writable]]' in Desc ? Desc : current)['[[Writable]]']
-						}
-					);
-				}
-
-				// For each field of Desc that is present, set the corresponding attribute of the property named P of object O to the value of the field.
+			if (IsAccessorDescriptor$1(Desc)) { // step 2.c
 				return DefineOwnProperty(
 					IsDataDescriptor,
 					SameValue$1,
@@ -6767,161 +6399,241 @@
 					Desc
 				);
 			}
-
-			return true; // step 7
-		};
-		return ValidateAndApplyPropertyDescriptor;
-	}
-
-	var OrdinaryDefineOwnProperty;
-	var hasRequiredOrdinaryDefineOwnProperty;
-
-	function requireOrdinaryDefineOwnProperty () {
-		if (hasRequiredOrdinaryDefineOwnProperty) return OrdinaryDefineOwnProperty;
-		hasRequiredOrdinaryDefineOwnProperty = 1;
-
-		var GetIntrinsic = getIntrinsic;
-
-		var $gOPD = gopd$1;
-		var $SyntaxError = GetIntrinsic('%SyntaxError%');
-		var $TypeError = GetIntrinsic('%TypeError%');
-
-		var isPropertyDescriptor = requireIsPropertyDescriptor();
-
-		var IsAccessorDescriptor = requireIsAccessorDescriptor();
-		var IsDataDescriptor = requireIsDataDescriptor();
-		var IsExtensible = requireIsExtensible();
-		var IsPropertyKey = IsPropertyKey$4;
-		var ToPropertyDescriptor = requireToPropertyDescriptor();
-		var SameValue$1 = SameValue;
-		var Type = Type$9;
-		var ValidateAndApplyPropertyDescriptor = requireValidateAndApplyPropertyDescriptor();
-
-		// https://262.ecma-international.org/6.0/#sec-ordinarydefineownproperty
-
-		OrdinaryDefineOwnProperty = function OrdinaryDefineOwnProperty(O, P, Desc) {
-			if (Type(O) !== 'Object') {
-				throw new $TypeError('Assertion failed: O must be an Object');
-			}
-			if (!IsPropertyKey(P)) {
-				throw new $TypeError('Assertion failed: P must be a Property Key');
-			}
-			if (!isPropertyDescriptor({
-				Type: Type,
-				IsDataDescriptor: IsDataDescriptor,
-				IsAccessorDescriptor: IsAccessorDescriptor
-			}, Desc)) {
-				throw new $TypeError('Assertion failed: Desc must be a Property Descriptor');
-			}
-			if (!$gOPD) {
-				// ES3/IE 8 fallback
-				if (IsAccessorDescriptor(Desc)) {
-					throw new $SyntaxError('This environment does not support accessor property descriptors.');
+			// step 2.d
+			return DefineOwnProperty(
+				IsDataDescriptor,
+				SameValue$1,
+				FromPropertyDescriptor,
+				O,
+				P,
+				{
+					'[[Configurable]]': !!Desc['[[Configurable]]'],
+					'[[Enumerable]]': !!Desc['[[Enumerable]]'],
+					'[[Value]]': Desc['[[Value]]'],
+					'[[Writable]]': !!Desc['[[Writable]]']
 				}
-				var creatingNormalDataProperty = !(P in O)
-					&& Desc['[[Writable]]']
-					&& Desc['[[Enumerable]]']
-					&& Desc['[[Configurable]]']
-					&& '[[Value]]' in Desc;
-				var settingExistingDataProperty = (P in O)
-					&& (!('[[Configurable]]' in Desc) || Desc['[[Configurable]]'])
-					&& (!('[[Enumerable]]' in Desc) || Desc['[[Enumerable]]'])
-					&& (!('[[Writable]]' in Desc) || Desc['[[Writable]]'])
-					&& '[[Value]]' in Desc;
-				if (creatingNormalDataProperty || settingExistingDataProperty) {
-					O[P] = Desc['[[Value]]']; // eslint-disable-line no-param-reassign
-					return SameValue$1(O[P], Desc['[[Value]]']);
+			);
+		}
+
+		// 3. Assert: current is a fully populated Property Descriptor.
+		if (
+			!isFullyPopulatedPropertyDescriptor(
+				{
+					IsAccessorDescriptor: IsAccessorDescriptor$1,
+					IsDataDescriptor: IsDataDescriptor
+				},
+				current
+			)
+		) {
+			throw new $TypeError$h('`current`, when present, must be a fully populated and valid Property Descriptor');
+		}
+
+		// 4. If every field in Desc is absent, return true.
+		// this can't really match the assertion that it's a Property Descriptor in our JS implementation
+
+		// 5. If current.[[Configurable]] is false, then
+		if (!current['[[Configurable]]']) {
+			if ('[[Configurable]]' in Desc && Desc['[[Configurable]]']) {
+				// step 5.a
+				return false;
+			}
+			if ('[[Enumerable]]' in Desc && !SameValue$1(Desc['[[Enumerable]]'], current['[[Enumerable]]'])) {
+				// step 5.b
+				return false;
+			}
+			if (!IsGenericDescriptor(Desc) && !SameValue$1(IsAccessorDescriptor$1(Desc), IsAccessorDescriptor$1(current))) {
+				// step 5.c
+				return false;
+			}
+			if (IsAccessorDescriptor$1(current)) { // step 5.d
+				if ('[[Get]]' in Desc && !SameValue$1(Desc['[[Get]]'], current['[[Get]]'])) {
+					return false;
 				}
-				throw new $SyntaxError('This environment does not support defining non-writable, non-enumerable, or non-configurable properties');
+				if ('[[Set]]' in Desc && !SameValue$1(Desc['[[Set]]'], current['[[Set]]'])) {
+					return false;
+				}
+			} else if (!current['[[Writable]]']) { // step 5.e
+				if ('[[Writable]]' in Desc && Desc['[[Writable]]']) {
+					return false;
+				}
+				if ('[[Value]]' in Desc && !SameValue$1(Desc['[[Value]]'], current['[[Value]]'])) {
+					return false;
+				}
 			}
-			var desc = $gOPD(O, P);
-			var current = desc && ToPropertyDescriptor(desc);
-			var extensible = IsExtensible(O);
-			return ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, current);
+		}
+
+		// 6. If O is not undefined, then
+		if (oType !== 'Undefined') {
+			var configurable;
+			var enumerable;
+			if (IsDataDescriptor(current) && IsAccessorDescriptor$1(Desc)) { // step 6.a
+				configurable = ('[[Configurable]]' in Desc ? Desc : current)['[[Configurable]]'];
+				enumerable = ('[[Enumerable]]' in Desc ? Desc : current)['[[Enumerable]]'];
+				// Replace the property named P of object O with an accessor property having [[Configurable]] and [[Enumerable]] attributes as described by current and each other attribute set to its default value.
+				return DefineOwnProperty(
+					IsDataDescriptor,
+					SameValue$1,
+					FromPropertyDescriptor,
+					O,
+					P,
+					{
+						'[[Configurable]]': !!configurable,
+						'[[Enumerable]]': !!enumerable,
+						'[[Get]]': ('[[Get]]' in Desc ? Desc : current)['[[Get]]'],
+						'[[Set]]': ('[[Set]]' in Desc ? Desc : current)['[[Set]]']
+					}
+				);
+			} else if (IsAccessorDescriptor$1(current) && IsDataDescriptor(Desc)) {
+				configurable = ('[[Configurable]]' in Desc ? Desc : current)['[[Configurable]]'];
+				enumerable = ('[[Enumerable]]' in Desc ? Desc : current)['[[Enumerable]]'];
+				// i. Replace the property named P of object O with a data property having [[Configurable]] and [[Enumerable]] attributes as described by current and each other attribute set to its default value.
+				return DefineOwnProperty(
+					IsDataDescriptor,
+					SameValue$1,
+					FromPropertyDescriptor,
+					O,
+					P,
+					{
+						'[[Configurable]]': !!configurable,
+						'[[Enumerable]]': !!enumerable,
+						'[[Value]]': ('[[Value]]' in Desc ? Desc : current)['[[Value]]'],
+						'[[Writable]]': !!('[[Writable]]' in Desc ? Desc : current)['[[Writable]]']
+					}
+				);
+			}
+
+			// For each field of Desc that is present, set the corresponding attribute of the property named P of object O to the value of the field.
+			return DefineOwnProperty(
+				IsDataDescriptor,
+				SameValue$1,
+				FromPropertyDescriptor,
+				O,
+				P,
+				Desc
+			);
+		}
+
+		return true; // step 7
+	};
+
+	var $gOPD = gopd$1;
+	var $SyntaxError$1 = syntax;
+	var $TypeError$g = type;
+
+	var isPropertyDescriptor = propertyDescriptor;
+
+	var IsAccessorDescriptor = IsAccessorDescriptor$3;
+	var IsExtensible = IsExtensible$1;
+	var IsPropertyKey$7 = IsPropertyKey$9;
+	var ToPropertyDescriptor = ToPropertyDescriptor$1;
+	var SameValue = SameValue$2;
+	var Type$9 = Type$c;
+	var ValidateAndApplyPropertyDescriptor = ValidateAndApplyPropertyDescriptor$1;
+
+	// https://262.ecma-international.org/6.0/#sec-ordinarydefineownproperty
+
+	var OrdinaryDefineOwnProperty$1 = function OrdinaryDefineOwnProperty(O, P, Desc) {
+		if (Type$9(O) !== 'Object') {
+			throw new $TypeError$g('Assertion failed: O must be an Object');
+		}
+		if (!IsPropertyKey$7(P)) {
+			throw new $TypeError$g('Assertion failed: P must be a Property Key');
+		}
+		if (!isPropertyDescriptor(Desc)) {
+			throw new $TypeError$g('Assertion failed: Desc must be a Property Descriptor');
+		}
+		if (!$gOPD) {
+			// ES3/IE 8 fallback
+			if (IsAccessorDescriptor(Desc)) {
+				throw new $SyntaxError$1('This environment does not support accessor property descriptors.');
+			}
+			var creatingNormalDataProperty = !(P in O)
+				&& Desc['[[Writable]]']
+				&& Desc['[[Enumerable]]']
+				&& Desc['[[Configurable]]']
+				&& '[[Value]]' in Desc;
+			var settingExistingDataProperty = (P in O)
+				&& (!('[[Configurable]]' in Desc) || Desc['[[Configurable]]'])
+				&& (!('[[Enumerable]]' in Desc) || Desc['[[Enumerable]]'])
+				&& (!('[[Writable]]' in Desc) || Desc['[[Writable]]'])
+				&& '[[Value]]' in Desc;
+			if (creatingNormalDataProperty || settingExistingDataProperty) {
+				O[P] = Desc['[[Value]]']; // eslint-disable-line no-param-reassign
+				return SameValue(O[P], Desc['[[Value]]']);
+			}
+			throw new $SyntaxError$1('This environment does not support defining non-writable, non-enumerable, or non-configurable properties');
+		}
+		var desc = $gOPD(O, P);
+		var current = desc && ToPropertyDescriptor(desc);
+		var extensible = IsExtensible(O);
+		return ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, current);
+	};
+
+	var $TypeError$f = type;
+
+	var IsPropertyKey$6 = IsPropertyKey$9;
+	var OrdinaryDefineOwnProperty = OrdinaryDefineOwnProperty$1;
+	var Type$8 = Type$c;
+
+	// https://262.ecma-international.org/6.0/#sec-createdataproperty
+
+	var CreateDataProperty$1 = function CreateDataProperty(O, P, V) {
+		if (Type$8(O) !== 'Object') {
+			throw new $TypeError$f('Assertion failed: Type(O) is not Object');
+		}
+		if (!IsPropertyKey$6(P)) {
+			throw new $TypeError$f('Assertion failed: IsPropertyKey(P) is not true');
+		}
+		var newDesc = {
+			'[[Configurable]]': true,
+			'[[Enumerable]]': true,
+			'[[Value]]': V,
+			'[[Writable]]': true
 		};
-		return OrdinaryDefineOwnProperty;
-	}
+		return OrdinaryDefineOwnProperty(O, P, newDesc);
+	};
 
-	var CreateDataProperty$1;
-	var hasRequiredCreateDataProperty;
+	var $TypeError$e = type;
 
-	function requireCreateDataProperty () {
-		if (hasRequiredCreateDataProperty) return CreateDataProperty$1;
-		hasRequiredCreateDataProperty = 1;
-
-		var GetIntrinsic = getIntrinsic;
-
-		var $TypeError = GetIntrinsic('%TypeError%');
-
-		var IsPropertyKey = IsPropertyKey$4;
-		var OrdinaryDefineOwnProperty = requireOrdinaryDefineOwnProperty();
-		var Type = Type$9;
-
-		// https://262.ecma-international.org/6.0/#sec-createdataproperty
-
-		CreateDataProperty$1 = function CreateDataProperty(O, P, V) {
-			if (Type(O) !== 'Object') {
-				throw new $TypeError('Assertion failed: Type(O) is not Object');
-			}
-			if (!IsPropertyKey(P)) {
-				throw new $TypeError('Assertion failed: IsPropertyKey(P) is not true');
-			}
-			var newDesc = {
-				'[[Configurable]]': true,
-				'[[Enumerable]]': true,
-				'[[Value]]': V,
-				'[[Writable]]': true
-			};
-			return OrdinaryDefineOwnProperty(O, P, newDesc);
-		};
-		return CreateDataProperty$1;
-	}
-
-	var GetIntrinsic$g = getIntrinsic;
-
-	var $TypeError$b = GetIntrinsic$g('%TypeError%');
-
-	var CreateDataProperty = requireCreateDataProperty();
-	var IsPropertyKey$3 = IsPropertyKey$4;
-	var Type$8 = Type$9;
+	var CreateDataProperty = CreateDataProperty$1;
+	var IsPropertyKey$5 = IsPropertyKey$9;
+	var Type$7 = Type$c;
 
 	// // https://262.ecma-international.org/6.0/#sec-createdatapropertyorthrow
 
 	var CreateDataPropertyOrThrow = function CreateDataPropertyOrThrow(O, P, V) {
-		if (Type$8(O) !== 'Object') {
-			throw new $TypeError$b('Assertion failed: Type(O) is not Object');
+		if (Type$7(O) !== 'Object') {
+			throw new $TypeError$e('Assertion failed: Type(O) is not Object');
 		}
-		if (!IsPropertyKey$3(P)) {
-			throw new $TypeError$b('Assertion failed: IsPropertyKey(P) is not true');
+		if (!IsPropertyKey$5(P)) {
+			throw new $TypeError$e('Assertion failed: IsPropertyKey(P) is not true');
 		}
 		var success = CreateDataProperty(O, P, V);
 		if (!success) {
-			throw new $TypeError$b('unable to create data property');
+			throw new $TypeError$e('unable to create data property');
 		}
 		return success;
 	};
 
 	var CreateDataPropertyOrThrow$1 = /*@__PURE__*/getDefaultExportFromCjs(CreateDataPropertyOrThrow);
 
-	var GetIntrinsic$f = getIntrinsic;
+	var $TypeError$d = type;
 
-	var $TypeError$a = GetIntrinsic$f('%TypeError%');
+	var inspect$3 = objectInspect;
 
-	var inspect$2 = requireObjectInspect();
-
-	var IsPropertyKey$2 = IsPropertyKey$4;
-	var Type$7 = Type$9;
+	var IsPropertyKey$4 = IsPropertyKey$9;
+	var Type$6 = Type$c;
 
 	// https://262.ecma-international.org/6.0/#sec-get-o-p
 
 	var Get$2 = function Get(O, P) {
 		// 7.3.1.1
-		if (Type$7(O) !== 'Object') {
-			throw new $TypeError$a('Assertion failed: Type(O) is not Object');
+		if (Type$6(O) !== 'Object') {
+			throw new $TypeError$d('Assertion failed: Type(O) is not Object');
 		}
 		// 7.3.1.2
-		if (!IsPropertyKey$2(P)) {
-			throw new $TypeError$a('Assertion failed: IsPropertyKey(P) is not true, got ' + inspect$2(P));
+		if (!IsPropertyKey$4(P)) {
+			throw new $TypeError$d('Assertion failed: IsPropertyKey(P) is not true, got ' + inspect$3(P));
 		}
 		// 7.3.1.3
 		return O[P];
@@ -6938,6 +6650,7 @@
 
 		var hasSymbols = requireShams$1();
 
+		/** @type {import('.')} */
 		shams = function hasToStringTagShams() {
 			return hasSymbols() && !!Symbol.toStringTag;
 		};
@@ -6985,7 +6698,7 @@
 
 		var hasSymbols = requireHasSymbols()();
 		var GetIntrinsic = getIntrinsic;
-		var callBound = callBound$2;
+		var callBound = callBound$4;
 		var isString = requireIsString();
 
 		var $iterator = GetIntrinsic('%Symbol.iterator%', true);
@@ -7066,7 +6779,7 @@
 
 		var GetIntrinsic = getIntrinsic;
 
-		var $TypeError = GetIntrinsic('%TypeError%');
+		var $TypeError = type;
 		var $fromCharCode = GetIntrinsic('%String.fromCharCode%');
 
 		var isLeadingSurrogate = requireIsLeadingSurrogate();
@@ -7091,14 +6804,11 @@
 		if (hasRequiredCodePointAt) return CodePointAt;
 		hasRequiredCodePointAt = 1;
 
-		var GetIntrinsic = getIntrinsic;
-
-		var $TypeError = GetIntrinsic('%TypeError%');
-		var callBound = callBound$2;
+		var $TypeError = type;
+		var callBound = callBound$4;
 		var isLeadingSurrogate = requireIsLeadingSurrogate();
 		var isTrailingSurrogate = requireIsTrailingSurrogate();
 
-		var Type = Type$9;
 		var UTF16SurrogatePairToCodePoint = requireUTF16SurrogatePairToCodePoint();
 
 		var $charAt = callBound('String.prototype.charAt');
@@ -7107,7 +6817,7 @@
 		// https://262.ecma-international.org/12.0/#sec-codepointat
 
 		CodePointAt = function CodePointAt(string, position) {
-			if (Type(string) !== 'String') {
+			if (typeof string !== 'string') {
 				throw new $TypeError('Assertion failed: `string` must be a String');
 			}
 			var size = string.length;
@@ -7150,6 +6860,26 @@
 		return CodePointAt;
 	}
 
+	var $isNaN$2 = _isNaN;
+
+	var _isFinite = function (x) { return (typeof x === 'number' || typeof x === 'bigint') && !$isNaN$2(x) && x !== Infinity && x !== -Infinity; };
+
+	var GetIntrinsic$8 = getIntrinsic;
+
+	var $abs$1 = GetIntrinsic$8('%Math.abs%');
+	var $floor$1 = GetIntrinsic$8('%Math.floor%');
+
+	var $isNaN$1 = _isNaN;
+	var $isFinite$1 = _isFinite;
+
+	var isInteger$2 = function isInteger(argument) {
+		if (typeof argument !== 'number' || $isNaN$1(argument) || !$isFinite$1(argument)) {
+			return false;
+		}
+		var absValue = $abs$1(argument);
+		return $floor$1(absValue) === absValue;
+	};
+
 	var maxSafeInteger;
 	var hasRequiredMaxSafeInteger;
 
@@ -7168,26 +6898,23 @@
 		if (hasRequiredAdvanceStringIndex) return AdvanceStringIndex$1;
 		hasRequiredAdvanceStringIndex = 1;
 
-		var GetIntrinsic = getIntrinsic;
-
 		var CodePointAt = requireCodePointAt();
-		var Type = Type$9;
 
 		var isInteger = isInteger$2;
 		var MAX_SAFE_INTEGER = requireMaxSafeInteger();
 
-		var $TypeError = GetIntrinsic('%TypeError%');
+		var $TypeError = type;
 
 		// https://262.ecma-international.org/12.0/#sec-advancestringindex
 
 		AdvanceStringIndex$1 = function AdvanceStringIndex(S, index, unicode) {
-			if (Type(S) !== 'String') {
+			if (typeof S !== 'string') {
 				throw new $TypeError('Assertion failed: `S` must be a String');
 			}
 			if (!isInteger(index) || index < 0 || index > MAX_SAFE_INTEGER) {
 				throw new $TypeError('Assertion failed: `length` must be an integer >= 0 and <= 2**53');
 			}
-			if (Type(unicode) !== 'Boolean') {
+			if (typeof unicode !== 'boolean') {
 				throw new $TypeError('Assertion failed: `unicode` must be a Boolean');
 			}
 			if (!unicode) {
@@ -7203,59 +6930,46 @@
 		return AdvanceStringIndex$1;
 	}
 
-	var GetV$1;
-	var hasRequiredGetV;
+	var $TypeError$c = type;
 
-	function requireGetV () {
-		if (hasRequiredGetV) return GetV$1;
-		hasRequiredGetV = 1;
+	var inspect$2 = objectInspect;
 
-		var GetIntrinsic = getIntrinsic;
+	var IsPropertyKey$3 = IsPropertyKey$9;
+	// var ToObject = require('./ToObject');
 
-		var $TypeError = GetIntrinsic('%TypeError%');
+	// https://262.ecma-international.org/6.0/#sec-getv
 
-		var inspect = requireObjectInspect();
+	var GetV$2 = function GetV(V, P) {
+		// 7.3.2.1
+		if (!IsPropertyKey$3(P)) {
+			throw new $TypeError$c('Assertion failed: IsPropertyKey(P) is not true, got ' + inspect$2(P));
+		}
 
-		var IsPropertyKey = IsPropertyKey$4;
-		// var ToObject = require('./ToObject');
+		// 7.3.2.2-3
+		// var O = ToObject(V);
 
-		// https://262.ecma-international.org/6.0/#sec-getv
+		// 7.3.2.4
+		return V[P];
+	};
 
-		GetV$1 = function GetV(V, P) {
-			// 7.3.2.1
-			if (!IsPropertyKey(P)) {
-				throw new $TypeError('Assertion failed: IsPropertyKey(P) is not true, got ' + inspect(P));
-			}
+	var $TypeError$b = type;
 
-			// 7.3.2.2-3
-			// var O = ToObject(V);
+	var GetV$1 = GetV$2;
+	var IsCallable$1 = IsCallable$3;
+	var IsPropertyKey$2 = IsPropertyKey$9;
 
-			// 7.3.2.4
-			return V[P];
-		};
-		return GetV$1;
-	}
-
-	var GetIntrinsic$e = getIntrinsic;
-
-	var $TypeError$9 = GetIntrinsic$e('%TypeError%');
-
-	var GetV = requireGetV();
-	var IsCallable$1 = requireIsCallable();
-	var IsPropertyKey$1 = IsPropertyKey$4;
-
-	var inspect$1 = requireObjectInspect();
+	var inspect$1 = objectInspect;
 
 	// https://262.ecma-international.org/6.0/#sec-getmethod
 
 	var GetMethod$3 = function GetMethod(O, P) {
 		// 7.3.9.1
-		if (!IsPropertyKey$1(P)) {
-			throw new $TypeError$9('Assertion failed: IsPropertyKey(P) is not true');
+		if (!IsPropertyKey$2(P)) {
+			throw new $TypeError$b('Assertion failed: IsPropertyKey(P) is not true');
 		}
 
 		// 7.3.9.2
-		var func = GetV(O, P);
+		var func = GetV$1(O, P);
 
 		// 7.3.9.4
 		if (func == null) {
@@ -7264,7 +6978,7 @@
 
 		// 7.3.9.5
 		if (!IsCallable$1(func)) {
-			throw new $TypeError$9(inspect$1(P) + ' is not a function: ' + inspect$1(func));
+			throw new $TypeError$b(inspect$1(P) + ' is not a function: ' + inspect$1(func));
 		}
 
 		// 7.3.9.6
@@ -7273,21 +6987,21 @@
 
 	var GetMethod$4 = /*@__PURE__*/getDefaultExportFromCjs(GetMethod$3);
 
-	var GetIntrinsic$d = getIntrinsic;
+	var GetIntrinsic$7 = getIntrinsic;
 
-	var $TypeError$8 = GetIntrinsic$d('%TypeError%');
-	var $SyntaxError = GetIntrinsic$d('%SyntaxError%');
-	var $asyncIterator = GetIntrinsic$d('%Symbol.asyncIterator%', true);
+	var $TypeError$a = type;
+	var $SyntaxError = syntax;
+	var $asyncIterator = GetIntrinsic$7('%Symbol.asyncIterator%', true);
 
-	var inspect = requireObjectInspect();
+	var inspect = objectInspect;
 	var hasSymbols$2 = requireHasSymbols()();
 
 	var getIteratorMethod = requireGetIteratorMethod();
 	var AdvanceStringIndex = requireAdvanceStringIndex();
-	var Call$1 = Call$2;
+	var Call$2 = Call$3;
 	var GetMethod$2 = GetMethod$3;
-	var IsArray = IsArray$2;
-	var Type$6 = Type$9;
+	var IsArray$1 = IsArray$3;
+	var Type$5 = Type$c;
 
 	// https://262.ecma-international.org/11.0/#sec-getiterator
 
@@ -7297,7 +7011,7 @@
 			actualHint = 'sync';
 		}
 		if (actualHint !== 'sync' && actualHint !== 'async') {
-			throw new $TypeError$8("Assertion failed: `hint` must be one of 'sync' or 'async', got " + inspect(hint));
+			throw new $TypeError$a("Assertion failed: `hint` must be one of 'sync' or 'async', got " + inspect(hint));
 		}
 
 		var actualMethod = method;
@@ -7314,15 +7028,15 @@
 					{
 						AdvanceStringIndex: AdvanceStringIndex,
 						GetMethod: GetMethod$2,
-						IsArray: IsArray
+						IsArray: IsArray$1
 					},
 					obj
 				);
 			}
 		}
-		var iterator = Call$1(actualMethod, obj);
-		if (Type$6(iterator) !== 'Object') {
-			throw new $TypeError$8('iterator must return an object');
+		var iterator = Call$2(actualMethod, obj);
+		if (Type$5(iterator) !== 'Object') {
+			throw new $TypeError$a('iterator must return an object');
 		}
 
 		return iterator;
@@ -7340,23 +7054,21 @@
 
 	var GetIterator$1 = /*@__PURE__*/getDefaultExportFromCjs(GetIterator);
 
-	var GetIntrinsic$c = getIntrinsic;
+	var $TypeError$9 = type;
 
-	var $TypeError$7 = GetIntrinsic$c('%TypeError%');
+	var hasOwn = hasown;
 
-	var hasOwn = requireHasown();
-
-	var IsPropertyKey = IsPropertyKey$4;
-	var Type$5 = Type$9;
+	var IsPropertyKey$1 = IsPropertyKey$9;
+	var Type$4 = Type$c;
 
 	// https://262.ecma-international.org/6.0/#sec-hasownproperty
 
 	var HasOwnProperty = function HasOwnProperty(O, P) {
-		if (Type$5(O) !== 'Object') {
-			throw new $TypeError$7('Assertion failed: `O` must be an Object');
+		if (Type$4(O) !== 'Object') {
+			throw new $TypeError$9('Assertion failed: `O` must be an Object');
 		}
-		if (!IsPropertyKey(P)) {
-			throw new $TypeError$7('Assertion failed: `P` must be a Property Key');
+		if (!IsPropertyKey$1(P)) {
+			throw new $TypeError$9('Assertion failed: `P` must be a Property Key');
 		}
 		return hasOwn(O, P);
 	};
@@ -7373,24 +7085,22 @@
 
 	var IsIntegralNumber$1 = /*@__PURE__*/getDefaultExportFromCjs(IsIntegralNumber);
 
-	var GetIntrinsic$b = getIntrinsic;
+	var $TypeError$8 = type;
 
-	var $TypeError$6 = GetIntrinsic$b('%TypeError%');
-
-	var Call = Call$2;
+	var Call$1 = Call$3;
 	var CompletionRecord = CompletionRecord_1;
 	var GetMethod$1 = GetMethod$3;
-	var IsCallable = requireIsCallable();
-	var Type$4 = Type$9;
+	var IsCallable = IsCallable$3;
+	var Type$3 = Type$c;
 
 	// https://262.ecma-international.org/6.0/#sec-iteratorclose
 
 	var IteratorClose = function IteratorClose(iterator, completion) {
-		if (Type$4(iterator) !== 'Object') {
-			throw new $TypeError$6('Assertion failed: Type(iterator) is not Object');
+		if (Type$3(iterator) !== 'Object') {
+			throw new $TypeError$8('Assertion failed: Type(iterator) is not Object');
 		}
 		if (!IsCallable(completion) && !(completion instanceof CompletionRecord)) {
-			throw new $TypeError$6('Assertion failed: completion is not a thunk representing a Completion Record, nor a Completion Record instance');
+			throw new $TypeError$8('Assertion failed: completion is not a thunk representing a Completion Record, nor a Completion Record instance');
 		}
 		var completionThunk = completion instanceof CompletionRecord ? function () { return completion['?'](); } : completion;
 
@@ -7402,7 +7112,7 @@
 
 		var completionRecord;
 		try {
-			var innerResult = Call(iteratorReturn, iterator, []);
+			var innerResult = Call$1(iteratorReturn, iterator, []);
 		} catch (e) {
 			// if we hit here, then "e" is the innerResult completion that needs re-throwing
 
@@ -7416,8 +7126,8 @@
 		completionRecord = completionThunk(); // if innerResult worked, then throw if the completion does
 		completionThunk = null; // ensure it's not called twice.
 
-		if (Type$4(innerResult) !== 'Object') {
-			throw new $TypeError$6('iterator .return must return an object');
+		if (Type$3(innerResult) !== 'Object') {
+			throw new $TypeError$8('iterator .return must return an object');
 		}
 
 		return completionRecord;
@@ -7425,68 +7135,53 @@
 
 	var IteratorClose$1 = /*@__PURE__*/getDefaultExportFromCjs(IteratorClose);
 
-	var GetIntrinsic$a = getIntrinsic;
-
-	var $TypeError$5 = GetIntrinsic$a('%TypeError%');
+	var $TypeError$7 = type;
 
 	var Get$1 = Get$2;
-	var ToBoolean = requireToBoolean();
-	var Type$3 = Type$9;
+	var ToBoolean = ToBoolean$2;
+	var Type$2 = Type$c;
 
 	// https://262.ecma-international.org/6.0/#sec-iteratorcomplete
 
 	var IteratorComplete$1 = function IteratorComplete(iterResult) {
-		if (Type$3(iterResult) !== 'Object') {
-			throw new $TypeError$5('Assertion failed: Type(iterResult) is not Object');
+		if (Type$2(iterResult) !== 'Object') {
+			throw new $TypeError$7('Assertion failed: Type(iterResult) is not Object');
 		}
 		return ToBoolean(Get$1(iterResult, 'done'));
 	};
 
-	var Invoke$1;
-	var hasRequiredInvoke;
+	var $TypeError$6 = type;
 
-	function requireInvoke () {
-		if (hasRequiredInvoke) return Invoke$1;
-		hasRequiredInvoke = 1;
+	var Call = Call$3;
+	var IsArray = IsArray$3;
+	var GetV = GetV$2;
+	var IsPropertyKey = IsPropertyKey$9;
 
-		var GetIntrinsic = getIntrinsic;
+	// https://262.ecma-international.org/6.0/#sec-invoke
 
-		var $TypeError = GetIntrinsic('%TypeError%');
+	var Invoke$1 = function Invoke(O, P) {
+		if (!IsPropertyKey(P)) {
+			throw new $TypeError$6('Assertion failed: P must be a Property Key');
+		}
+		var argumentsList = arguments.length > 2 ? arguments[2] : [];
+		if (!IsArray(argumentsList)) {
+			throw new $TypeError$6('Assertion failed: optional `argumentsList`, if provided, must be a List');
+		}
+		var func = GetV(O, P);
+		return Call(func, O, argumentsList);
+	};
 
-		var Call = Call$2;
-		var IsArray = IsArray$2;
-		var GetV = requireGetV();
-		var IsPropertyKey = IsPropertyKey$4;
+	var $TypeError$5 = type;
 
-		// https://262.ecma-international.org/6.0/#sec-invoke
-
-		Invoke$1 = function Invoke(O, P) {
-			if (!IsPropertyKey(P)) {
-				throw new $TypeError('Assertion failed: P must be a Property Key');
-			}
-			var argumentsList = arguments.length > 2 ? arguments[2] : [];
-			if (!IsArray(argumentsList)) {
-				throw new $TypeError('Assertion failed: optional `argumentsList`, if provided, must be a List');
-			}
-			var func = GetV(O, P);
-			return Call(func, O, argumentsList);
-		};
-		return Invoke$1;
-	}
-
-	var GetIntrinsic$9 = getIntrinsic;
-
-	var $TypeError$4 = GetIntrinsic$9('%TypeError%');
-
-	var Invoke = requireInvoke();
-	var Type$2 = Type$9;
+	var Invoke = Invoke$1;
+	var Type$1 = Type$c;
 
 	// https://262.ecma-international.org/6.0/#sec-iteratornext
 
 	var IteratorNext$1 = function IteratorNext(iterator, value) {
 		var result = Invoke(iterator, 'next', arguments.length < 2 ? [] : [value]);
-		if (Type$2(result) !== 'Object') {
-			throw new $TypeError$4('iterator next must return an object');
+		if (Type$1(result) !== 'Object') {
+			throw new $TypeError$5('iterator next must return an object');
 		}
 		return result;
 	};
@@ -7504,35 +7199,31 @@
 
 	var IteratorStep$1 = /*@__PURE__*/getDefaultExportFromCjs(IteratorStep);
 
-	var GetIntrinsic$8 = getIntrinsic;
-
-	var $TypeError$3 = GetIntrinsic$8('%TypeError%');
+	var $TypeError$4 = type;
 
 	var Get = Get$2;
-	var Type$1 = Type$9;
+	var Type = Type$c;
 
 	// https://262.ecma-international.org/6.0/#sec-iteratorvalue
 
 	var IteratorValue = function IteratorValue(iterResult) {
-		if (Type$1(iterResult) !== 'Object') {
-			throw new $TypeError$3('Assertion failed: Type(iterResult) is not Object');
+		if (Type(iterResult) !== 'Object') {
+			throw new $TypeError$4('Assertion failed: Type(iterResult) is not Object');
 		}
 		return Get(iterResult, 'value');
 	};
 
 	var IteratorValue$1 = /*@__PURE__*/getDefaultExportFromCjs(IteratorValue);
 
-	var GetIntrinsic$7 = getIntrinsic;
+	var GetIntrinsic$6 = getIntrinsic;
 
-	var $abs = GetIntrinsic$7('%Math.abs%');
+	var $abs = GetIntrinsic$6('%Math.abs%');
 
 	// http://262.ecma-international.org/5.1/#sec-5.2
 
 	var abs$1 = function abs(x) {
 		return $abs(x);
 	};
-
-	var Type = Type$9;
 
 	// var modulo = require('./modulo');
 	var $floor = Math.floor;
@@ -7541,7 +7232,7 @@
 
 	var floor$1 = function floor(x) {
 		// return x - modulo(x, 1);
-		if (Type(x) === 'BigInt') {
+		if (typeof x === 'bigint') {
 			return x;
 		}
 		return $floor(x);
@@ -7704,7 +7395,7 @@
 		if (hasRequiredIsRegex) return isRegex;
 		hasRequiredIsRegex = 1;
 
-		var callBound = callBound$2;
+		var callBound = callBound$4;
 		var hasToStringTag = requireShams()();
 		var has;
 		var $exec;
@@ -7770,12 +7461,11 @@
 		if (hasRequiredSafeRegexTest) return safeRegexTest;
 		hasRequiredSafeRegexTest = 1;
 
-		var callBound = callBound$2;
-		var GetIntrinsic = getIntrinsic;
+		var callBound = callBound$4;
 		var isRegex = requireIsRegex();
 
 		var $exec = callBound('RegExp.prototype.exec');
-		var $TypeError = GetIntrinsic('%TypeError%');
+		var $TypeError = type;
 
 		safeRegexTest = function regexTester(regex) {
 			if (!isRegex(regex)) {
@@ -8038,38 +7728,15 @@
 		return defineProperties_1;
 	}
 
-	var CheckObjectCoercible;
-	var hasRequiredCheckObjectCoercible;
+	var $TypeError$3 = type;
 
-	function requireCheckObjectCoercible () {
-		if (hasRequiredCheckObjectCoercible) return CheckObjectCoercible;
-		hasRequiredCheckObjectCoercible = 1;
-
-		var GetIntrinsic = getIntrinsic;
-
-		var $TypeError = GetIntrinsic('%TypeError%');
-
-		// http://262.ecma-international.org/5.1/#sec-9.10
-
-		CheckObjectCoercible = function CheckObjectCoercible(value, optMessage) {
-			if (value == null) {
-				throw new $TypeError(optMessage || ('Cannot call method on ' + value));
-			}
-			return value;
-		};
-		return CheckObjectCoercible;
-	}
-
-	var RequireObjectCoercible$2;
-	var hasRequiredRequireObjectCoercible$1;
-
-	function requireRequireObjectCoercible$1 () {
-		if (hasRequiredRequireObjectCoercible$1) return RequireObjectCoercible$2;
-		hasRequiredRequireObjectCoercible$1 = 1;
-
-		RequireObjectCoercible$2 = requireCheckObjectCoercible();
-		return RequireObjectCoercible$2;
-	}
+	/** @type {import('./RequireObjectCoercible')} */
+	var RequireObjectCoercible$1 = function RequireObjectCoercible(value) {
+		if (value == null) {
+			throw new $TypeError$3((arguments.length > 0 && arguments[1]) || ('Cannot call method on ' + value));
+		}
+		return value;
+	};
 
 	var ToString$2;
 	var hasRequiredToString;
@@ -8081,7 +7748,7 @@
 		var GetIntrinsic = getIntrinsic;
 
 		var $String = GetIntrinsic('%String%');
-		var $TypeError = GetIntrinsic('%TypeError%');
+		var $TypeError = type;
 
 		// https://262.ecma-international.org/6.0/#sec-tostring
 
@@ -8101,9 +7768,9 @@
 		if (hasRequiredImplementation) return implementation;
 		hasRequiredImplementation = 1;
 
-		var RequireObjectCoercible = requireRequireObjectCoercible$1();
+		var RequireObjectCoercible = RequireObjectCoercible$1;
 		var ToString = requireToString();
-		var callBound = callBound$2;
+		var callBound = callBound$4;
 		var $replace = callBound('String.prototype.replace');
 
 		var mvsIsWS = (/^\s$/).test('\u180E');
@@ -8181,7 +7848,7 @@
 
 		var callBind = callBindExports;
 		var define = requireDefineProperties();
-		var RequireObjectCoercible = requireRequireObjectCoercible$1();
+		var RequireObjectCoercible = RequireObjectCoercible$1;
 
 		var implementation = requireImplementation();
 		var getPolyfill = requirePolyfill();
@@ -8214,10 +7881,10 @@
 
 		var $Number = GetIntrinsic('%Number%');
 		var $RegExp = GetIntrinsic('%RegExp%');
-		var $TypeError = GetIntrinsic('%TypeError%');
+		var $TypeError = type;
 		var $parseInteger = GetIntrinsic('%parseInt%');
 
-		var callBound = callBound$2;
+		var callBound = callBound$4;
 		var regexTester = requireSafeRegexTest();
 
 		var $strSlice = callBound('String.prototype.slice');
@@ -8230,12 +7897,10 @@
 
 		var $trim = requireString_prototype_trim();
 
-		var Type = Type$9;
-
 		// https://262.ecma-international.org/13.0/#sec-stringtonumber
 
 		StringToNumber$1 = function StringToNumber(argument) {
-			if (Type(argument) !== 'String') {
+			if (typeof argument !== 'string') {
 				throw new $TypeError('Assertion failed: `argument` is not a String');
 			}
 			if (isBinary(argument)) {
@@ -8256,10 +7921,10 @@
 		return StringToNumber$1;
 	}
 
-	var GetIntrinsic$6 = getIntrinsic;
+	var GetIntrinsic$5 = getIntrinsic;
 
-	var $TypeError$2 = GetIntrinsic$6('%TypeError%');
-	var $Number = GetIntrinsic$6('%Number%');
+	var $TypeError$2 = type;
+	var $Number = GetIntrinsic$5('%Number%');
 	var isPrimitive = requireIsPrimitive();
 
 	var ToPrimitive = ToPrimitive$1;
@@ -8308,36 +7973,28 @@
 
 	var ToIntegerOrInfinity$1 = /*@__PURE__*/getDefaultExportFromCjs(ToIntegerOrInfinity);
 
-	var RequireObjectCoercible$1;
-	var hasRequiredRequireObjectCoercible;
+	/** @type {import('.')} */
+	var esObjectAtoms = Object;
 
-	function requireRequireObjectCoercible () {
-		if (hasRequiredRequireObjectCoercible) return RequireObjectCoercible$1;
-		hasRequiredRequireObjectCoercible = 1;
+	var $Object = esObjectAtoms;
+	var RequireObjectCoercible = RequireObjectCoercible$1;
 
-		RequireObjectCoercible$1 = requireCheckObjectCoercible();
-		return RequireObjectCoercible$1;
-	}
-
-	var GetIntrinsic$5 = getIntrinsic;
-
-	var $Object = GetIntrinsic$5('%Object%');
-
-	var RequireObjectCoercible = requireRequireObjectCoercible();
-
-	// https://262.ecma-international.org/6.0/#sec-toobject
-
-	var ToObject = function ToObject(value) {
+	/** @type {import('./ToObject')} */
+	var ToObject$2 = function ToObject(value) {
 		RequireObjectCoercible(value);
 		return $Object(value);
 	};
+
+	// https://262.ecma-international.org/6.0/#sec-toobject
+
+	var ToObject = ToObject$2;
 
 	var ToObject$1 = /*@__PURE__*/getDefaultExportFromCjs(ToObject);
 
 	var GetIntrinsic$4 = getIntrinsic;
 
 	var $String$1 = GetIntrinsic$4('%String%');
-	var $TypeError$1 = GetIntrinsic$4('%TypeError%');
+	var $TypeError$1 = type;
 
 	// https://262.ecma-international.org/6.0/#sec-tostring
 
@@ -8377,11 +8034,9 @@
 		if (hasRequiredStringPad) return StringPad$1;
 		hasRequiredStringPad = 1;
 
-		var GetIntrinsic = getIntrinsic;
+		var $TypeError = type;
 
-		var $TypeError = GetIntrinsic('%TypeError%');
-
-		var callBound = callBound$2;
+		var callBound = callBound$4;
 
 		var ToLength = requireToLength();
 		var ToString$1 = ToString;
@@ -8424,7 +8079,7 @@
 	var GetIntrinsic$3 = getIntrinsic;
 
 	var $String = GetIntrinsic$3('%String%');
-	var $RangeError = GetIntrinsic$3('%RangeError%');
+	var $RangeError = requireRange();
 
 	var StringPad = requireStringPad();
 
@@ -8464,7 +8119,7 @@
 	var GetIntrinsic$2 = getIntrinsic;
 
 	var callBind = callBindExports;
-	var callBound = callBound$2;
+	var callBound = callBound$4;
 
 	var $ownKeys = GetIntrinsic$2('%Reflect.ownKeys%', true);
 	var $pushApply = callBind.apply(GetIntrinsic$2('%Array.prototype.push%'));
@@ -8510,7 +8165,7 @@
 	    if (depth < 1) return descr;
 	    const entries = [];
 	    for (const prop of ['years', 'months', 'weeks', 'days', 'hours', 'minutes', 'seconds', 'milliseconds', 'microseconds', 'nanoseconds']) {
-	      if (this[prop] !== 0) entries.push(`  ${prop}: ${options.stylize(this[prop], 'number')}`);
+	      if (this[prop] !== 0) entries.push("  ".concat(prop, ": ").concat(options.stylize(this[prop], 'number')));
 	    }
 	    return descr + ' {\n' + entries.join(',\n') + '\n}';
 	  }
@@ -8546,100 +8201,74 @@
 	    Object.defineProperty(Class.prototype, prop, desc);
 	  }
 	  DefineIntrinsic(name, Class);
-	  DefineIntrinsic(`${name}.prototype`, Class.prototype);
+	  DefineIntrinsic("".concat(name, ".prototype"), Class.prototype);
 	}
 	function DefineIntrinsic(name, value) {
-	  const key = `%${name}%`;
-	  if (INTRINSICS[key] !== undefined) throw new Error(`intrinsic ${name} already exists`);
+	  const key = "%".concat(name, "%");
+	  if (INTRINSICS[key] !== undefined) throw new Error("intrinsic ".concat(name, " already exists"));
 	  INTRINSICS[key] = value;
 	}
 	function GetIntrinsic(intrinsic) {
 	  return intrinsic in INTRINSICS ? INTRINSICS[intrinsic] : ESGetIntrinsic(intrinsic);
 	}
 
-	class MethodRecord {
-	  constructor(recordType, receiver, methodNames) {
-	    this.recordType = recordType;
-	    this.receiver = receiver;
-	    const nMethods = methodNames.length;
-	    for (let ix = 0; ix < nMethods; ix++) {
-	      this.lookup(methodNames[ix]);
-	    }
-	  }
-	  isBuiltIn() {
-	    return typeof this.receiver === 'string';
-	  }
-	  hasLookedUp(methodName) {
-	    return !!this[`_${methodName}`];
-	  }
-	  lookup(methodName) {
-	    if (this.hasLookedUp(methodName)) {
-	      throw new Error(`assertion failure: ${methodName} already looked up`);
-	    }
-	    if (this.isBuiltIn()) {
-	      this[`_${methodName}`] = GetIntrinsic(`%Temporal.${this.recordType}.prototype.${methodName}%`);
-	    } else {
-	      const method = GetMethod$4(this.receiver, methodName);
-	      if (!method) {
-	        // GetMethod may return undefined if method is null or undefined
-	        throw new TypeError(`${methodName} should be present on ${this.recordType}`);
-	      }
-	      this[`_${methodName}`] = method;
-	    }
-	  }
-	  call(methodName, args) {
-	    if (!this.hasLookedUp(methodName)) {
-	      throw new Error(`assertion failure: ${methodName} should have been looked up`);
-	    }
-	    let receiver = this.receiver;
-	    if (this.isBuiltIn()) {
-	      const cls = GetIntrinsic(`%Temporal.${this.recordType}%`);
-	      receiver = new cls(receiver);
-	    }
-	    return this[`_${methodName}`].apply(receiver, args);
-	  }
+	const MathAbs$4 = Math.abs;
+	const MathLog10 = Math.log10;
+	const MathSign$2 = Math.sign;
+	const MathTrunc$1 = Math.trunc;
+	const NumberParseInt = Number.parseInt;
+	const NumberPrototypeToPrecision = Number.prototype.toPrecision;
+	const StringPrototypePadStart = String.prototype.padStart;
+	const StringPrototypeRepeat = String.prototype.repeat;
+	const StringPrototypeSlice$1 = String.prototype.slice;
+
+	// Computes trunc(x / 10**p) and x % 10**p, returning { div, mod }, with
+	// precision loss only once in the quotient, by string manipulation. If the
+	// quotient and remainder are safe integers, then they are exact. x must be an
+	// integer. p must be a non-negative integer. Both div and mod have the sign of
+	// x.
+	function TruncatingDivModByPowerOf10(x, p) {
+	  if (x === 0) return {
+	    div: x,
+	    mod: x
+	  }; // preserves signed zero
+
+	  const sign = MathSign$2(x);
+	  x = MathAbs$4(x);
+	  const xDigits = MathTrunc$1(1 + MathLog10(x));
+	  if (p >= xDigits) return {
+	    div: sign * 0,
+	    mod: sign * x
+	  };
+	  if (p === 0) return {
+	    div: sign * x,
+	    mod: sign * 0
+	  };
+
+	  // would perform nearest rounding if x was not an integer:
+	  const xStr = Call$4(NumberPrototypeToPrecision, x, [xDigits]);
+	  const div = sign * NumberParseInt(Call$4(StringPrototypeSlice$1, xStr, [0, xDigits - p]), 10);
+	  const mod = sign * NumberParseInt(Call$4(StringPrototypeSlice$1, xStr, [xDigits - p]), 10);
+	  return {
+	    div,
+	    mod
+	  };
 	}
-	class TimeZoneMethodRecord extends MethodRecord {
-	  constructor(timeZone) {
-	    let methodNames = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
-	    super('TimeZone', timeZone, methodNames);
-	  }
-	  getOffsetNanosecondsFor(instant) {
-	    return this.call('getOffsetNanosecondsFor', [instant]);
-	  }
-	  getPossibleInstantsFor(dateTime) {
-	    return this.call('getPossibleInstantsFor', [dateTime]);
-	  }
-	}
-	class CalendarMethodRecord extends MethodRecord {
-	  constructor(calendar) {
-	    let methodNames = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
-	    super('Calendar', calendar, methodNames);
-	  }
-	  dateAdd(date, duration, options) {
-	    return this.call('dateAdd', [date, duration, options]);
-	  }
-	  dateFromFields(fields, options) {
-	    return this.call('dateFromFields', [fields, options]);
-	  }
-	  dateUntil(one, two, options) {
-	    return this.call('dateUntil', [one, two, options]);
-	  }
-	  day(date) {
-	    return this.call('day', [date]);
-	  }
-	  fields(fieldNames) {
-	    return this.call('fields', [fieldNames]);
-	  }
-	  mergeFields(fields, additionalFields) {
-	    return this.call('mergeFields', [fields, additionalFields]);
-	  }
-	  monthDayFromFields(fields, options) {
-	    return this.call('monthDayFromFields', [fields, options]);
-	  }
-	  yearMonthFromFields(fields, options) {
-	    return this.call('yearMonthFromFields', [fields, options]);
-	  }
+
+	// Computes x * 10**p + z with precision loss only at the end, by string
+	// manipulation. If the result is a safe integer, then it is exact. x must be
+	// an integer. p must be a non-negative integer. z must have the same sign as
+	// x and be less than 10**p.
+	function FMAPowerOf10(x, p, z) {
+	  if (x === 0) return z;
+	  const sign = MathSign$2(x) || MathSign$2(z);
+	  x = MathAbs$4(x);
+	  z = MathAbs$4(z);
+	  const xStr = Call$4(NumberPrototypeToPrecision, x, [MathTrunc$1(1 + MathLog10(x))]);
+	  if (z === 0) return sign * NumberParseInt(xStr + Call$4(StringPrototypeRepeat, '0', [p]), 10);
+	  const zStr = Call$4(NumberPrototypeToPrecision, z, [MathTrunc$1(1 + MathLog10(z))]);
+	  const resStr = xStr + Call$4(StringPrototypePadStart, zStr, [p, '0']);
+	  return sign * NumberParseInt(resStr, 10);
 	}
 
 	// Instant
@@ -8704,21 +8333,287 @@
 	  GetSlots(container)[id] = value;
 	}
 
+	class MethodRecord {
+	  constructor(recordType, receiver, methodNames) {
+	    this.recordType = recordType;
+	    this.receiver = receiver;
+	    const nMethods = methodNames.length;
+	    for (let ix = 0; ix < nMethods; ix++) {
+	      this.lookup(methodNames[ix]);
+	    }
+	  }
+	  isBuiltIn() {
+	    return typeof this.receiver === 'string';
+	  }
+	  hasLookedUp(methodName) {
+	    return !!this["_".concat(methodName)];
+	  }
+	  lookup(methodName) {
+	    if (this.hasLookedUp(methodName)) {
+	      throw new Error("assertion failure: ".concat(methodName, " already looked up"));
+	    }
+	    if (this.isBuiltIn()) {
+	      this["_".concat(methodName)] = GetIntrinsic("%Temporal.".concat(this.recordType, ".prototype.").concat(methodName, "%"));
+	    } else {
+	      const method = GetMethod$4(this.receiver, methodName);
+	      if (!method) {
+	        // GetMethod may return undefined if method is null or undefined
+	        throw new TypeError("".concat(methodName, " should be present on ").concat(this.recordType));
+	      }
+	      this["_".concat(methodName)] = method;
+	    }
+	  }
+	  call(methodName, args) {
+	    if (!this.hasLookedUp(methodName)) {
+	      throw new Error("assertion failure: ".concat(methodName, " should have been looked up"));
+	    }
+	    let receiver = this.receiver;
+	    if (this.isBuiltIn()) {
+	      const cls = GetIntrinsic("%Temporal.".concat(this.recordType, "%"));
+	      receiver = new cls(receiver);
+	    }
+	    return this["_".concat(methodName)].apply(receiver, args);
+	  }
+	}
+	class TimeZoneMethodRecord extends MethodRecord {
+	  constructor(timeZone) {
+	    let methodNames = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
+	    super('TimeZone', timeZone, methodNames);
+	  }
+	  getOffsetNanosecondsFor(instant) {
+	    return this.call('getOffsetNanosecondsFor', [instant]);
+	  }
+	  getPossibleInstantsFor(dateTime) {
+	    return this.call('getPossibleInstantsFor', [dateTime]);
+	  }
+	}
+	class CalendarMethodRecord extends MethodRecord {
+	  constructor(calendar) {
+	    let methodNames = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
+	    super('Calendar', calendar, methodNames);
+	  }
+	  static CreateFromRelativeTo(plainRelativeTo, zonedRelativeTo) {
+	    let methodNames = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
+	    const relativeTo = zonedRelativeTo !== null && zonedRelativeTo !== void 0 ? zonedRelativeTo : plainRelativeTo;
+	    if (!relativeTo) return undefined;
+	    return new this(GetSlot(relativeTo, CALENDAR), methodNames);
+	  }
+	  dateAdd(date, duration, options) {
+	    return this.call('dateAdd', [date, duration, options]);
+	  }
+	  dateFromFields(fields, options) {
+	    return this.call('dateFromFields', [fields, options]);
+	  }
+	  dateUntil(one, two, options) {
+	    return this.call('dateUntil', [one, two, options]);
+	  }
+	  day(date) {
+	    return this.call('day', [date]);
+	  }
+	  fields(fieldNames) {
+	    return this.call('fields', [fieldNames]);
+	  }
+	  mergeFields(fields, additionalFields) {
+	    return this.call('mergeFields', [fields, additionalFields]);
+	  }
+	  monthDayFromFields(fields, options) {
+	    return this.call('monthDayFromFields', [fields, options]);
+	  }
+	  yearMonthFromFields(fields, options) {
+	    return this.call('yearMonthFromFields', [fields, options]);
+	  }
+	}
+
+	function _toPrimitive(t, r) {
+	  if ("object" != typeof t || !t) return t;
+	  var e = t[Symbol.toPrimitive];
+	  if (void 0 !== e) {
+	    var i = e.call(t, r || "default");
+	    if ("object" != typeof i) return i;
+	    throw new TypeError("@@toPrimitive must return a primitive value.");
+	  }
+	  return ("string" === r ? String : Number)(t);
+	}
+	function _toPropertyKey(t) {
+	  var i = _toPrimitive(t, "string");
+	  return "symbol" == typeof i ? i : i + "";
+	}
+	function _defineProperty(obj, key, value) {
+	  key = _toPropertyKey(key);
+	  if (key in obj) {
+	    Object.defineProperty(obj, key, {
+	      value: value,
+	      enumerable: true,
+	      configurable: true,
+	      writable: true
+	    });
+	  } else {
+	    obj[key] = value;
+	  }
+	  return obj;
+	}
+
+	var _TimeDuration;
+	const MathAbs$3 = Math.abs;
+	const MathSign$1 = Math.sign;
+	const NumberIsInteger = Number.isInteger;
+	const NumberIsSafeInteger$1 = Number.isSafeInteger;
+	class TimeDuration {
+	  constructor(totalNs) {
+	    if (typeof totalNs === 'number') throw new Error('assertion failed: big integer required');
+	    this.totalNs = bigInt(totalNs);
+	    if (this.totalNs.abs().greater(TimeDuration.MAX)) throw new Error('assertion failed: integer too big');
+	    const {
+	      quotient,
+	      remainder
+	    } = this.totalNs.divmod(1e9);
+	    this.sec = quotient.toJSNumber();
+	    this.subsec = remainder.toJSNumber();
+	    if (!NumberIsSafeInteger$1(this.sec)) throw new Error('assertion failed: seconds too big');
+	    if (MathAbs$3(this.subsec) > 999999999) throw new Error('assertion failed: subseconds too big');
+	  }
+	  static fromEpochNsDiff(epochNs1, epochNs2) {
+	    const diff = bigInt(epochNs1).subtract(epochNs2);
+	    // No extra validate step. Should instead fail assertion if too big
+	    return new TimeDuration(diff);
+	  }
+	  static normalize(h, min, s, ms, µs, ns) {
+	    const totalNs = bigInt(ns).add(bigInt(µs).multiply(1e3)).add(bigInt(ms).multiply(1e6)).add(bigInt(s).multiply(1e9)).add(bigInt(min).multiply(60e9)).add(bigInt(h).multiply(3600e9));
+	    return _validateNew.call(TimeDuration, totalNs, 'total');
+	  }
+	  abs() {
+	    return new TimeDuration(this.totalNs.abs());
+	  }
+	  add(other) {
+	    return _validateNew.call(TimeDuration, this.totalNs.add(other.totalNs), 'sum');
+	  }
+	  add24HourDays(days) {
+	    if (!NumberIsInteger(days)) throw new Error('assertion failed: days is an integer');
+	    return _validateNew.call(TimeDuration, this.totalNs.add(bigInt(days).multiply(86400e9)), 'sum');
+	  }
+	  addToEpochNs(epochNs) {
+	    return bigInt(epochNs).add(this.totalNs);
+	  }
+	  cmp(other) {
+	    return this.totalNs.compare(other.totalNs);
+	  }
+	  divmod(n) {
+	    if (n === 0) throw new Error('division by zero');
+	    const {
+	      quotient,
+	      remainder
+	    } = this.totalNs.divmod(n);
+	    const q = quotient.toJSNumber();
+	    const r = new TimeDuration(remainder);
+	    return {
+	      quotient: q,
+	      remainder: r
+	    };
+	  }
+	  fdiv(n) {
+	    if (n === 0) throw new Error('division by zero');
+	    let {
+	      quotient,
+	      remainder
+	    } = this.totalNs.divmod(n);
+
+	    // Perform long division to calculate the fractional part of the quotient
+	    // remainder / n with more accuracy than 64-bit floating point division
+	    const precision = 50;
+	    const decimalDigits = [];
+	    let digit;
+	    const sign = (this.totalNs.geq(0) ? 1 : -1) * MathSign$1(n);
+	    while (!remainder.isZero() && decimalDigits.length < precision) {
+	      remainder = remainder.multiply(10);
+	      ({
+	        quotient: digit,
+	        remainder
+	      } = remainder.divmod(n));
+	      decimalDigits.push(MathAbs$3(digit.toJSNumber()));
+	    }
+	    return sign * Number(quotient.abs().toString() + '.' + decimalDigits.join(''));
+	  }
+	  isZero() {
+	    return this.totalNs.isZero();
+	  }
+	  round(increment, mode) {
+	    if (increment === 1) return this;
+	    let {
+	      quotient,
+	      remainder
+	    } = this.totalNs.divmod(increment);
+	    if (remainder.equals(bigInt.zero)) return this;
+	    const sign = remainder.lt(bigInt.zero) ? -1 : 1;
+	    const tiebreaker = remainder.multiply(2).abs();
+	    const tie = tiebreaker.equals(increment);
+	    const expandIsNearer = tiebreaker.gt(increment);
+	    switch (mode) {
+	      case 'ceil':
+	        if (sign > 0) quotient = quotient.add(sign);
+	        break;
+	      case 'floor':
+	        if (sign < 0) quotient = quotient.add(sign);
+	        break;
+	      case 'expand':
+	        // always expand if there is a remainder
+	        quotient = quotient.add(sign);
+	        break;
+	      case 'trunc':
+	        // no change needed, because divmod is a truncation
+	        break;
+	      case 'halfCeil':
+	        if (expandIsNearer || tie && sign > 0) quotient = quotient.add(sign);
+	        break;
+	      case 'halfFloor':
+	        if (expandIsNearer || tie && sign < 0) quotient = quotient.add(sign);
+	        break;
+	      case 'halfExpand':
+	        // "half up away from zero"
+	        if (expandIsNearer || tie) quotient = quotient.add(sign);
+	        break;
+	      case 'halfTrunc':
+	        if (expandIsNearer) quotient = quotient.add(sign);
+	        break;
+	      case 'halfEven':
+	        {
+	          if (expandIsNearer || tie && quotient.isOdd()) quotient = quotient.add(sign);
+	          break;
+	        }
+	    }
+	    return _validateNew.call(TimeDuration, quotient.multiply(increment), 'rounding');
+	  }
+	  sign() {
+	    return this.cmp(new TimeDuration(0n));
+	  }
+	  subtract(other) {
+	    return _validateNew.call(TimeDuration, this.totalNs.subtract(other.totalNs), 'difference');
+	  }
+	}
+	_TimeDuration = TimeDuration;
+	function _validateNew(totalNs, operation) {
+	  if (totalNs.abs().greater(_TimeDuration.MAX)) {
+	    throw new RangeError("".concat(operation, " of duration time units cannot exceed ").concat(_TimeDuration.MAX, " s"));
+	  }
+	  return new _TimeDuration(totalNs);
+	}
+	_defineProperty(TimeDuration, "MAX", bigInt('9007199254740991999999999'));
+	_defineProperty(TimeDuration, "ZERO", new _TimeDuration(bigInt.zero));
+
 	const offsetIdentifierNoCapture = /(?:[+\u2212-](?:[01][0-9]|2[0-3])(?::?[0-5][0-9])?)/;
 	const tzComponent = /[A-Za-z._][A-Za-z._0-9+-]*/;
-	const timeZoneID = new RegExp(`(?:${offsetIdentifierNoCapture.source}|(?:${tzComponent.source})(?:\\/(?:${tzComponent.source}))*)`);
+	const timeZoneID = new RegExp("(?:".concat(offsetIdentifierNoCapture.source, "|(?:").concat(tzComponent.source, ")(?:\\/(?:").concat(tzComponent.source, "))*)"));
 	const yearpart = /(?:[+\u2212-]\d{6}|\d{4})/;
 	const monthpart = /(?:0[1-9]|1[0-2])/;
 	const daypart = /(?:0[1-9]|[12]\d|3[01])/;
-	const datesplit = new RegExp(`(${yearpart.source})(?:-(${monthpart.source})-(${daypart.source})|(${monthpart.source})(${daypart.source}))`);
+	const datesplit = new RegExp("(".concat(yearpart.source, ")(?:-(").concat(monthpart.source, ")-(").concat(daypart.source, ")|(").concat(monthpart.source, ")(").concat(daypart.source, "))"));
 	const timesplit = /(\d{2})(?::(\d{2})(?::(\d{2})(?:[.,](\d{1,9}))?)?|(\d{2})(?:(\d{2})(?:[.,](\d{1,9}))?)?)?/;
 	const offsetWithParts = /([+\u2212-])([01][0-9]|2[0-3])(?::?([0-5][0-9])(?::?([0-5][0-9])(?:[.,](\d{1,9}))?)?)?/;
 	const offset = /((?:[+\u2212-])(?:[01][0-9]|2[0-3])(?::?(?:[0-5][0-9])(?::?(?:[0-5][0-9])(?:[.,](?:\d{1,9}))?)?)?)/;
-	const offsetpart = new RegExp(`([zZ])|${offset.source}?`);
+	const offsetpart = new RegExp("([zZ])|".concat(offset.source, "?"));
 	const offsetIdentifier = /([+\u2212-])([01][0-9]|2[0-3])(?::?([0-5][0-9])?)?/;
 	const annotation = /\[(!)?([a-z_][a-z0-9_-]*)=([A-Za-z0-9]+(?:-[A-Za-z0-9]+)*)\]/g;
-	const zoneddatetime = new RegExp([`^${datesplit.source}`, `(?:(?:T|\\s+)${timesplit.source}(?:${offsetpart.source})?)?`, `(?:\\[!?(${timeZoneID.source})\\])?`, `((?:${annotation.source})*)$`].join(''), 'i');
-	const time = new RegExp([`^T?${timesplit.source}`, `(?:${offsetpart.source})?`, `(?:\\[!?${timeZoneID.source}\\])?`, `((?:${annotation.source})*)$`].join(''), 'i');
+	const zoneddatetime = new RegExp(["^".concat(datesplit.source), "(?:(?:[tT]|\\s+)".concat(timesplit.source, "(?:").concat(offsetpart.source, ")?)?"), "(?:\\[!?(".concat(timeZoneID.source, ")\\])?"), "((?:".concat(annotation.source, ")*)$")].join(''));
+	const time = new RegExp(["^[tT]?".concat(timesplit.source), "(?:".concat(offsetpart.source, ")?"), "(?:\\[!?".concat(timeZoneID.source, "\\])?"), "((?:".concat(annotation.source, ")*)$")].join(''));
 
 	// The short forms of YearMonth and MonthDay are only for the ISO calendar, but
 	// annotations are still allowed, and will throw if the calendar annotation is
@@ -8730,16 +8625,17 @@
 	// Not ambiguous with HHMMSS because that requires a 'T' prefix
 	// UTC offsets are not allowed, because they are not allowed with any date-only
 	// format; also, YYYY-MM-UU is ambiguous with YYYY-MM-DD
-	const yearmonth = new RegExp(`^(${yearpart.source})-?(${monthpart.source})(?:\\[!?${timeZoneID.source}\\])?((?:${annotation.source})*)$`);
-	const monthday = new RegExp(`^(?:--)?(${monthpart.source})-?(${daypart.source})(?:\\[!?${timeZoneID.source}\\])?((?:${annotation.source})*)$`);
+	const yearmonth = new RegExp("^(".concat(yearpart.source, ")-?(").concat(monthpart.source, ")(?:\\[!?").concat(timeZoneID.source, "\\])?((?:").concat(annotation.source, ")*)$"));
+	const monthday = new RegExp("^(?:--)?(".concat(monthpart.source, ")-?(").concat(daypart.source, ")(?:\\[!?").concat(timeZoneID.source, "\\])?((?:").concat(annotation.source, ")*)$"));
 	const fraction = /(\d+)(?:[.,](\d{1,9}))?/;
 	const durationDate = /(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)W)?(?:(\d+)D)?/;
-	const durationTime = new RegExp(`(?:${fraction.source}H)?(?:${fraction.source}M)?(?:${fraction.source}S)?`);
-	const duration = new RegExp(`^([+\u2212-])?P${durationDate.source}(?:T(?!$)${durationTime.source})?$`, 'i');
+	const durationTime = new RegExp("(?:".concat(fraction.source, "H)?(?:").concat(fraction.source, "M)?(?:").concat(fraction.source, "S)?"));
+	const duration = new RegExp("^([+\u2212-])?P".concat(durationDate.source, "(?:T(?!$)").concat(durationTime.source, ")?$"), 'i');
 
 	/* global true */
 
 	const ArrayIncludes$1 = Array.prototype.includes;
+	const ArrayPrototypeMap = Array.prototype.map;
 	const ArrayPrototypePush$3 = Array.prototype.push;
 	const ArrayPrototypeSort$1 = Array.prototype.sort;
 	const ArrayPrototypeFind = Array.prototype.find;
@@ -8755,11 +8651,13 @@
 	const MathTrunc = Math.trunc;
 	const NumberIsFinite = Number.isFinite;
 	const NumberIsNaN = Number.isNaN;
+	const NumberIsSafeInteger = Number.isSafeInteger;
 	const NumberMaxSafeInteger = Number.MAX_SAFE_INTEGER;
 	const ObjectCreate$8 = Object.create;
 	const ObjectDefineProperty = Object.defineProperty;
 	const ObjectEntries$1 = Object.entries;
 	const ObjectGetOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
+	const SetPrototypeHas$1 = Set.prototype.has;
 	const StringCtor = String;
 	const StringFromCharCode = String.fromCharCode;
 	const StringPrototypeCharCodeAt = String.prototype.charCodeAt;
@@ -8767,12 +8665,12 @@
 	const StringPrototypeReplace = String.prototype.replace;
 	const StringPrototypeSlice = String.prototype.slice;
 	const $TypeError = GetIntrinsic('%TypeError%');
-	const $isEnumerable = callBound$3('Object.prototype.propertyIsEnumerable');
+	const $isEnumerable = callBound$5('Object.prototype.propertyIsEnumerable');
 	const DAY_SECONDS = 86400;
-	const DAY_NANOS = bigInt(DAY_SECONDS).multiply(1e9);
+	const DAY_NANOS = DAY_SECONDS * 1e9;
 	// Instant range is 100 million days (inclusive) before or after epoch.
-	const NS_MIN = DAY_NANOS.multiply(-1e8);
-	const NS_MAX = DAY_NANOS.multiply(1e8);
+	const NS_MIN = bigInt(DAY_NANOS).multiply(-1e8);
+	const NS_MAX = bigInt(DAY_NANOS).multiply(1e8);
 	// PlainDateTime range is 24 hours wider (exclusive) than the Instant range on
 	// both ends, to allow for valid Instant=>PlainDateTime conversion for all
 	// built-in time zones (whose offsets must have a magnitude less than 24 hours).
@@ -8787,6 +8685,7 @@
 	const BEFORE_FIRST_DST = bigInt(-388152).multiply(1e13); // 1847-01-01T00:00:00Z
 
 	const BUILTIN_CALENDAR_IDS = ['iso8601', 'hebrew', 'islamic', 'islamic-umalqura', 'islamic-tbla', 'islamic-civil', 'islamic-rgsa', 'islamicc', 'persian', 'ethiopic', 'ethioaa', 'coptic', 'chinese', 'dangi', 'roc', 'indian', 'buddhist', 'japanese', 'gregory'];
+	const ICU_LEGACY_TIME_ZONE_IDS = new Set(['ACT', 'AET', 'AGT', 'ART', 'AST', 'BET', 'BST', 'CAT', 'CNT', 'CST', 'CTT', 'EAT', 'ECT', 'IET', 'IST', 'JST', 'MIT', 'NET', 'NST', 'PLT', 'PNT', 'PRT', 'PST', 'SST', 'VST']);
 	function ToIntegerWithTruncation(value) {
 	  const number = ToNumber$2(value);
 	  if (number === 0) return 0;
@@ -8801,7 +8700,7 @@
 	  const integer = ToIntegerWithTruncation(value);
 	  if (integer <= 0) {
 	    if (property !== undefined) {
-	      throw new RangeError(`property '${property}' cannot be a a number less than one`);
+	      throw new RangeError("property '".concat(property, "' cannot be a a number less than one"));
 	    }
 	    throw new RangeError('Cannot convert a number less than one to a positive integer');
 	  }
@@ -8810,7 +8709,7 @@
 	function ToIntegerIfIntegral(value) {
 	  const number = ToNumber$2(value);
 	  if (!NumberIsFinite(number)) throw new RangeError('infinity is out of range');
-	  if (!IsIntegralNumber$1(number)) throw new RangeError(`unsupported fractional value ${value}`);
+	  if (!IsIntegralNumber$1(number)) throw new RangeError("unsupported fractional value ".concat(value));
 	  if (number === 0) return 0; // ℝ(value) in spec text; converts -0 to 0
 	  return number;
 	}
@@ -8818,9 +8717,9 @@
 	// This convenience function isn't in the spec, but is useful in the polyfill
 	// for DRY and better error messages.
 	function RequireString(value) {
-	  if (Type$a(value) !== 'String') {
+	  if (Type$d(value) !== 'String') {
 	    // Use String() to ensure that Symbols won't throw
-	    throw new TypeError(`expected a string, not ${StringCtor(value)}`);
+	    throw new TypeError("expected a string, not ".concat(StringCtor(value)));
 	  }
 	  return value;
 	}
@@ -8871,10 +8770,10 @@
 	// with modifications per Temporal spec/mainadditions.html
 
 	function CopyDataProperties(target, source, excludedKeys, excludedValues) {
-	  if (Type$a(target) !== 'Object') {
+	  if (Type$d(target) !== 'Object') {
 	    throw new $TypeError('Assertion failed: "target" must be an Object');
 	  }
-	  if (!IsArray$3(excludedKeys) || !every$1(excludedKeys, IsPropertyKey$5)) {
+	  if (!IsArray$4(excludedKeys) || !every$1(excludedKeys, IsPropertyKey$a)) {
 	    throw new $TypeError('Assertion failed: "excludedKeys" must be a List of Property Keys');
 	  }
 	  if (typeof source === 'undefined' || source === null) {
@@ -8884,7 +8783,7 @@
 	  var keys = OwnPropertyKeys$1(from);
 	  forEach$1(keys, function (nextKey) {
 	    var excluded = some$1(excludedKeys, function (e) {
-	      return SameValue$1(e, nextKey) === true;
+	      return SameValue$3(e, nextKey) === true;
 	    });
 	    if (excluded) return;
 	    var enumerable = $isEnumerable(from, nextKey) ||
@@ -8894,7 +8793,7 @@
 	      var propValue = Get$3(from, nextKey);
 	      if (excludedValues !== undefined) {
 	        forEach$1(excludedValues, function (e) {
-	          if (SameValue$1(e, propValue) === true) {
+	          if (SameValue$3(e, propValue) === true) {
 	            excluded = true;
 	          }
 	        });
@@ -8955,7 +8854,7 @@
 	  if (showCalendar === 'never') return '';
 	  if (showCalendar === 'auto' && id === 'iso8601') return '';
 	  const flag = showCalendar === 'critical' ? '!' : '';
-	  return `[${flag}u-ca=${id}]`;
+	  return "[".concat(flag, "u-ca=").concat(id, "]");
 	}
 
 	// Not a separate abstract operation in the spec, because it only occurs in one
@@ -8965,16 +8864,16 @@
 	function processAnnotations(annotations) {
 	  let calendar;
 	  let calendarWasCritical = false;
-	  for (const [, critical, key, value] of Call$3(StringPrototypeMatchAll, annotations, [annotation])) {
+	  for (const [, critical, key, value] of Call$4(StringPrototypeMatchAll, annotations, [annotation])) {
 	    if (key === 'u-ca') {
 	      if (calendar === undefined) {
 	        calendar = value;
 	        calendarWasCritical = critical === '!';
 	      } else if (critical === '!' || calendarWasCritical) {
-	        throw new RangeError(`Invalid annotations in ${annotations}: more than one u-ca present with critical flag`);
+	        throw new RangeError("Invalid annotations in ".concat(annotations, ": more than one u-ca present with critical flag"));
 	      }
 	    } else if (critical === '!') {
-	      throw new RangeError(`Unrecognized annotation: !${key}=${value}`);
+	      throw new RangeError("Unrecognized annotation: !".concat(key, "=").concat(value));
 	    }
 	  }
 	  return calendar;
@@ -8982,10 +8881,10 @@
 	function ParseISODateTime(isoString) {
 	  // ZDT is the superset of fields for every other Temporal type
 	  const match = zoneddatetime.exec(isoString);
-	  if (!match) throw new RangeError(`invalid ISO 8601 string: ${isoString}`);
+	  if (!match) throw new RangeError("invalid ISO 8601 string: ".concat(isoString));
 	  let yearString = match[1];
-	  if (yearString[0] === '\u2212') yearString = `-${yearString.slice(1)}`;
-	  if (yearString === '-000000') throw new RangeError(`invalid ISO 8601 string: ${isoString}`);
+	  if (yearString[0] === '\u2212') yearString = "-".concat(yearString.slice(1));
+	  if (yearString === '-000000') throw new RangeError("invalid ISO 8601 string: ".concat(isoString));
 	  const year = ToIntegerOrInfinity$1(yearString);
 	  const month = ToIntegerOrInfinity$1(match[2] || match[4]);
 	  const day = ToIntegerOrInfinity$1(match[3] || match[5]);
@@ -9068,7 +8967,7 @@
 	      nanosecond,
 	      z
 	    } = ParseISODateTime(isoString));
-	    if (!hasTime) throw new RangeError(`time is missing in string: ${isoString}`);
+	    if (!hasTime) throw new RangeError("time is missing in string: ".concat(isoString));
 	    if (z) throw new RangeError('Z designator not supported for PlainTime');
 	  }
 	  // if it's a date-time string, OK
@@ -9107,15 +9006,15 @@
 	      };
 	    }
 	  }
-	  throw new RangeError(`invalid ISO 8601 time-only string ${isoString}; may need a T prefix`);
+	  throw new RangeError("invalid ISO 8601 time-only string ".concat(isoString, "; may need a T prefix"));
 	}
 	function ParseTemporalYearMonthString(isoString) {
 	  const match = yearmonth.exec(isoString);
 	  let year, month, calendar, referenceISODay;
 	  if (match) {
 	    let yearString = match[1];
-	    if (yearString[0] === '\u2212') yearString = `-${yearString.slice(1)}`;
-	    if (yearString === '-000000') throw new RangeError(`invalid ISO 8601 string: ${isoString}`);
+	    if (yearString[0] === '\u2212') yearString = "-".concat(yearString.slice(1));
+	    if (yearString === '-000000') throw new RangeError("invalid ISO 8601 string: ".concat(isoString));
 	    year = ToIntegerOrInfinity$1(yearString);
 	    month = ToIntegerOrInfinity$1(match[2]);
 	    calendar = processAnnotations(match[3]);
@@ -9168,15 +9067,15 @@
 	    referenceISOYear
 	  };
 	}
-	const TIMEZONE_IDENTIFIER = new RegExp(`^${timeZoneID.source}$`, 'i');
-	const OFFSET_IDENTIFIER = new RegExp(`^${offsetIdentifier.source}$`);
+	const TIMEZONE_IDENTIFIER = new RegExp("^".concat(timeZoneID.source, "$"), 'i');
+	const OFFSET_IDENTIFIER = new RegExp("^".concat(offsetIdentifier.source, "$"));
 	function throwBadTimeZoneStringError(timeZoneString) {
 	  // Offset identifiers only support minute precision, but offsets in ISO
 	  // strings support nanosecond precision. If the identifier is invalid but
 	  // it's a valid ISO offset, then it has sub-minute precision. Show a clearer
 	  // error message in that case.
 	  const msg = OFFSET.test(timeZoneString) ? 'Seconds not allowed in offset time zone' : 'Invalid time zone';
-	  throw new RangeError(`${msg}: ${timeZoneString}`);
+	  throw new RangeError("".concat(msg, ": ").concat(timeZoneString));
 	}
 	function ParseTimeZoneIdentifier(identifier) {
 	  if (!TIMEZONE_IDENTIFIER.test(identifier)) {
@@ -9238,9 +9137,9 @@
 	}
 	function ParseTemporalDurationString(isoString) {
 	  const match = duration.exec(isoString);
-	  if (!match) throw new RangeError(`invalid duration: ${isoString}`);
+	  if (!match) throw new RangeError("invalid duration: ".concat(isoString));
 	  if (match.slice(2).every(element => element === undefined)) {
-	    throw new RangeError(`invalid duration: ${isoString}`);
+	    throw new RangeError("invalid duration: ".concat(isoString));
 	  }
 	  const sign = match[1] === '-' || match[1] === '\u2212' ? -1 : 1;
 	  const years = match[2] === undefined ? 0 : ToIntegerWithTruncation(match[2]) * sign;
@@ -9258,14 +9157,16 @@
 	  // fractional hours, minutes, or seconds, expressed in whole nanoseconds:
 	  let excessNanoseconds = 0;
 	  if (fHours !== undefined) {
-	    if (minutesStr ?? fMinutes ?? secondsStr ?? fSeconds ?? false) {
+	    var _ref3, _ref4, _ref5;
+	    if ((_ref3 = (_ref4 = (_ref5 = minutesStr !== null && minutesStr !== void 0 ? minutesStr : fMinutes) !== null && _ref5 !== void 0 ? _ref5 : secondsStr) !== null && _ref4 !== void 0 ? _ref4 : fSeconds) !== null && _ref3 !== void 0 ? _ref3 : false) {
 	      throw new RangeError('only the smallest unit can be fractional');
 	    }
 	    excessNanoseconds = ToIntegerWithTruncation((fHours + '000000000').slice(0, 9)) * 3600 * sign;
 	  } else {
 	    minutes = minutesStr === undefined ? 0 : ToIntegerWithTruncation(minutesStr) * sign;
 	    if (fMinutes !== undefined) {
-	      if (secondsStr ?? fSeconds ?? false) {
+	      var _ref6;
+	      if ((_ref6 = secondsStr !== null && secondsStr !== void 0 ? secondsStr : fSeconds) !== null && _ref6 !== void 0 ? _ref6 : false) {
 	        throw new RangeError('only the smallest unit can be fractional');
 	      }
 	      excessNanoseconds = ToIntegerWithTruncation((fMinutes + '000000000').slice(0, 9)) * 60 * sign;
@@ -9281,6 +9182,7 @@
 	  const milliseconds = MathTrunc(excessNanoseconds / 1e6) % 1000;
 	  seconds += MathTrunc(excessNanoseconds / 1e9) % 60;
 	  minutes += MathTrunc(excessNanoseconds / 60e9);
+	  RejectDuration(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
 	  return {
 	    years,
 	    months,
@@ -9357,7 +9259,7 @@
 	  };
 	}
 	function ToTemporalDurationRecord(item) {
-	  if (Type$a(item) !== 'Object') {
+	  if (Type$d(item) !== 'Object') {
 	    return ParseTemporalDurationString(RequireString(item));
 	  }
 	  if (IsTemporalDuration(item)) {
@@ -9410,7 +9312,7 @@
 	  return result;
 	}
 	function ToTemporalPartialDurationRecord(temporalDurationLike) {
-	  if (Type$a(temporalDurationLike) !== 'Object') {
+	  if (Type$d(temporalDurationLike) !== 'Object') {
 	    throw new TypeError('invalid duration-like');
 	  }
 	  const result = {
@@ -9443,7 +9345,7 @@
 	  let record = ToTemporalDurationRecord(item);
 	  for (const property of disallowedProperties) {
 	    if (record[property] !== 0) {
-	      throw new RangeError(`Duration field ${property} not supported by Temporal.Instant. Try Temporal.ZonedDateTime instead.`);
+	      throw new RangeError("Duration field ".concat(property, " not supported by Temporal.Instant. Try Temporal.ZonedDateTime instead."));
 	    }
 	  }
 	  return record;
@@ -9495,31 +9397,31 @@
 	  }
 	  const integerIncrement = MathTrunc(increment);
 	  if (integerIncrement < 1 || integerIncrement > 1e9) {
-	    throw new RangeError(`roundingIncrement must be at least 1 and at most 1e9, not ${increment}`);
+	    throw new RangeError("roundingIncrement must be at least 1 and at most 1e9, not ".concat(increment));
 	  }
 	  return integerIncrement;
 	}
 	function ValidateTemporalRoundingIncrement(increment, dividend, inclusive) {
 	  const maximum = inclusive ? dividend : dividend - 1;
 	  if (increment > maximum) {
-	    throw new RangeError(`roundingIncrement must be at least 1 and less than ${maximum}, not ${increment}`);
+	    throw new RangeError("roundingIncrement must be at least 1 and less than ".concat(maximum, ", not ").concat(increment));
 	  }
 	  if (dividend % increment !== 0) {
-	    throw new RangeError(`Rounding increment must divide evenly into ${dividend}`);
+	    throw new RangeError("Rounding increment must divide evenly into ".concat(dividend));
 	  }
 	}
 	function ToFractionalSecondDigits(normalizedOptions) {
 	  let digitsValue = normalizedOptions.fractionalSecondDigits;
 	  if (digitsValue === undefined) return 'auto';
-	  if (Type$a(digitsValue) !== 'Number') {
+	  if (Type$d(digitsValue) !== 'Number') {
 	    if (ToString$1(digitsValue) !== 'auto') {
-	      throw new RangeError(`fractionalSecondDigits must be 'auto' or 0 through 9, not ${digitsValue}`);
+	      throw new RangeError("fractionalSecondDigits must be 'auto' or 0 through 9, not ".concat(digitsValue));
 	    }
 	    return 'auto';
 	  }
 	  const digitCount = MathFloor$1(digitsValue);
 	  if (!NumberIsFinite(digitCount) || digitCount < 0 || digitCount > 9) {
-	    throw new RangeError(`fractionalSecondDigits must be 'auto' or 0 through 9, not ${digitsValue}`);
+	    throw new RangeError("fractionalSecondDigits must be 'auto' or 0 through 9, not ".concat(digitsValue));
 	  }
 	  return digitCount;
 	}
@@ -9556,7 +9458,6 @@
 	        increment: 1
 	      };
 	  }
-
 	  switch (precision) {
 	    case 'auto':
 	      return {
@@ -9608,7 +9509,7 @@
 	      allowedSingular.push(singular);
 	    }
 	  }
-	  Call$3(ArrayPrototypePush$3, allowedSingular, extraValues);
+	  Call$4(ArrayPrototypePush$3, allowedSingular, extraValues);
 	  let defaultVal = requiredOrDefault;
 	  if (defaultVal === REQUIRED) {
 	    defaultVal = undefined;
@@ -9616,7 +9517,7 @@
 	    allowedSingular.push(defaultVal);
 	  }
 	  const allowedValues = [];
-	  Call$3(ArrayPrototypePush$3, allowedValues, allowedSingular);
+	  Call$4(ArrayPrototypePush$3, allowedValues, allowedSingular);
 	  for (let index = 0; index < allowedSingular.length; index++) {
 	    const singular = allowedSingular[index];
 	    const plural = PLURAL_FOR.get(singular);
@@ -9624,7 +9525,7 @@
 	  }
 	  let retval = GetOption(options, key, allowedValues, defaultVal);
 	  if (retval === undefined && requiredOrDefault === REQUIRED) {
-	    throw new RangeError(`${key} is required`);
+	    throw new RangeError("".concat(key, " is required"));
 	  }
 	  if (SINGULAR_FOR.has(retval)) retval = SINGULAR_FOR.get(retval);
 	  return retval;
@@ -9642,7 +9543,7 @@
 	  let offsetBehaviour = 'option';
 	  let matchMinutes = false;
 	  let year, month, day, hour, minute, second, millisecond, microsecond, nanosecond, calendar, timeZone, offset;
-	  if (Type$a(relativeTo) === 'Object') {
+	  if (Type$d(relativeTo) === 'Object') {
 	    if (IsTemporalZonedDateTime(relativeTo)) {
 	      const timeZoneRec = new TimeZoneMethodRecord(GetSlot(relativeTo, TIME_ZONE), ['getOffsetNanosecondsFor', 'getPossibleInstantsFor']);
 	      return {
@@ -9659,7 +9560,7 @@
 	    calendar = GetTemporalCalendarSlotValueWithISODefault(relativeTo);
 	    const calendarRec = new CalendarMethodRecord(calendar, ['dateFromFields', 'fields']);
 	    const fieldNames = CalendarFields(calendarRec, ['day', 'month', 'monthCode', 'year']);
-	    Call$3(ArrayPrototypePush$3, fieldNames, ['hour', 'microsecond', 'millisecond', 'minute', 'nanosecond', 'offset', 'second', 'timeZone']);
+	    Call$4(ArrayPrototypePush$3, fieldNames, ['hour', 'microsecond', 'millisecond', 'minute', 'nanosecond', 'offset', 'second', 'timeZone']);
 	    const fields = PrepareTemporalFields(relativeTo, fieldNames, []);
 	    const dateOptions = ObjectCreate$8(null);
 	    dateOptions.overflow = 'constrain';
@@ -9707,7 +9608,7 @@
 	      throw new RangeError('Z designator not supported for PlainDate relativeTo; either remove the Z or add a bracketed time zone');
 	    }
 	    if (!calendar) calendar = 'iso8601';
-	    if (!IsBuiltinCalendar(calendar)) throw new RangeError(`invalid calendar identifier ${calendar}`);
+	    if (!IsBuiltinCalendar(calendar)) throw new RangeError("invalid calendar identifier ".concat(calendar));
 	    calendar = ASCIILowercase(calendar);
 	  }
 	  if (timeZone === undefined) return {
@@ -9746,6 +9647,9 @@
 	  if (UNITS_DESCENDING.indexOf(unit1) > UNITS_DESCENDING.indexOf(unit2)) return unit2;
 	  return unit1;
 	}
+	function IsCalendarUnit(unit) {
+	  return unit === 'year' || unit === 'month' || unit === 'week';
+	}
 	function PrepareTemporalFields(bag, fields, requiredFields) {
 	  let extraFieldDescriptors = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : [];
 	  let duplicateBehaviour = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 'throw';
@@ -9757,18 +9661,18 @@
 	  if (extraFieldDescriptors) {
 	    for (let index = 0; index < extraFieldDescriptors.length; index++) {
 	      let desc = extraFieldDescriptors[index];
-	      Call$3(ArrayPrototypePush$3, fields, [desc.property]);
+	      Call$4(ArrayPrototypePush$3, fields, [desc.property]);
 	      if (desc.required === true && requiredFields !== 'partial') {
-	        Call$3(ArrayPrototypePush$3, requiredFields, [desc.property]);
+	        Call$4(ArrayPrototypePush$3, requiredFields, [desc.property]);
 	      }
 	    }
 	  }
-	  Call$3(ArrayPrototypeSort$1, fields, []);
+	  Call$4(ArrayPrototypeSort$1, fields, []);
 	  let previousProperty = undefined;
 	  for (let index = 0; index < fields.length; index++) {
 	    const property = fields[index];
 	    if (property === 'constructor' || property === '__proto__') {
-	      throw new RangeError(`Calendar fields cannot be named ${property}`);
+	      throw new RangeError("Calendar fields cannot be named ".concat(property));
 	    }
 	    if (property !== previousProperty) {
 	      let value = bag[property];
@@ -9777,7 +9681,7 @@
 	        if (BUILTIN_CASTS.has(property)) {
 	          value = BUILTIN_CASTS.get(property)(value);
 	        } else if (extraFieldDescriptors) {
-	          const matchingDescriptor = Call$3(ArrayPrototypeFind, extraFieldDescriptors, [desc => desc.property === property]);
+	          const matchingDescriptor = Call$4(ArrayPrototypeFind, extraFieldDescriptors, [desc => desc.property === property]);
 	          if (matchingDescriptor) {
 	            const convertor = matchingDescriptor.conversion;
 	            value = convertor(value);
@@ -9785,8 +9689,8 @@
 	        }
 	        result[property] = value;
 	      } else if (requiredFields !== 'partial') {
-	        if (Call$3(ArrayIncludes$1, requiredFields, [property])) {
-	          throw new TypeError(`required property '${property}' missing or undefined`);
+	        if (Call$4(ArrayIncludes$1, requiredFields, [property])) {
+	          throw new TypeError("required property '".concat(property, "' missing or undefined"));
 	        }
 	        value = BUILTIN_DEFAULTS.get(property);
 	        result[property] = value;
@@ -9821,7 +9725,7 @@
 	}
 	function ToTemporalDate(item, options) {
 	  if (options !== undefined) options = SnapshotOwnProperties(GetOptionsObject(options), null);
-	  if (Type$a(item) === 'Object') {
+	  if (Type$d(item) === 'Object') {
 	    if (IsTemporalDate(item)) return item;
 	    if (IsTemporalZonedDateTime(item)) {
 	      ToTemporalOverflow(options); // validate and ignore
@@ -9847,7 +9751,7 @@
 	  } = ParseTemporalDateString(RequireString(item));
 	  if (z) throw new RangeError('Z designator not supported for PlainDate');
 	  if (!calendar) calendar = 'iso8601';
-	  if (!IsBuiltinCalendar(calendar)) throw new RangeError(`invalid calendar identifier ${calendar}`);
+	  if (!IsBuiltinCalendar(calendar)) throw new RangeError("invalid calendar identifier ".concat(calendar));
 	  calendar = ASCIILowercase(calendar);
 	  ToTemporalOverflow(options); // validate and ignore
 	  return CreateTemporalDate(year, month, day, calendar);
@@ -9891,7 +9795,7 @@
 	function ToTemporalDateTime(item, options) {
 	  let year, month, day, hour, minute, second, millisecond, microsecond, nanosecond, calendar;
 	  const resolvedOptions = SnapshotOwnProperties(GetOptionsObject(options), null);
-	  if (Type$a(item) === 'Object') {
+	  if (Type$d(item) === 'Object') {
 	    if (IsTemporalDateTime(item)) return item;
 	    if (IsTemporalZonedDateTime(item)) {
 	      ToTemporalOverflow(resolvedOptions); // validate and ignore
@@ -9905,7 +9809,7 @@
 	    calendar = GetTemporalCalendarSlotValueWithISODefault(item);
 	    const calendarRec = new CalendarMethodRecord(calendar, ['dateFromFields', 'fields']);
 	    const fieldNames = CalendarFields(calendarRec, ['day', 'month', 'monthCode', 'year']);
-	    Call$3(ArrayPrototypePush$3, fieldNames, ['hour', 'microsecond', 'millisecond', 'minute', 'nanosecond', 'second']);
+	    Call$4(ArrayPrototypePush$3, fieldNames, ['hour', 'microsecond', 'millisecond', 'minute', 'nanosecond', 'second']);
 	    const fields = PrepareTemporalFields(item, fieldNames, []);
 	    ({
 	      year,
@@ -9936,11 +9840,10 @@
 	    if (z) throw new RangeError('Z designator not supported for PlainDateTime');
 	    RejectDateTime(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond);
 	    if (!calendar) calendar = 'iso8601';
-	    if (!IsBuiltinCalendar(calendar)) throw new RangeError(`invalid calendar identifier ${calendar}`);
+	    if (!IsBuiltinCalendar(calendar)) throw new RangeError("invalid calendar identifier ".concat(calendar));
 	    calendar = ASCIILowercase(calendar);
 	    ToTemporalOverflow(resolvedOptions); // validate and ignore
 	  }
-
 	  return CreateTemporalDateTime(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond, calendar);
 	}
 	function ToTemporalDuration(item) {
@@ -9961,7 +9864,7 @@
 	  return new TemporalDuration(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
 	}
 	function ToTemporalInstant(item) {
-	  if (Type$a(item === 'Object')) {
+	  if (Type$d(item === 'Object')) {
 	    if (IsTemporalInstant(item)) return item;
 	    if (IsTemporalZonedDateTime(item)) {
 	      const TemporalInstant = GetIntrinsic('%Temporal.Instant%');
@@ -9992,7 +9895,7 @@
 	}
 	function ToTemporalMonthDay(item, options) {
 	  if (options !== undefined) options = SnapshotOwnProperties(GetOptionsObject(options), null);
-	  if (Type$a(item) === 'Object') {
+	  if (Type$d(item) === 'Object') {
 	    if (IsTemporalMonthDay(item)) return item;
 	    let calendar;
 	    if (HasSlot(item, CALENDAR)) {
@@ -10014,13 +9917,13 @@
 	    calendar
 	  } = ParseTemporalMonthDayString(RequireString(item));
 	  if (calendar === undefined) calendar = 'iso8601';
-	  if (!IsBuiltinCalendar(calendar)) throw new RangeError(`invalid calendar identifier ${calendar}`);
+	  if (!IsBuiltinCalendar(calendar)) throw new RangeError("invalid calendar identifier ".concat(calendar));
 	  calendar = ASCIILowercase(calendar);
 	  ToTemporalOverflow(options); // validate and ignore
 
 	  if (referenceISOYear === undefined) {
 	    if (calendar !== 'iso8601') {
-	      throw new Error(`assertion failed: missing year with non-"iso8601" calendar identifier ${calendar}`);
+	      throw new Error("assertion failed: missing year with non-\"iso8601\" calendar identifier ".concat(calendar));
 	    }
 	    RejectISODate(1972, month, day);
 	    return CreateTemporalMonthDay(month, day, calendar);
@@ -10032,7 +9935,7 @@
 	function ToTemporalTime(item) {
 	  let overflow = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'constrain';
 	  let hour, minute, second, millisecond, microsecond, nanosecond;
-	  if (Type$a(item) === 'Object') {
+	  if (Type$d(item) === 'Object') {
 	    if (IsTemporalTime(item)) return item;
 	    if (IsTemporalZonedDateTime(item)) {
 	      const timeZoneRec = new TimeZoneMethodRecord(GetSlot(item, TIME_ZONE), ['getOffsetNanosecondsFor']);
@@ -10074,7 +9977,7 @@
 	}
 	function ToTemporalYearMonth(item, options) {
 	  if (options !== undefined) options = SnapshotOwnProperties(GetOptionsObject(options), null);
-	  if (Type$a(item) === 'Object') {
+	  if (Type$d(item) === 'Object') {
 	    if (IsTemporalYearMonth(item)) return item;
 	    const calendar = GetTemporalCalendarSlotValueWithISODefault(item);
 	    const calendarRec = new CalendarMethodRecord(calendar, ['fields', 'yearMonthFromFields']);
@@ -10089,7 +9992,7 @@
 	    calendar
 	  } = ParseTemporalYearMonthString(RequireString(item));
 	  if (calendar === undefined) calendar = 'iso8601';
-	  if (!IsBuiltinCalendar(calendar)) throw new RangeError(`invalid calendar identifier ${calendar}`);
+	  if (!IsBuiltinCalendar(calendar)) throw new RangeError("invalid calendar identifier ".concat(calendar));
 	  calendar = ASCIILowercase(calendar);
 	  ToTemporalOverflow(options); // validate and ignore
 
@@ -10102,9 +10005,7 @@
 	  return CalendarYearMonthFromFields(calendarRec, result);
 	}
 	function InterpretISODateTimeOffset(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond, offsetBehaviour, offsetNs, timeZoneRec, disambiguation, offsetOpt, matchMinute) {
-	  // If offsetBehaviour !== "exact" and offsetOpt !== "use", at least
-	  // getPossibleInstantsFor should be looked up in advance. timeZoneRec may be
-	  // modified by looking up getOffsetNanosecondsFor as needed.
+	  // getPossibleInstantsFor and getOffsetNanosecondsFor should be looked up.
 	  const dt = CreateTemporalDateTime(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond, 'iso8601');
 	  if (offsetBehaviour === 'wall' || offsetOpt === 'ignore') {
 	    // Simple case: ISO string without a TZ offset (or caller wants to ignore
@@ -10126,7 +10027,6 @@
 	  // "prefer" or "reject"
 	  const possibleInstants = GetPossibleInstantsFor(timeZoneRec, dt);
 	  if (possibleInstants.length > 0) {
-	    if (!timeZoneRec.hasLookedUp('getOffsetNanosecondsFor')) timeZoneRec.lookup('getOffsetNanosecondsFor');
 	    for (let index = 0; index < possibleInstants.length; index++) {
 	      const candidate = possibleInstants[index];
 	      const candidateOffset = GetOffsetNanosecondsFor(timeZoneRec, candidate);
@@ -10141,12 +10041,11 @@
 	  // zone and date/time.
 	  if (offsetOpt === 'reject') {
 	    const offsetStr = FormatUTCOffsetNanoseconds(offsetNs);
-	    const timeZoneString = IsTemporalTimeZone(timeZoneRec.receiver) ? GetSlot(timeZoneRec.receiver, TIMEZONE_ID) : 'time zone';
-	    throw new RangeError(`Offset ${offsetStr} is invalid for ${dt} in ${timeZoneString}`);
+	    const timeZoneString = IsTemporalTimeZone(timeZoneRec.receiver) ? GetSlot(timeZoneRec.receiver, TIMEZONE_ID) : typeof timeZoneRec.receiver === 'string' ? timeZoneRec.receiver : 'time zone';
+	    throw new RangeError("Offset ".concat(offsetStr, " is invalid for ").concat(dt, " in ").concat(timeZoneString));
 	  }
 	  // fall through: offsetOpt === 'prefer', but the offset doesn't match
 	  // so fall back to use the time zone instead.
-	  if (!timeZoneRec.hasLookedUp('getOffsetNanosecondsFor')) timeZoneRec.lookup('getOffsetNanosecondsFor');
 	  const instant = DisambiguatePossibleInstants(possibleInstants, timeZoneRec, dt, disambiguation);
 	  return GetSlot(instant, EPOCHNANOSECONDS);
 	}
@@ -10156,12 +10055,12 @@
 	  let disambiguation, offsetOpt;
 	  let matchMinute = false;
 	  let offsetBehaviour = 'option';
-	  if (Type$a(item) === 'Object') {
+	  if (Type$d(item) === 'Object') {
 	    if (IsTemporalZonedDateTime(item)) return item;
 	    calendar = GetTemporalCalendarSlotValueWithISODefault(item);
 	    const calendarRec = new CalendarMethodRecord(calendar, ['dateFromFields', 'fields']);
 	    const fieldNames = CalendarFields(calendarRec, ['day', 'month', 'monthCode', 'year']);
-	    Call$3(ArrayPrototypePush$3, fieldNames, ['hour', 'microsecond', 'millisecond', 'minute', 'nanosecond', 'offset', 'second', 'timeZone']);
+	    Call$4(ArrayPrototypePush$3, fieldNames, ['hour', 'microsecond', 'millisecond', 'minute', 'nanosecond', 'offset', 'second', 'timeZone']);
 	    const fields = PrepareTemporalFields(item, fieldNames, ['timeZone']);
 	    timeZone = ToTemporalTimeZoneSlotValue(fields.timeZone);
 	    offset = fields.offset;
@@ -10205,20 +10104,16 @@
 	      offsetBehaviour = 'wall';
 	    }
 	    if (!calendar) calendar = 'iso8601';
-	    if (!IsBuiltinCalendar(calendar)) throw new RangeError(`invalid calendar identifier ${calendar}`);
+	    if (!IsBuiltinCalendar(calendar)) throw new RangeError("invalid calendar identifier ".concat(calendar));
 	    calendar = ASCIILowercase(calendar);
 	    matchMinute = true; // ISO strings may specify offset with less precision
 	    disambiguation = ToTemporalDisambiguation(resolvedOptions);
 	    offsetOpt = ToTemporalOffset(resolvedOptions, 'reject');
 	    ToTemporalOverflow(resolvedOptions); // validate and ignore
 	  }
-
 	  let offsetNs = 0;
 	  if (offsetBehaviour === 'option') offsetNs = ParseDateTimeUTCOffset(offset);
-	  const timeZoneRec = new TimeZoneMethodRecord(timeZone);
-	  if (offsetBehaviour !== 'exact' && offsetOpt !== 'use') {
-	    timeZoneRec.lookup('getPossibleInstantsFor');
-	  }
+	  const timeZoneRec = new TimeZoneMethodRecord(timeZone, ['getOffsetNanosecondsFor', 'getPossibleInstantsFor']);
 	  const epochNanoseconds = InterpretISODateTimeOffset(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond, offsetBehaviour, offsetNs, timeZoneRec, disambiguation, offsetOpt, matchMinute);
 	  return CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar);
 	}
@@ -10239,7 +10134,7 @@
 	      repr += '[u-ca=<calendar object>]';
 	    }
 	    ObjectDefineProperty(result, '_repr_', {
-	      value: `Temporal.PlainDate <${repr}>`,
+	      value: "Temporal.PlainDate <".concat(repr, ">"),
 	      writable: false,
 	      enumerable: false,
 	      configurable: false
@@ -10275,7 +10170,7 @@
 	      repr += '[u-ca=<calendar object>]';
 	    }
 	    Object.defineProperty(result, '_repr_', {
-	      value: `Temporal.PlainDateTime <${repr}>`,
+	      value: "Temporal.PlainDateTime <".concat(repr, ">"),
 	      writable: false,
 	      enumerable: false,
 	      configurable: false
@@ -10306,7 +10201,7 @@
 	      repr += '[u-ca=<calendar object>]';
 	    }
 	    Object.defineProperty(result, '_repr_', {
-	      value: `Temporal.PlainMonthDay <${repr}>`,
+	      value: "Temporal.PlainMonthDay <".concat(repr, ">"),
 	      writable: false,
 	      enumerable: false,
 	      configurable: false
@@ -10338,7 +10233,7 @@
 	      repr += '[u-ca=<calendar object>]';
 	    }
 	    Object.defineProperty(result, '_repr_', {
-	      value: `Temporal.PlainYearMonth <${repr}>`,
+	      value: "Temporal.PlainYearMonth <".concat(repr, ">"),
 	      writable: false,
 	      enumerable: false,
 	      configurable: false
@@ -10375,7 +10270,7 @@
 	      const dateTime = GetPlainDateTimeFor(undefined, instant, 'iso8601', offsetNs);
 	      repr = TemporalDateTimeToString(dateTime, 'auto', 'never');
 	      repr += FormatDateTimeUTCOffsetRounded(offsetNs);
-	      repr += `[${timeZone}]`;
+	      repr += "[".concat(timeZone, "]");
 	    } else {
 	      const dateTime = GetPlainDateTimeFor(undefined, instant, 'iso8601', 0);
 	      repr = TemporalDateTimeToString(dateTime, 'auto', 'never') + 'Z[<time zone object>]';
@@ -10386,7 +10281,7 @@
 	      repr += '[u-ca=<calendar object>]';
 	    }
 	    Object.defineProperty(result, '_repr_', {
-	      value: `Temporal.ZonedDateTime <${repr}>`,
+	      value: "Temporal.ZonedDateTime <".concat(repr, ">"),
 	      writable: false,
 	      enumerable: false,
 	      configurable: false
@@ -10410,14 +10305,14 @@
 	  fieldNames = calendarRec.fields(fieldNames);
 	  const result = [];
 	  for (const name of fieldNames) {
-	    if (Type$a(name) !== 'String') throw new TypeError('bad return from calendar.fields()');
-	    Call$3(ArrayPrototypePush$3, result, [name]);
+	    if (Type$d(name) !== 'String') throw new TypeError('bad return from calendar.fields()');
+	    Call$4(ArrayPrototypePush$3, result, [name]);
 	  }
 	  return result;
 	}
 	function CalendarMergeFields(calendarRec, fields, additionalFields) {
 	  const result = calendarRec.mergeFields(fields, additionalFields);
-	  if (!calendarRec.isBuiltIn() && Type$a(result) !== 'Object') {
+	  if (!calendarRec.isBuiltIn() && Type$d(result) !== 'Object') {
 	    throw new TypeError('bad return from calendar.mergeFields()');
 	  }
 	  return result;
@@ -10436,10 +10331,10 @@
 	  if (typeof calendar === 'string') {
 	    const TemporalCalendar = GetIntrinsic('%Temporal.Calendar%');
 	    calendar = new TemporalCalendar(calendar);
-	    return Call$3(GetIntrinsic('%Temporal.Calendar.prototype.year%'), calendar, [dateLike]);
+	    return Call$4(GetIntrinsic('%Temporal.Calendar.prototype.year%'), calendar, [dateLike]);
 	  }
 	  const year = GetMethod$4(calendar, 'year');
-	  const result = Call$3(year, calendar, [dateLike]);
+	  const result = Call$4(year, calendar, [dateLike]);
 	  if (typeof result !== 'number') {
 	    throw new TypeError('calendar year result must be an integer');
 	  }
@@ -10452,10 +10347,10 @@
 	  if (typeof calendar === 'string') {
 	    const TemporalCalendar = GetIntrinsic('%Temporal.Calendar%');
 	    calendar = new TemporalCalendar(calendar);
-	    return Call$3(GetIntrinsic('%Temporal.Calendar.prototype.month%'), calendar, [dateLike]);
+	    return Call$4(GetIntrinsic('%Temporal.Calendar.prototype.month%'), calendar, [dateLike]);
 	  }
 	  const month = GetMethod$4(calendar, 'month');
-	  const result = Call$3(month, calendar, [dateLike]);
+	  const result = Call$4(month, calendar, [dateLike]);
 	  if (typeof result !== 'number') {
 	    throw new TypeError('calendar month result must be a positive integer');
 	  }
@@ -10468,10 +10363,10 @@
 	  if (typeof calendar === 'string') {
 	    const TemporalCalendar = GetIntrinsic('%Temporal.Calendar%');
 	    calendar = new TemporalCalendar(calendar);
-	    return Call$3(GetIntrinsic('%Temporal.Calendar.prototype.monthCode%'), calendar, [dateLike]);
+	    return Call$4(GetIntrinsic('%Temporal.Calendar.prototype.monthCode%'), calendar, [dateLike]);
 	  }
 	  const monthCode = GetMethod$4(calendar, 'monthCode');
-	  const result = Call$3(monthCode, calendar, [dateLike]);
+	  const result = Call$4(monthCode, calendar, [dateLike]);
 	  if (typeof result !== 'string') {
 	    throw new TypeError('calendar monthCode result must be a string');
 	  }
@@ -10493,10 +10388,10 @@
 	  if (typeof calendar === 'string') {
 	    const TemporalCalendar = GetIntrinsic('%Temporal.Calendar%');
 	    calendar = new TemporalCalendar(calendar);
-	    return Call$3(GetIntrinsic('%Temporal.Calendar.prototype.era%'), calendar, [dateLike]);
+	    return Call$4(GetIntrinsic('%Temporal.Calendar.prototype.era%'), calendar, [dateLike]);
 	  }
 	  const era = GetMethod$4(calendar, 'era');
-	  let result = Call$3(era, calendar, [dateLike]);
+	  let result = Call$4(era, calendar, [dateLike]);
 	  if (result === undefined) {
 	    return result;
 	  }
@@ -10509,10 +10404,10 @@
 	  if (typeof calendar === 'string') {
 	    const TemporalCalendar = GetIntrinsic('%Temporal.Calendar%');
 	    calendar = new TemporalCalendar(calendar);
-	    return Call$3(GetIntrinsic('%Temporal.Calendar.prototype.eraYear%'), calendar, [dateLike]);
+	    return Call$4(GetIntrinsic('%Temporal.Calendar.prototype.eraYear%'), calendar, [dateLike]);
 	  }
 	  const eraYear = GetMethod$4(calendar, 'eraYear');
-	  let result = Call$3(eraYear, calendar, [dateLike]);
+	  let result = Call$4(eraYear, calendar, [dateLike]);
 	  if (result === undefined) {
 	    return result;
 	  }
@@ -10528,10 +10423,10 @@
 	  if (typeof calendar === 'string') {
 	    const TemporalCalendar = GetIntrinsic('%Temporal.Calendar%');
 	    calendar = new TemporalCalendar(calendar);
-	    return Call$3(GetIntrinsic('%Temporal.Calendar.prototype.dayOfWeek%'), calendar, [dateLike]);
+	    return Call$4(GetIntrinsic('%Temporal.Calendar.prototype.dayOfWeek%'), calendar, [dateLike]);
 	  }
 	  const dayOfWeek = GetMethod$4(calendar, 'dayOfWeek');
-	  const result = Call$3(dayOfWeek, calendar, [dateLike]);
+	  const result = Call$4(dayOfWeek, calendar, [dateLike]);
 	  if (typeof result !== 'number') {
 	    throw new TypeError('calendar dayOfWeek result must be a positive integer');
 	  }
@@ -10544,10 +10439,10 @@
 	  if (typeof calendar === 'string') {
 	    const TemporalCalendar = GetIntrinsic('%Temporal.Calendar%');
 	    calendar = new TemporalCalendar(calendar);
-	    return Call$3(GetIntrinsic('%Temporal.Calendar.prototype.dayOfYear%'), calendar, [dateLike]);
+	    return Call$4(GetIntrinsic('%Temporal.Calendar.prototype.dayOfYear%'), calendar, [dateLike]);
 	  }
 	  const dayOfYear = GetMethod$4(calendar, 'dayOfYear');
-	  const result = Call$3(dayOfYear, calendar, [dateLike]);
+	  const result = Call$4(dayOfYear, calendar, [dateLike]);
 	  if (typeof result !== 'number') {
 	    throw new TypeError('calendar dayOfYear result must be a positive integer');
 	  }
@@ -10560,14 +10455,14 @@
 	  if (typeof calendar === 'string') {
 	    const TemporalCalendar = GetIntrinsic('%Temporal.Calendar%');
 	    calendar = new TemporalCalendar(calendar);
-	    return Call$3(GetIntrinsic('%Temporal.Calendar.prototype.weekOfYear%'), calendar, [dateLike]);
+	    return Call$4(GetIntrinsic('%Temporal.Calendar.prototype.weekOfYear%'), calendar, [dateLike]);
 	  }
 	  const weekOfYear = GetMethod$4(calendar, 'weekOfYear');
-	  const result = Call$3(weekOfYear, calendar, [dateLike]);
-	  if (typeof result !== 'number') {
+	  const result = Call$4(weekOfYear, calendar, [dateLike]);
+	  if (typeof result !== 'number' && result !== undefined) {
 	    throw new TypeError('calendar weekOfYear result must be a positive integer');
 	  }
-	  if (!IsIntegralNumber$1(result) || result < 1) {
+	  if ((!IsIntegralNumber$1(result) || result < 1) && result !== undefined) {
 	    throw new RangeError('calendar weekOfYear result must be a positive integer');
 	  }
 	  return result;
@@ -10576,14 +10471,14 @@
 	  if (typeof calendar === 'string') {
 	    const TemporalCalendar = GetIntrinsic('%Temporal.Calendar%');
 	    calendar = new TemporalCalendar(calendar);
-	    return Call$3(GetIntrinsic('%Temporal.Calendar.prototype.yearOfWeek%'), calendar, [dateLike]);
+	    return Call$4(GetIntrinsic('%Temporal.Calendar.prototype.yearOfWeek%'), calendar, [dateLike]);
 	  }
 	  const yearOfWeek = GetMethod$4(calendar, 'yearOfWeek');
-	  const result = Call$3(yearOfWeek, calendar, [dateLike]);
-	  if (typeof result !== 'number') {
+	  const result = Call$4(yearOfWeek, calendar, [dateLike]);
+	  if (typeof result !== 'number' && result !== undefined) {
 	    throw new TypeError('calendar yearOfWeek result must be an integer');
 	  }
-	  if (!IsIntegralNumber$1(result)) {
+	  if (!IsIntegralNumber$1(result) && result !== undefined) {
 	    throw new RangeError('calendar yearOfWeek result must be an integer');
 	  }
 	  return result;
@@ -10592,10 +10487,10 @@
 	  if (typeof calendar === 'string') {
 	    const TemporalCalendar = GetIntrinsic('%Temporal.Calendar%');
 	    calendar = new TemporalCalendar(calendar);
-	    return Call$3(GetIntrinsic('%Temporal.Calendar.prototype.daysInWeek%'), calendar, [dateLike]);
+	    return Call$4(GetIntrinsic('%Temporal.Calendar.prototype.daysInWeek%'), calendar, [dateLike]);
 	  }
 	  const daysInWeek = GetMethod$4(calendar, 'daysInWeek');
-	  const result = Call$3(daysInWeek, calendar, [dateLike]);
+	  const result = Call$4(daysInWeek, calendar, [dateLike]);
 	  if (typeof result !== 'number') {
 	    throw new TypeError('calendar daysInWeek result must be a positive integer');
 	  }
@@ -10608,10 +10503,10 @@
 	  if (typeof calendar === 'string') {
 	    const TemporalCalendar = GetIntrinsic('%Temporal.Calendar%');
 	    calendar = new TemporalCalendar(calendar);
-	    return Call$3(GetIntrinsic('%Temporal.Calendar.prototype.daysInMonth%'), calendar, [dateLike]);
+	    return Call$4(GetIntrinsic('%Temporal.Calendar.prototype.daysInMonth%'), calendar, [dateLike]);
 	  }
 	  const daysInMonth = GetMethod$4(calendar, 'daysInMonth');
-	  const result = Call$3(daysInMonth, calendar, [dateLike]);
+	  const result = Call$4(daysInMonth, calendar, [dateLike]);
 	  if (typeof result !== 'number') {
 	    throw new TypeError('calendar daysInMonth result must be a positive integer');
 	  }
@@ -10624,10 +10519,10 @@
 	  if (typeof calendar === 'string') {
 	    const TemporalCalendar = GetIntrinsic('%Temporal.Calendar%');
 	    calendar = new TemporalCalendar(calendar);
-	    return Call$3(GetIntrinsic('%Temporal.Calendar.prototype.daysInYear%'), calendar, [dateLike]);
+	    return Call$4(GetIntrinsic('%Temporal.Calendar.prototype.daysInYear%'), calendar, [dateLike]);
 	  }
 	  const daysInYear = GetMethod$4(calendar, 'daysInYear');
-	  const result = Call$3(daysInYear, calendar, [dateLike]);
+	  const result = Call$4(daysInYear, calendar, [dateLike]);
 	  if (typeof result !== 'number') {
 	    throw new TypeError('calendar daysInYear result must be a positive integer');
 	  }
@@ -10640,10 +10535,10 @@
 	  if (typeof calendar === 'string') {
 	    const TemporalCalendar = GetIntrinsic('%Temporal.Calendar%');
 	    calendar = new TemporalCalendar(calendar);
-	    return Call$3(GetIntrinsic('%Temporal.Calendar.prototype.monthsInYear%'), calendar, [dateLike]);
+	    return Call$4(GetIntrinsic('%Temporal.Calendar.prototype.monthsInYear%'), calendar, [dateLike]);
 	  }
 	  const monthsInYear = GetMethod$4(calendar, 'monthsInYear');
-	  const result = Call$3(monthsInYear, calendar, [dateLike]);
+	  const result = Call$4(monthsInYear, calendar, [dateLike]);
 	  if (typeof result !== 'number') {
 	    throw new TypeError('calendar monthsInYear result must be a positive integer');
 	  }
@@ -10656,10 +10551,10 @@
 	  if (typeof calendar === 'string') {
 	    const TemporalCalendar = GetIntrinsic('%Temporal.Calendar%');
 	    calendar = new TemporalCalendar(calendar);
-	    return Call$3(GetIntrinsic('%Temporal.Calendar.prototype.inLeapYear%'), calendar, [dateLike]);
+	    return Call$4(GetIntrinsic('%Temporal.Calendar.prototype.inLeapYear%'), calendar, [dateLike]);
 	  }
 	  const inLeapYear = GetMethod$4(calendar, 'inLeapYear');
-	  const result = Call$3(inLeapYear, calendar, [dateLike]);
+	  const result = Call$4(inLeapYear, calendar, [dateLike]);
 	  if (typeof result !== 'boolean') {
 	    throw new TypeError('calendar inLeapYear result must be a boolean');
 	  }
@@ -10670,7 +10565,7 @@
 	  return 'dateAdd' in object && 'dateFromFields' in object && 'dateUntil' in object && 'day' in object && 'dayOfWeek' in object && 'dayOfYear' in object && 'daysInMonth' in object && 'daysInWeek' in object && 'daysInYear' in object && 'fields' in object && 'id' in object && 'inLeapYear' in object && 'mergeFields' in object && 'month' in object && 'monthCode' in object && 'monthDayFromFields' in object && 'monthsInYear' in object && 'weekOfYear' in object && 'year' in object && 'yearMonthFromFields' in object && 'yearOfWeek' in object;
 	}
 	function ToTemporalCalendarSlotValue(calendarLike) {
-	  if (Type$a(calendarLike) === 'Object') {
+	  if (Type$d(calendarLike) === 'Object') {
 	    if (HasSlot(calendarLike, CALENDAR)) return GetSlot(calendarLike, CALENDAR);
 	    if (!ObjectImplementsTemporalCalendarProtocol(calendarLike)) {
 	      throw new TypeError('expected a Temporal.Calendar or object implementing the Temporal.Calendar protocol');
@@ -10696,7 +10591,7 @@
 	    }
 	  }
 	  if (!calendar) calendar = 'iso8601';
-	  if (!IsBuiltinCalendar(calendar)) throw new RangeError(`invalid calendar identifier ${calendar}`);
+	  if (!IsBuiltinCalendar(calendar)) throw new RangeError("invalid calendar identifier ".concat(calendar));
 	  return ASCIILowercase(calendar);
 	}
 	function GetTemporalCalendarSlotValueWithISODefault(item) {
@@ -10714,7 +10609,7 @@
 	  return result;
 	}
 	function ToTemporalCalendarObject(slotValue) {
-	  if (Type$a(slotValue) === 'Object') return slotValue;
+	  if (Type$d(slotValue) === 'Object') return slotValue;
 	  const TemporalCalendar = GetIntrinsic('%Temporal.Calendar%');
 	  return new TemporalCalendar(slotValue);
 	}
@@ -10734,7 +10629,7 @@
 	  const cal1 = ToTemporalCalendarIdentifier(one);
 	  const cal2 = ToTemporalCalendarIdentifier(two);
 	  if (cal1 !== cal2) {
-	    throw new RangeError(`cannot ${errorMessageAction} of ${cal1} and ${cal2} calendars`);
+	    throw new RangeError("cannot ".concat(errorMessageAction, " of ").concat(cal1, " and ").concat(cal2, " calendars"));
 	  }
 	}
 	function ConsolidateCalendars(one, two) {
@@ -10769,7 +10664,7 @@
 	  return 'getOffsetNanosecondsFor' in object && 'getPossibleInstantsFor' in object && 'id' in object;
 	}
 	function ToTemporalTimeZoneSlotValue(temporalTimeZoneLike) {
-	  if (Type$a(temporalTimeZoneLike) === 'Object') {
+	  if (Type$d(temporalTimeZoneLike) === 'Object') {
 	    if (IsTemporalZonedDateTime(temporalTimeZoneLike)) return GetSlot(temporalTimeZoneLike, TIME_ZONE);
 	    if (!ObjectImplementsTemporalTimeZoneProtocol(temporalTimeZoneLike)) {
 	      throw new TypeError('expected a Temporal.TimeZone or object implementing the Temporal.TimeZone protocol');
@@ -10786,7 +10681,7 @@
 	  }
 	  // if offsetMinutes is undefined, then tzName must be present
 	  const record = GetAvailableNamedTimeZoneIdentifier(tzName);
-	  if (!record) throw new RangeError(`Unrecognized time zone ${tzName}`);
+	  if (!record) throw new RangeError("Unrecognized time zone ".concat(tzName));
 	  return record.identifier;
 	}
 	function ToTemporalTimeZoneIdentifier(slotValue) {
@@ -10796,7 +10691,7 @@
 	  return result;
 	}
 	function ToTemporalTimeZoneObject(slotValue) {
-	  if (Type$a(slotValue) === 'Object') return slotValue;
+	  if (Type$d(slotValue) === 'Object') return slotValue;
 	  const TemporalTimeZone = GetIntrinsic('%Temporal.TimeZone%');
 	  return new TemporalTimeZone(slotValue);
 	}
@@ -10854,14 +10749,14 @@
 	  const subSecondNs = absoluteNs % 1e9;
 	  const precision = second === 0 && subSecondNs === 0 ? 'minute' : 'auto';
 	  const timeString = FormatTimeString(hour, minute, second, subSecondNs, precision);
-	  return `${sign}${timeString}`;
+	  return "".concat(sign).concat(timeString);
 	}
 	function GetPlainDateTimeFor(timeZoneRec, instant, calendar) {
 	  let precalculatedOffsetNs = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : undefined;
 	  // Either getOffsetNanosecondsFor must be looked up, or
 	  // precalculatedOffsetNs should be supplied
 	  const ns = GetSlot(instant, EPOCHNANOSECONDS);
-	  const offsetNs = precalculatedOffsetNs ?? GetOffsetNanosecondsFor(timeZoneRec, instant);
+	  const offsetNs = precalculatedOffsetNs !== null && precalculatedOffsetNs !== void 0 ? precalculatedOffsetNs : GetOffsetNanosecondsFor(timeZoneRec, instant);
 	  let {
 	    year,
 	    month,
@@ -10887,12 +10782,8 @@
 	  return CreateTemporalDateTime(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond, calendar);
 	}
 	function GetInstantFor(timeZoneRec, dateTime, disambiguation) {
-	  // getPossibleInstantsFor must be looked up already.
-	  // getOffsetNanosecondsFor _may_ be looked up and timeZoneRec may be modified.
+	  // getPossibleInstantsFor and getOffsetNanosecondsFor must be looked up.
 	  const possibleInstants = GetPossibleInstantsFor(timeZoneRec, dateTime);
-	  if (possibleInstants.length === 0 && disambiguation !== 'reject' && !timeZoneRec.hasLookedUp('getOffsetNanosecondsFor')) {
-	    timeZoneRec.lookup('getOffsetNanosecondsFor');
-	  }
 	  return DisambiguatePossibleInstants(possibleInstants, timeZoneRec, dateTime, disambiguation);
 	}
 	function DisambiguatePossibleInstants(possibleInstants, timeZoneRec, dateTime, disambiguation) {
@@ -10934,11 +10825,15 @@
 	  const offsetBefore = GetOffsetNanosecondsFor(timeZoneRec, dayBefore);
 	  const offsetAfter = GetOffsetNanosecondsFor(timeZoneRec, dayAfter);
 	  const nanoseconds = offsetAfter - offsetBefore;
+	  if (MathAbs$2(nanoseconds) > DAY_NANOS) {
+	    throw new RangeError('bad return from getOffsetNanosecondsFor: UTC offset shift longer than 24 hours');
+	  }
 	  switch (disambiguation) {
 	    case 'earlier':
 	      {
-	        const earlierTime = AddTime(hour, minute, second, millisecond, microsecond, nanosecond, 0, 0, 0, 0, 0, -nanoseconds);
-	        const earlierDate = AddISODate(year, month, day, 0, 0, 0, earlierTime.deltaDays, 'constrain');
+	        const norm = TimeDuration.normalize(0, 0, 0, 0, 0, -nanoseconds);
+	        const earlierTime = AddTime(hour, minute, second, millisecond, microsecond, nanosecond, norm);
+	        const earlierDate = BalanceISODate(year, month, day + earlierTime.deltaDays);
 	        const earlierPlainDateTime = CreateTemporalDateTime(earlierDate.year, earlierDate.month, earlierDate.day, earlierTime.hour, earlierTime.minute, earlierTime.second, earlierTime.millisecond, earlierTime.microsecond, earlierTime.nanosecond);
 	        return GetPossibleInstantsFor(timeZoneRec, earlierPlainDateTime)[0];
 	      }
@@ -10946,8 +10841,9 @@
 	    // fall through because 'compatible' means 'later' for "spring forward" transitions
 	    case 'later':
 	      {
-	        const laterTime = AddTime(hour, minute, second, millisecond, microsecond, nanosecond, 0, 0, 0, 0, 0, nanoseconds);
-	        const laterDate = AddISODate(year, month, day, 0, 0, 0, laterTime.deltaDays, 'constrain');
+	        const norm = TimeDuration.normalize(0, 0, 0, 0, 0, nanoseconds);
+	        const laterTime = AddTime(hour, minute, second, millisecond, microsecond, nanosecond, norm);
+	        const laterDate = BalanceISODate(year, month, day + laterTime.deltaDays);
 	        const laterPlainDateTime = CreateTemporalDateTime(laterDate.year, laterDate.month, laterDate.day, laterTime.hour, laterTime.minute, laterTime.second, laterTime.millisecond, laterTime.microsecond, laterTime.nanosecond);
 	        const possible = GetPossibleInstantsFor(timeZoneRec, laterPlainDateTime);
 	        return possible[possible.length - 1];
@@ -10957,7 +10853,7 @@
 	        throw new Error('should not be reached: reject handled earlier');
 	      }
 	  }
-	  throw new Error(`assertion failed: invalid disambiguation value ${disambiguation}`);
+	  throw new Error("assertion failed: invalid disambiguation value ".concat(disambiguation));
 	}
 	function GetPossibleInstantsFor(timeZoneRec, dateTime) {
 	  const possibleInstants = timeZoneRec.getPossibleInstantsFor(dateTime);
@@ -10968,15 +10864,24 @@
 	    if (!IsTemporalInstant(instant)) {
 	      throw new TypeError('bad return from getPossibleInstantsFor');
 	    }
-	    Call$3(ArrayPrototypePush$3, result, [instant]);
+	    Call$4(ArrayPrototypePush$3, result, [instant]);
+	  }
+	  const numResults = result.length;
+	  if (numResults > 1) {
+	    const mapped = Call$4(ArrayPrototypeMap, result, [i => GetSlot(i, EPOCHNANOSECONDS)]);
+	    const min = bigInt.min(...mapped);
+	    const max = bigInt.max(...mapped);
+	    if (bigInt(max).subtract(min).abs().greater(DAY_NANOS)) {
+	      throw new RangeError('bad return from getPossibleInstantsFor: UTC offset shift longer than 24 hours');
+	    }
 	  }
 	  return result;
 	}
 	function ISOYearString(year) {
 	  let yearString;
 	  if (year < 0 || year > 9999) {
-	    let sign = year < 0 ? '-' : '+';
-	    let yearNumber = MathAbs$2(year);
+	    const sign = year < 0 ? '-' : '+';
+	    const yearNumber = MathAbs$2(year);
 	    yearString = sign + ToZeroPaddedDecimalString$1(yearNumber, 6);
 	  } else {
 	    yearString = ToZeroPaddedDecimalString$1(year, 4);
@@ -10992,18 +10897,18 @@
 	    if (subSecondNanoseconds === 0) return '';
 	    const fractionFullPrecision = ToZeroPaddedDecimalString$1(subSecondNanoseconds, 9);
 	    // now remove any trailing zeroes
-	    fraction = Call$3(StringPrototypeReplace, fractionFullPrecision, [/0+$/, '']);
+	    fraction = Call$4(StringPrototypeReplace, fractionFullPrecision, [/0+$/, '']);
 	  } else {
 	    if (precision === 0) return '';
 	    const fractionFullPrecision = ToZeroPaddedDecimalString$1(subSecondNanoseconds, 9);
-	    fraction = Call$3(StringPrototypeSlice, fractionFullPrecision, [0, precision]);
+	    fraction = Call$4(StringPrototypeSlice, fractionFullPrecision, [0, precision]);
 	  }
-	  return `.${fraction}`;
+	  return ".".concat(fraction);
 	}
 	function FormatTimeString(hour, minute, second, subSecondNanoseconds, precision) {
-	  let result = `${ISODateTimePartString(hour)}:${ISODateTimePartString(minute)}`;
+	  let result = "".concat(ISODateTimePartString(hour), ":").concat(ISODateTimePartString(minute));
 	  if (precision === 'minute') return result;
-	  result += `:${ISODateTimePartString(second)}`;
+	  result += ":".concat(ISODateTimePartString(second));
 	  result += FormatFractionalSeconds(subSecondNanoseconds, precision);
 	  return result;
 	}
@@ -11018,44 +10923,30 @@
 	  if (timeZone !== undefined) {
 	    timeZoneString = FormatDateTimeUTCOffsetRounded(offsetNs);
 	  }
-	  return `${dateTimeString}${timeZoneString}`;
+	  return "".concat(dateTimeString).concat(timeZoneString);
 	}
 	function formatAsDecimalNumber(num) {
 	  if (num <= NumberMaxSafeInteger) return num.toString(10);
 	  return bigInt(num).toString();
 	}
-	function TemporalDurationToString(years, months, weeks, days, hours, minutes, seconds, ms, µs, ns) {
-	  let precision = arguments.length > 10 && arguments[10] !== undefined ? arguments[10] : 'auto';
-	  const sign = DurationSign(years, months, weeks, days, hours, minutes, seconds, ms, µs, ns);
-	  let total = TotalDurationNanoseconds(0, 0, seconds, ms, µs, ns);
-	  ({
-	    quotient: total,
-	    remainder: ns
-	  } = total.divmod(1000));
-	  ({
-	    quotient: total,
-	    remainder: µs
-	  } = total.divmod(1000));
-	  ({
-	    quotient: seconds,
-	    remainder: ms
-	  } = total.divmod(1000));
+	function TemporalDurationToString(years, months, weeks, days, hours, minutes, normSeconds) {
+	  let precision = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : 'auto';
+	  const sign = DurationSign(years, months, weeks, days, hours, minutes, normSeconds.sec, 0, 0, normSeconds.subsec);
 	  let datePart = '';
-	  if (years !== 0) datePart += `${formatAsDecimalNumber(MathAbs$2(years))}Y`;
-	  if (months !== 0) datePart += `${formatAsDecimalNumber(MathAbs$2(months))}M`;
-	  if (weeks !== 0) datePart += `${formatAsDecimalNumber(MathAbs$2(weeks))}W`;
-	  if (days !== 0) datePart += `${formatAsDecimalNumber(MathAbs$2(days))}D`;
+	  if (years !== 0) datePart += "".concat(formatAsDecimalNumber(MathAbs$2(years)), "Y");
+	  if (months !== 0) datePart += "".concat(formatAsDecimalNumber(MathAbs$2(months)), "M");
+	  if (weeks !== 0) datePart += "".concat(formatAsDecimalNumber(MathAbs$2(weeks)), "W");
+	  if (days !== 0) datePart += "".concat(formatAsDecimalNumber(MathAbs$2(days)), "D");
 	  let timePart = '';
-	  if (hours !== 0) timePart += `${formatAsDecimalNumber(MathAbs$2(hours))}H`;
-	  if (minutes !== 0) timePart += `${formatAsDecimalNumber(MathAbs$2(minutes))}M`;
-	  if (!seconds.isZero() || !ms.isZero() || !µs.isZero() || !ns.isZero() || years === 0 && months === 0 && weeks === 0 && days === 0 && hours === 0 && minutes === 0 || precision !== 'auto') {
-	    const secondsPart = formatAsDecimalNumber(seconds.abs());
-	    const subSecondNanoseconds = MathAbs$2(ms.toJSNumber()) * 1e6 + MathAbs$2(µs.toJSNumber()) * 1e3 + MathAbs$2(ns.toJSNumber());
-	    const subSecondsPart = FormatFractionalSeconds(subSecondNanoseconds, precision);
-	    timePart += `${secondsPart}${subSecondsPart}S`;
+	  if (hours !== 0) timePart += "".concat(formatAsDecimalNumber(MathAbs$2(hours)), "H");
+	  if (minutes !== 0) timePart += "".concat(formatAsDecimalNumber(MathAbs$2(minutes)), "M");
+	  if (!normSeconds.isZero() || years === 0 && months === 0 && weeks === 0 && days === 0 && hours === 0 && minutes === 0 || precision !== 'auto') {
+	    const secondsPart = formatAsDecimalNumber(MathAbs$2(normSeconds.sec));
+	    const subSecondsPart = FormatFractionalSeconds(MathAbs$2(normSeconds.subsec), precision);
+	    timePart += "".concat(secondsPart).concat(subSecondsPart, "S");
 	  }
-	  let result = `${sign < 0 ? '-' : ''}P${datePart}`;
-	  if (timePart) result = `${result}T${timePart}`;
+	  let result = "".concat(sign < 0 ? '-' : '', "P").concat(datePart);
+	  if (timePart) result = "".concat(result, "T").concat(timePart);
 	  return result;
 	}
 	function TemporalDateToString(date) {
@@ -11064,7 +10955,7 @@
 	  const month = ISODateTimePartString(GetSlot(date, ISO_MONTH));
 	  const day = ISODateTimePartString(GetSlot(date, ISO_DAY));
 	  const calendar = MaybeFormatCalendarAnnotation(GetSlot(date, CALENDAR), showCalendar);
-	  return `${year}-${month}-${day}${calendar}`;
+	  return "".concat(year, "-").concat(month, "-").concat(day).concat(calendar);
 	}
 	function TemporalDateTimeToString(dateTime, precision) {
 	  let showCalendar = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 'auto';
@@ -11102,18 +10993,18 @@
 	  const subSecondNanoseconds = millisecond * 1e6 + microsecond * 1e3 + nanosecond;
 	  const timeString = FormatTimeString(hour, minute, second, subSecondNanoseconds, precision);
 	  const calendar = MaybeFormatCalendarAnnotation(GetSlot(dateTime, CALENDAR), showCalendar);
-	  return `${yearString}-${monthString}-${dayString}T${timeString}${calendar}`;
+	  return "".concat(yearString, "-").concat(monthString, "-").concat(dayString, "T").concat(timeString).concat(calendar);
 	}
 	function TemporalMonthDayToString(monthDay) {
 	  let showCalendar = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'auto';
 	  const month = ISODateTimePartString(GetSlot(monthDay, ISO_MONTH));
 	  const day = ISODateTimePartString(GetSlot(monthDay, ISO_DAY));
-	  let resultString = `${month}-${day}`;
+	  let resultString = "".concat(month, "-").concat(day);
 	  const calendar = GetSlot(monthDay, CALENDAR);
 	  const calendarID = ToTemporalCalendarIdentifier(calendar);
 	  if (showCalendar === 'always' || showCalendar === 'critical' || calendarID !== 'iso8601') {
 	    const year = ISOYearString(GetSlot(monthDay, ISO_YEAR));
-	    resultString = `${year}-${resultString}`;
+	    resultString = "".concat(year, "-").concat(resultString);
 	  }
 	  const calendarString = FormatCalendarAnnotation(calendarID, showCalendar);
 	  if (calendarString) resultString += calendarString;
@@ -11123,12 +11014,12 @@
 	  let showCalendar = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'auto';
 	  const year = ISOYearString(GetSlot(yearMonth, ISO_YEAR));
 	  const month = ISODateTimePartString(GetSlot(yearMonth, ISO_MONTH));
-	  let resultString = `${year}-${month}`;
+	  let resultString = "".concat(year, "-").concat(month);
 	  const calendar = GetSlot(yearMonth, CALENDAR);
 	  const calendarID = ToTemporalCalendarIdentifier(calendar);
 	  if (showCalendar === 'always' || showCalendar === 'critical' || calendarID !== 'iso8601') {
 	    const day = ISODateTimePartString(GetSlot(yearMonth, ISO_DAY));
-	    resultString += `-${day}`;
+	    resultString += "-".concat(day);
 	  }
 	  const calendarString = FormatCalendarAnnotation(calendarID, showCalendar);
 	  if (calendarString) resultString += calendarString;
@@ -11161,7 +11052,7 @@
 	  if (showTimeZone !== 'never') {
 	    const identifier = ToTemporalTimeZoneIdentifier(tz);
 	    const flag = showTimeZone === 'critical' ? '!' : '';
-	    dateTimeString += `[${flag}${identifier}]`;
+	    dateTimeString += "[".concat(flag).concat(identifier, "]");
 	  }
 	  dateTimeString += MaybeFormatCalendarAnnotation(GetSlot(zdt, CALENDAR), showCalendar);
 	  return dateTimeString;
@@ -11172,7 +11063,7 @@
 	function ParseDateTimeUTCOffset(string) {
 	  const match = OFFSET_WITH_PARTS.exec(string);
 	  if (!match) {
-	    throw new RangeError(`invalid time zone offset: ${string}`);
+	    throw new RangeError("invalid time zone offset: ".concat(string));
 	  }
 	  const sign = match[1] === '-' || match[1] === '\u2212' ? -1 : +1;
 	  const hours = +match[2];
@@ -11184,23 +11075,24 @@
 	}
 	let canonicalTimeZoneIdsCache = undefined;
 	function GetAvailableNamedTimeZoneIdentifier(identifier) {
+	  var _canonicalTimeZoneIds, _specialCases$segment, _specialCases$segment2;
 	  // The most common case is when the identifier is a canonical time zone ID.
 	  // Fast-path that case by caching all canonical IDs. For old ECMAScript
 	  // implementations lacking this API, set the cache to `null` to avoid retries.
 	  if (canonicalTimeZoneIdsCache === undefined) {
-	    const canonicalTimeZoneIds = IntlSupportedValuesOf?.('timeZone');
+	    const canonicalTimeZoneIds = IntlSupportedValuesOf === null || IntlSupportedValuesOf === void 0 ? void 0 : IntlSupportedValuesOf('timeZone');
 	    if (canonicalTimeZoneIds) {
 	      canonicalTimeZoneIdsCache = new MapCtor();
 	      for (let ix = 0; ix < canonicalTimeZoneIds.length; ix++) {
 	        const id = canonicalTimeZoneIds[ix];
-	        Call$3(MapPrototypeSet$1, canonicalTimeZoneIdsCache, [ASCIILowercase(id), id]);
+	        Call$4(MapPrototypeSet$1, canonicalTimeZoneIdsCache, [ASCIILowercase(id), id]);
 	      }
 	    } else {
 	      canonicalTimeZoneIdsCache = null;
 	    }
 	  }
 	  const lower = ASCIILowercase(identifier);
-	  let primaryIdentifier = canonicalTimeZoneIdsCache?.get(lower);
+	  let primaryIdentifier = (_canonicalTimeZoneIds = canonicalTimeZoneIdsCache) === null || _canonicalTimeZoneIds === void 0 ? void 0 : _canonicalTimeZoneIds.get(lower);
 	  if (primaryIdentifier) return {
 	    identifier: primaryIdentifier,
 	    primaryIdentifier
@@ -11213,6 +11105,13 @@
 	    primaryIdentifier = formatter.resolvedOptions().timeZone;
 	  } catch {
 	    return undefined;
+	  }
+
+	  // Some legacy identifiers are aliases in ICU but not legal IANA identifiers.
+	  // Reject them even if the implementation's Intl supports them, as they are
+	  // not present in the IANA time zone database.
+	  if (Call$4(SetPrototypeHas$1, ICU_LEGACY_TIME_ZONE_IDS, [identifier])) {
+	    throw new RangeError("".concat(identifier, " is a legacy time zone identifier from ICU. Use ").concat(primaryIdentifier, " instead"));
 	  }
 
 	  // The identifier is an alias (a deprecated identifier that's a synonym for a
@@ -11245,14 +11144,14 @@
 	  if (segments[0] === 'Etc') {
 	    const etcName = ['Zulu', 'Greenwich', 'Universal'].includes(segments[1]) ? segments[1] : segments[1].toUpperCase();
 	    return {
-	      identifier: `Etc/${etcName}`,
+	      identifier: "Etc/".concat(etcName),
 	      primaryIdentifier
 	    };
 	  }
 
 	  // Legacy US identifiers like US/Alaska or US/Indiana-Starke are 2 segments and use standard form.
 	  if (segments[0] === 'Us') return {
-	    identifier: `US/${segments[1]}`,
+	    identifier: "US/".concat(segments[1]),
 	    primaryIdentifier
 	  };
 
@@ -11273,8 +11172,8 @@
 	    Bajanorte: 'BajaNorte',
 	    Bajasur: 'BajaSur'
 	  };
-	  segments[1] = specialCases[segments[1]] ?? segments[1];
-	  if (segments.length > 2) segments[2] = specialCases[segments[2]] ?? segments[2];
+	  segments[1] = (_specialCases$segment = specialCases[segments[1]]) !== null && _specialCases$segment !== void 0 ? _specialCases$segment : segments[1];
+	  if (segments.length > 2) segments[2] = (_specialCases$segment2 = specialCases[segments[2]]) !== null && _specialCases$segment2 !== void 0 ? _specialCases$segment2 : segments[2];
 	  return {
 	    identifier: segments.join('/'),
 	    primaryIdentifier
@@ -11301,7 +11200,7 @@
 	  const hour = MathFloor$1(absoluteMinutes / 60);
 	  const minute = absoluteMinutes % 60;
 	  const timeString = FormatTimeString(hour, minute, 0, 0, 'minute');
-	  return `${sign}${timeString}`;
+	  return "".concat(sign).concat(timeString);
 	}
 	function FormatDateTimeUTCOffsetRounded(offsetNanoseconds) {
 	  offsetNanoseconds = RoundNumberToIncrement(bigInt(offsetNanoseconds), 60e9, 'halfExpand').toJSNumber();
@@ -11390,13 +11289,13 @@
 	  // transitions after that.
 	  const now = SystemUTCEpochNanoSeconds();
 	  const base = epochNanoseconds.greater(now) ? epochNanoseconds : now;
-	  const uppercap = base.plus(DAY_NANOS.multiply(366 * 3));
+	  const uppercap = base.plus(bigInt(DAY_NANOS).multiply(366 * 3));
 	  let leftNanos = epochNanoseconds;
 	  let leftOffsetNs = GetNamedTimeZoneOffsetNanoseconds(id, leftNanos);
 	  let rightNanos = leftNanos;
 	  let rightOffsetNs = leftOffsetNs;
 	  while (leftOffsetNs === rightOffsetNs && bigInt(leftNanos).compare(uppercap) === -1) {
-	    rightNanos = bigInt(leftNanos).plus(DAY_NANOS.multiply(2 * 7));
+	    rightNanos = bigInt(leftNanos).plus(bigInt(DAY_NANOS).multiply(2 * 7));
 	    if (rightNanos.greater(NS_MAX)) return null;
 	    rightOffsetNs = GetNamedTimeZoneOffsetNanoseconds(id, rightNanos);
 	    if (leftOffsetNs === rightOffsetNs) {
@@ -11412,7 +11311,7 @@
 	  // are no transitions between the present day and 3 years from now, assume
 	  // there are none after.
 	  const now = SystemUTCEpochNanoSeconds();
-	  const lookahead = now.plus(DAY_NANOS.multiply(366 * 3));
+	  const lookahead = now.plus(bigInt(DAY_NANOS).multiply(366 * 3));
 	  if (epochNanoseconds.gt(lookahead)) {
 	    const prevBeforeLookahead = GetNamedTimeZonePreviousTransition(id, lookahead);
 	    if (prevBeforeLookahead === null || prevBeforeLookahead.lt(now)) {
@@ -11439,7 +11338,7 @@
 	  let leftNanos = rightNanos;
 	  let leftOffsetNs = rightOffsetNs;
 	  while (rightOffsetNs === leftOffsetNs && bigInt(rightNanos).compare(BEFORE_FIRST_DST) === 1) {
-	    leftNanos = bigInt(rightNanos).minus(DAY_NANOS.multiply(2 * 7));
+	    leftNanos = bigInt(rightNanos).minus(bigInt(DAY_NANOS).multiply(2 * 7));
 	    if (leftNanos.lesser(BEFORE_FIRST_DST)) return null;
 	    leftOffsetNs = GetNamedTimeZoneOffsetNanoseconds(id, leftNanos);
 	    if (rightOffsetNs === leftOffsetNs) {
@@ -11537,37 +11436,6 @@
 	    days += ISODaysInMonth(year, m);
 	  }
 	  return days;
-	}
-	function WeekOfYear(year, month, day) {
-	  let doy = DayOfYear(year, month, day);
-	  let dow = DayOfWeek(year, month, day) || 7;
-	  let doj = DayOfWeek(year, 1, 1);
-	  const week = MathFloor$1((doy - dow + 10) / 7);
-	  if (week < 1) {
-	    if (doj === 5 || doj === 6 && LeapYear(year - 1)) {
-	      return {
-	        week: 53,
-	        year: year - 1
-	      };
-	    } else {
-	      return {
-	        week: 52,
-	        year: year - 1
-	      };
-	    }
-	  }
-	  if (week === 53) {
-	    if ((LeapYear(year) ? 366 : 365) - doy < 4 - dow) {
-	      return {
-	        week: 1,
-	        year: year + 1
-	      };
-	    }
-	  }
-	  return {
-	    week,
-	    year
-	  };
 	}
 	function DurationSign(y, mon, w, d, h, min, s, ms, µs, ns) {
 	  const fields = [y, mon, w, d, h, min, s, ms, µs, ns];
@@ -11714,32 +11582,24 @@
 	    nanosecond: nanosecond.toJSNumber()
 	  };
 	}
-	function TotalDurationNanoseconds(hours, minutes, seconds, milliseconds, microseconds, nanoseconds) {
-	  minutes = bigInt(minutes).add(bigInt(hours).multiply(60));
-	  seconds = bigInt(seconds).add(minutes.multiply(60));
-	  milliseconds = bigInt(milliseconds).add(seconds.multiply(1000));
-	  microseconds = bigInt(microseconds).add(milliseconds.multiply(1000));
-	  return bigInt(nanoseconds).add(microseconds.multiply(1000));
-	}
-	function NanosecondsToDays(nanoseconds, zonedRelativeTo, timeZoneRec, precalculatedPlainDateTime) {
+	function NormalizedTimeDurationToDays(norm, zonedRelativeTo, timeZoneRec, precalculatedPlainDateTime) {
 	  // getOffsetNanosecondsFor and getPossibleInstantsFor must be looked up
 	  const TemporalInstant = GetIntrinsic('%Temporal.Instant%');
-	  const sign = MathSign(nanoseconds);
-	  nanoseconds = bigInt(nanoseconds);
+	  const sign = norm.sign();
 	  if (sign === 0) return {
 	    days: 0,
-	    nanoseconds: bigInt.zero,
-	    dayLengthNs: DAY_NANOS.toJSNumber()
+	    norm,
+	    dayLengthNs: DAY_NANOS
 	  };
 	  const startNs = GetSlot(zonedRelativeTo, EPOCHNANOSECONDS);
 	  const start = GetSlot(zonedRelativeTo, INSTANT);
-	  const endNs = startNs.add(nanoseconds);
+	  const endNs = norm.addToEpochNs(startNs);
 	  const end = new TemporalInstant(endNs);
 	  const calendar = GetSlot(zonedRelativeTo, CALENDAR);
 
 	  // Find the difference in days only. Inline DifferenceISODateTime because we
 	  // don't need the path that potentially calls calendar methods.
-	  const dtStart = precalculatedPlainDateTime ?? GetPlainDateTimeFor(timeZoneRec, start, 'iso8601');
+	  const dtStart = precalculatedPlainDateTime !== null && precalculatedPlainDateTime !== void 0 ? precalculatedPlainDateTime : GetPlainDateTimeFor(timeZoneRec, start, 'iso8601');
 	  const dtEnd = GetPlainDateTimeFor(timeZoneRec, end, 'iso8601');
 	  const date1 = TemporalDateTimeToDate(dtStart);
 	  const date2 = TemporalDateTimeToDate(dtEnd);
@@ -11761,180 +11621,141 @@
 	  // back inside the period where it belongs. Note that this case only can
 	  // happen for positive durations because the only direction that
 	  // `disambiguation: 'compatible'` can change clock time is forwards.
-	  days = bigInt(days);
-	  if (sign === 1) {
-	    while (days.greater(0) && relativeResult.epochNs.greater(endNs)) {
-	      days = days.prev();
-	      relativeResult = AddDaysToZonedDateTime(start, dtStart, timeZoneRec, calendar, days.toJSNumber());
-	      // may do disambiguation
+	  if (sign === 1 && days > 0 && relativeResult.epochNs.greater(endNs)) {
+	    days--;
+	    relativeResult = AddDaysToZonedDateTime(start, dtStart, timeZoneRec, calendar, days);
+	    // may do disambiguation
+	    if (days > 0 && relativeResult.epochNs.greater(endNs)) {
+	      throw new RangeError('inconsistent result from custom time zone getInstantFor()');
 	    }
 	  }
+	  norm = TimeDuration.fromEpochNsDiff(endNs, relativeResult.epochNs);
 
-	  nanoseconds = endNs.subtract(relativeResult.epochNs);
-	  let isOverflow = false;
-	  let dayLengthNs;
-	  do {
-	    // calculate length of the next day (day that contains the time remainder)
-	    const oneDayFarther = AddDaysToZonedDateTime(relativeResult.instant, relativeResult.dateTime, timeZoneRec, calendar, sign);
-	    dayLengthNs = oneDayFarther.epochNs.subtract(relativeResult.epochNs).toJSNumber();
-	    isOverflow = nanoseconds.subtract(dayLengthNs).multiply(sign).geq(0);
-	    if (isOverflow) {
-	      nanoseconds = nanoseconds.subtract(dayLengthNs);
-	      relativeResult = oneDayFarther;
-	      days = days.add(sign);
-	    }
-	  } while (isOverflow);
-	  if (!days.isZero() && MathSign(days.toJSNumber()) != sign) {
+	  // calculate length of the next day (day that contains the time remainder)
+	  let oneDayFarther = AddDaysToZonedDateTime(relativeResult.instant, relativeResult.dateTime, timeZoneRec, calendar, sign);
+	  let dayLengthNs = TimeDuration.fromEpochNsDiff(oneDayFarther.epochNs, relativeResult.epochNs);
+	  const oneDayLess = norm.subtract(dayLengthNs);
+	  let isOverflow = oneDayLess.sign() * sign >= 0;
+	  if (isOverflow) {
+	    norm = oneDayLess;
+	    relativeResult = oneDayFarther;
+	    days += sign;
+
+	    // ensure there was no more overflow
+	    oneDayFarther = AddDaysToZonedDateTime(relativeResult.instant, relativeResult.dateTime, timeZoneRec, calendar, sign);
+	    dayLengthNs = TimeDuration.fromEpochNsDiff(oneDayFarther.epochNs, relativeResult.epochNs);
+	    isOverflow = norm.subtract(dayLengthNs).sign() * sign >= 0;
+	    if (isOverflow) throw new RangeError('inconsistent result from custom time zone getPossibleInstantsFor()');
+	  }
+	  if (days !== 0 && MathSign(days) != sign) {
 	    throw new RangeError('Time zone or calendar converted nanoseconds into a number of days with the opposite sign');
 	  }
-	  if (!nanoseconds.isZero() && MathSign(nanoseconds.toJSNumber()) != sign) {
-	    if (nanoseconds.lt(0) && sign === 1) {
-	      throw new Error('assert not reached');
+	  if (sign === -1) {
+	    if (norm.sign() === 1) {
+	      throw new RangeError('Time zone or calendar ended up with a remainder of nanoseconds with the opposite sign');
 	    }
-	    throw new RangeError('Time zone or calendar ended up with a remainder of nanoseconds with the opposite sign');
-	  }
-	  if (nanoseconds.abs().geq(MathAbs$2(dayLengthNs))) {
+	  } else if (norm.sign() === -1) {
 	    throw new Error('assert not reached');
 	  }
+	  if (norm.abs().cmp(dayLengthNs.abs()) >= 0) {
+	    throw new Error('assert not reached');
+	  }
+	  const daylen = dayLengthNs.abs().totalNs.toJSNumber();
+	  if (!NumberIsSafeInteger(daylen)) {
+	    const h = daylen / 3600e9;
+	    throw new RangeError("Time zone calculated a day length of ".concat(h, " h, longer than ~2502 h causes precision loss"));
+	  }
+	  if (MathAbs$2(days) > NumberMaxSafeInteger / 86400) throw new Error('assert not reached');
 	  return {
-	    days: days.toJSNumber(),
-	    nanoseconds,
-	    dayLengthNs: MathAbs$2(dayLengthNs)
+	    days,
+	    norm,
+	    dayLengthNs: daylen
 	  };
 	}
-	function BalanceTimeDuration(days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, largestUnit) {
-	  let result = BalancePossiblyInfiniteTimeDuration(days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, largestUnit);
-	  if (result === 'positive overflow' || result === 'negative overflow') {
-	    throw new RangeError('Duration out of range');
-	  } else {
-	    return result;
-	  }
-	}
-	function BalancePossiblyInfiniteTimeDuration(days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, largestUnit) {
-	  hours = bigInt(hours).add(bigInt(days).multiply(24));
-	  nanoseconds = TotalDurationNanoseconds(hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
-	  const sign = nanoseconds.lesser(0) ? -1 : 1;
-	  nanoseconds = nanoseconds.abs();
-	  microseconds = milliseconds = seconds = minutes = hours = days = bigInt.zero;
+	function BalanceTimeDuration(norm, largestUnit) {
+	  const sign = norm.sign();
+	  let nanoseconds = norm.abs().subsec;
+	  let microseconds = 0;
+	  let milliseconds = 0;
+	  let seconds = norm.abs().sec;
+	  let minutes = 0;
+	  let hours = 0;
+	  let days = 0;
 	  switch (largestUnit) {
 	    case 'year':
 	    case 'month':
 	    case 'week':
 	    case 'day':
-	      ({
-	        quotient: microseconds,
-	        remainder: nanoseconds
-	      } = nanoseconds.divmod(1000));
-	      ({
-	        quotient: milliseconds,
-	        remainder: microseconds
-	      } = microseconds.divmod(1000));
-	      ({
-	        quotient: seconds,
-	        remainder: milliseconds
-	      } = milliseconds.divmod(1000));
-	      ({
-	        quotient: minutes,
-	        remainder: seconds
-	      } = seconds.divmod(60));
-	      ({
-	        quotient: hours,
-	        remainder: minutes
-	      } = minutes.divmod(60));
-	      ({
-	        quotient: days,
-	        remainder: hours
-	      } = hours.divmod(24));
+	      microseconds = MathTrunc(nanoseconds / 1000);
+	      nanoseconds %= 1000;
+	      milliseconds = MathTrunc(microseconds / 1000);
+	      microseconds %= 1000;
+	      seconds += MathTrunc(milliseconds / 1000);
+	      milliseconds %= 1000;
+	      minutes = MathTrunc(seconds / 60);
+	      seconds %= 60;
+	      hours = MathTrunc(minutes / 60);
+	      minutes %= 60;
+	      days = MathTrunc(hours / 24);
+	      hours %= 24;
 	      break;
 	    case 'hour':
-	      ({
-	        quotient: microseconds,
-	        remainder: nanoseconds
-	      } = nanoseconds.divmod(1000));
-	      ({
-	        quotient: milliseconds,
-	        remainder: microseconds
-	      } = microseconds.divmod(1000));
-	      ({
-	        quotient: seconds,
-	        remainder: milliseconds
-	      } = milliseconds.divmod(1000));
-	      ({
-	        quotient: minutes,
-	        remainder: seconds
-	      } = seconds.divmod(60));
-	      ({
-	        quotient: hours,
-	        remainder: minutes
-	      } = minutes.divmod(60));
+	      microseconds = MathTrunc(nanoseconds / 1000);
+	      nanoseconds %= 1000;
+	      milliseconds = MathTrunc(microseconds / 1000);
+	      microseconds %= 1000;
+	      seconds += MathTrunc(milliseconds / 1000);
+	      milliseconds %= 1000;
+	      minutes = MathTrunc(seconds / 60);
+	      seconds %= 60;
+	      hours = MathTrunc(minutes / 60);
+	      minutes %= 60;
 	      break;
 	    case 'minute':
-	      ({
-	        quotient: microseconds,
-	        remainder: nanoseconds
-	      } = nanoseconds.divmod(1000));
-	      ({
-	        quotient: milliseconds,
-	        remainder: microseconds
-	      } = microseconds.divmod(1000));
-	      ({
-	        quotient: seconds,
-	        remainder: milliseconds
-	      } = milliseconds.divmod(1000));
-	      ({
-	        quotient: minutes,
-	        remainder: seconds
-	      } = seconds.divmod(60));
+	      microseconds = MathTrunc(nanoseconds / 1000);
+	      nanoseconds %= 1000;
+	      milliseconds = MathTrunc(microseconds / 1000);
+	      microseconds %= 1000;
+	      seconds += MathTrunc(milliseconds / 1000);
+	      milliseconds %= 1000;
+	      minutes = MathTrunc(seconds / 60);
+	      seconds %= 60;
 	      break;
 	    case 'second':
-	      ({
-	        quotient: microseconds,
-	        remainder: nanoseconds
-	      } = nanoseconds.divmod(1000));
-	      ({
-	        quotient: milliseconds,
-	        remainder: microseconds
-	      } = microseconds.divmod(1000));
-	      ({
-	        quotient: seconds,
-	        remainder: milliseconds
-	      } = milliseconds.divmod(1000));
+	      microseconds = MathTrunc(nanoseconds / 1000);
+	      nanoseconds %= 1000;
+	      milliseconds = MathTrunc(microseconds / 1000);
+	      microseconds %= 1000;
+	      seconds += MathTrunc(milliseconds / 1000);
+	      milliseconds %= 1000;
 	      break;
 	    case 'millisecond':
-	      ({
-	        quotient: microseconds,
-	        remainder: nanoseconds
-	      } = nanoseconds.divmod(1000));
-	      ({
-	        quotient: milliseconds,
-	        remainder: microseconds
-	      } = microseconds.divmod(1000));
+	      microseconds = MathTrunc(nanoseconds / 1000);
+	      nanoseconds %= 1000;
+	      milliseconds = FMAPowerOf10(seconds, 3, MathTrunc(microseconds / 1000));
+	      microseconds %= 1000;
+	      seconds = 0;
 	      break;
 	    case 'microsecond':
-	      ({
-	        quotient: microseconds,
-	        remainder: nanoseconds
-	      } = nanoseconds.divmod(1000));
+	      microseconds = FMAPowerOf10(seconds, 6, MathTrunc(nanoseconds / 1000));
+	      nanoseconds %= 1000;
+	      seconds = 0;
 	      break;
 	    case 'nanosecond':
+	      nanoseconds = FMAPowerOf10(seconds, 9, nanoseconds);
+	      seconds = 0;
 	      break;
 	    default:
 	      throw new Error('assert not reached');
 	  }
-	  days = days.toJSNumber() * sign;
-	  hours = hours.toJSNumber() * sign;
-	  minutes = minutes.toJSNumber() * sign;
-	  seconds = seconds.toJSNumber() * sign;
-	  milliseconds = milliseconds.toJSNumber() * sign;
-	  microseconds = microseconds.toJSNumber() * sign;
-	  nanoseconds = nanoseconds.toJSNumber() * sign;
-	  if (!NumberIsFinite(days) || !NumberIsFinite(hours) || !NumberIsFinite(minutes) || !NumberIsFinite(seconds) || !NumberIsFinite(milliseconds) || !NumberIsFinite(microseconds) || !NumberIsFinite(nanoseconds)) {
-	    if (sign === 1) {
-	      return 'positive overflow';
-	    } else if (sign === -1) {
-	      return 'negative overflow';
-	    }
-	  }
+	  days *= sign;
+	  hours *= sign;
+	  minutes *= sign;
+	  seconds *= sign;
+	  milliseconds *= sign;
+	  microseconds *= sign;
+	  nanoseconds *= sign;
+	  RejectDuration(0, 0, 0, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
 	  return {
 	    days,
 	    hours,
@@ -11945,24 +11766,18 @@
 	    nanoseconds
 	  };
 	}
-	function BalanceTimeDurationRelative(days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, largestUnit, zonedRelativeTo, timeZoneRec, precalculatedPlainDateTime) {
-	  let result = BalancePossiblyInfiniteTimeDurationRelative(days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, largestUnit, zonedRelativeTo, timeZoneRec, precalculatedPlainDateTime);
-	  if (result === 'positive overflow' || result === 'negative overflow') {
-	    throw new RangeError('Duration out of range');
-	  }
-	  return result;
-	}
-	function BalancePossiblyInfiniteTimeDurationRelative(days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, largestUnit, zonedRelativeTo, timeZoneRec, precalculatedPlainDateTime) {
+	function BalanceTimeDurationRelative(days, norm, largestUnit, zonedRelativeTo, timeZoneRec, precalculatedPlainDateTime) {
 	  const startNs = GetSlot(zonedRelativeTo, EPOCHNANOSECONDS);
 	  const startInstant = GetSlot(zonedRelativeTo, INSTANT);
 	  let intermediateNs = startNs;
 	  if (days !== 0) {
-	    precalculatedPlainDateTime ??= GetPlainDateTimeFor(timeZoneRec, startInstant, 'iso8601');
+	    var _precalculatedPlainDa;
+	    (_precalculatedPlainDa = precalculatedPlainDateTime) !== null && _precalculatedPlainDa !== void 0 ? _precalculatedPlainDa : precalculatedPlainDateTime = GetPlainDateTimeFor(timeZoneRec, startInstant, 'iso8601');
 	    intermediateNs = AddDaysToZonedDateTime(startInstant, precalculatedPlainDateTime, timeZoneRec, 'iso8601', days).epochNs;
 	  }
-	  const endNs = AddInstant(intermediateNs, hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
-	  nanoseconds = endNs.subtract(startNs);
-	  if (nanoseconds.isZero()) {
+	  const endNs = AddInstant(intermediateNs, norm);
+	  norm = TimeDuration.fromEpochNsDiff(endNs, startNs);
+	  if (norm.isZero()) {
 	    return {
 	      days: 0,
 	      hours: 0,
@@ -11973,28 +11788,25 @@
 	      nanoseconds: 0
 	    };
 	  }
-	  if (largestUnit === 'year' || largestUnit === 'month' || largestUnit === 'week' || largestUnit === 'day') {
-	    precalculatedPlainDateTime ??= GetPlainDateTimeFor(timeZoneRec, startInstant, 'iso8601');
+	  if (IsCalendarUnit(largestUnit) || largestUnit === 'day') {
+	    var _precalculatedPlainDa2;
+	    (_precalculatedPlainDa2 = precalculatedPlainDateTime) !== null && _precalculatedPlainDa2 !== void 0 ? _precalculatedPlainDa2 : precalculatedPlainDateTime = GetPlainDateTimeFor(timeZoneRec, startInstant, 'iso8601');
 	    ({
 	      days,
-	      nanoseconds
-	    } = NanosecondsToDays(nanoseconds, zonedRelativeTo, timeZoneRec, precalculatedPlainDateTime));
+	      norm
+	    } = NormalizedTimeDurationToDays(norm, zonedRelativeTo, timeZoneRec, precalculatedPlainDateTime));
 	    largestUnit = 'hour';
 	  } else {
 	    days = 0;
 	  }
-	  const result = BalancePossiblyInfiniteTimeDuration(0, 0, 0, 0, 0, 0, nanoseconds, largestUnit);
-	  if (result === 'positive overflow' || result === 'negative overflow') {
-	    return result;
-	  }
-	  ({
+	  const {
 	    hours,
 	    minutes,
 	    seconds,
 	    milliseconds,
 	    microseconds,
 	    nanoseconds
-	  } = result);
+	  } = BalanceTimeDuration(norm, largestUnit);
 	  return {
 	    days,
 	    hours,
@@ -12006,127 +11818,12 @@
 	  };
 	}
 	function UnbalanceDateDurationRelative(years, months, weeks, days, largestUnit, plainRelativeTo, calendarRec) {
-	  // calendarRec must be present and must have looked up:
-	  // * largestUnit month and years !== 0: dateAdd and dateUntil
-	  // * largestUnit week and (years !== 0 or months !== 0): dateAdd
-	  // * largestUnit day or smaller, and (years, months, or weeks !== 0): dateAdd
+	  // calendarRec must have looked up dateAdd and dateUntil
 	  const TemporalDuration = GetIntrinsic('%Temporal.Duration%');
-	  const sign = DurationSign(years, months, weeks, days, 0, 0, 0, 0, 0, 0);
-	  if (sign === 0) return {
-	    years,
-	    months,
-	    weeks,
-	    days
-	  };
-	  const oneYear = new TemporalDuration(sign);
-	  const oneMonth = new TemporalDuration(0, sign);
-	  const oneWeek = new TemporalDuration(0, 0, sign);
-
-	  // Perform arithmetic in the mathematical integer domain
-	  years = bigInt(years);
-	  months = bigInt(months);
-	  weeks = bigInt(weeks);
-	  days = bigInt(days);
-	  switch (largestUnit) {
-	    case 'year':
-	      // no-op
-	      break;
-	    case 'month':
-	      {
-	        if (years.isZero()) break;
-	        if (!calendarRec) throw new RangeError('a starting point is required for months balancing');
-	        // balance years down to months
-	        while (!years.isZero()) {
-	          const newRelativeTo = CalendarDateAdd(calendarRec, plainRelativeTo, oneYear);
-	          const untilOptions = ObjectCreate$8(null);
-	          untilOptions.largestUnit = 'month';
-	          const untilResult = CalendarDateUntil(calendarRec, plainRelativeTo, newRelativeTo, untilOptions);
-	          const oneYearMonths = GetSlot(untilResult, MONTHS);
-	          plainRelativeTo = newRelativeTo;
-	          months = months.add(oneYearMonths);
-	          years = years.subtract(sign);
-	        }
-	      }
-	      break;
-	    case 'week':
-	      {
-	        if (years.isZero() && months.isZero()) break;
-	        if (!calendarRec) throw new RangeError('a starting point is required for weeks balancing');
-	        // balance years down to days
-	        while (!years.isZero()) {
-	          let oneYearDays;
-	          ({
-	            relativeTo: plainRelativeTo,
-	            days: oneYearDays
-	          } = MoveRelativeDate(calendarRec, plainRelativeTo, oneYear));
-	          days = days.add(oneYearDays);
-	          years = years.subtract(sign);
-	        }
-
-	        // balance months down to days
-	        while (!months.isZero()) {
-	          let oneMonthDays;
-	          ({
-	            relativeTo: plainRelativeTo,
-	            days: oneMonthDays
-	          } = MoveRelativeDate(calendarRec, plainRelativeTo, oneMonth));
-	          days = days.add(oneMonthDays);
-	          months = months.subtract(sign);
-	        }
-	      }
-	      break;
-	    default:
-	      {
-	        if (years.isZero() && months.isZero() && weeks.isZero()) break;
-	        if (!calendarRec) throw new RangeError('a starting point is required for balancing calendar units');
-	        // balance years down to days
-	        while (!years.isZero()) {
-	          let oneYearDays;
-	          ({
-	            relativeTo: plainRelativeTo,
-	            days: oneYearDays
-	          } = MoveRelativeDate(calendarRec, plainRelativeTo, oneYear));
-	          days = days.add(oneYearDays);
-	          years = years.subtract(sign);
-	        }
-
-	        // balance months down to days
-	        while (!months.isZero()) {
-	          let oneMonthDays;
-	          ({
-	            relativeTo: plainRelativeTo,
-	            days: oneMonthDays
-	          } = MoveRelativeDate(calendarRec, plainRelativeTo, oneMonth));
-	          days = days.add(oneMonthDays);
-	          months = months.subtract(sign);
-	        }
-
-	        // balance weeks down to days
-	        while (!weeks.isZero()) {
-	          let oneWeekDays;
-	          ({
-	            relativeTo: plainRelativeTo,
-	            days: oneWeekDays
-	          } = MoveRelativeDate(calendarRec, plainRelativeTo, oneWeek));
-	          days = days.add(oneWeekDays);
-	          weeks = weeks.subtract(sign);
-	        }
-	      }
-	      break;
-	  }
-	  return {
-	    years: years.toJSNumber(),
-	    months: months.toJSNumber(),
-	    weeks: weeks.toJSNumber(),
-	    days: days.toJSNumber()
-	  };
-	}
-	function BalanceDateDurationRelative(years, months, weeks, days, largestUnit, plainRelativeTo, calendarRec) {
-	  // dateAdd, dateUntil must be looked up if units are not 0 and largestUnit == year
-	  // dateAdd must be looked up if units are not 0 and largestUnit == month or week
-	  const TemporalDuration = GetIntrinsic('%Temporal.Duration%');
-	  const sign = DurationSign(years, months, weeks, days, 0, 0, 0, 0, 0, 0);
-	  if (sign === 0 || largestUnit !== 'year' && largestUnit !== 'month' && largestUnit !== 'week') {
+	  const defaultLargestUnit = DefaultTemporalLargestUnit(years, months, weeks, days, 0, 0, 0, 0, 0, 0);
+	  const effectiveLargestUnit = LargerOfTwoTemporalUnits(largestUnit, 'day');
+	  if (LargerOfTwoTemporalUnits(defaultLargestUnit, effectiveLargestUnit) === effectiveLargestUnit) {
+	    // no-op
 	    return {
 	      years,
 	      months,
@@ -12134,114 +11831,134 @@
 	      days
 	    };
 	  }
-	  if (!plainRelativeTo) throw new RangeError(`a starting point is required for ${largestUnit}s balancing`);
-	  const oneYear = new TemporalDuration(sign);
-	  const oneMonth = new TemporalDuration(0, sign);
-	  const oneWeek = new TemporalDuration(0, 0, sign);
+	  if (!calendarRec) throw new RangeError("a starting point is required for ".concat(largestUnit, "s balancing"));
+	  switch (effectiveLargestUnit) {
+	    case 'year':
+	      throw new Error('assert not reached');
+	    case 'month':
+	      {
+	        // balance years down to months
+	        const later = CalendarDateAdd(calendarRec, plainRelativeTo, new TemporalDuration(years));
+	        const untilOptions = ObjectCreate$8(null);
+	        untilOptions.largestUnit = 'month';
+	        const untilResult = CalendarDateUntil(calendarRec, plainRelativeTo, later, untilOptions);
+	        const yearsInMonths = GetSlot(untilResult, MONTHS);
+	        return {
+	          years: 0,
+	          months: months + yearsInMonths,
+	          weeks,
+	          days
+	        };
+	      }
+	    case 'week':
+	      {
+	        // balance years and months down to days
+	        const later = CalendarDateAdd(calendarRec, plainRelativeTo, new TemporalDuration(years, months));
+	        const yearsMonthsInDays = DaysUntil(plainRelativeTo, later);
+	        return {
+	          years: 0,
+	          months: 0,
+	          weeks,
+	          days: days + yearsMonthsInDays
+	        };
+	      }
+	    default:
+	      {
+	        // largestUnit is "day", or any time unit
+	        // balance years, months, and weeks down to days
+	        const later = CalendarDateAdd(calendarRec, plainRelativeTo, new TemporalDuration(years, months, weeks));
+	        const yearsMonthsWeeksInDays = DaysUntil(plainRelativeTo, later);
+	        return {
+	          years: 0,
+	          months: 0,
+	          weeks: 0,
+	          days: days + yearsMonthsWeeksInDays
+	        };
+	      }
+	  }
+	}
+	function BalanceDateDurationRelative(years, months, weeks, days, largestUnit, smallestUnit, plainRelativeTo, calendarRec) {
+	  // calendarRec must have looked up dateAdd and dateUntil
+	  const TemporalDuration = GetIntrinsic('%Temporal.Duration%');
 
-	  // Perform arithmetic in the mathematical integer domain
-	  years = bigInt(years);
-	  months = bigInt(months);
-	  weeks = bigInt(weeks);
-	  days = bigInt(days);
+	  // If no nonzero calendar units, then there's nothing to balance.
+	  // If largestUnit is 'day' or lower, then the balance is a no-op.
+	  // In both cases, return early. Anything after this requires a calendar.
+	  if (years === 0 && months === 0 && weeks === 0 && days === 0 || largestUnit !== 'year' && largestUnit !== 'month' && largestUnit !== 'week') {
+	    return {
+	      years,
+	      months,
+	      weeks,
+	      days
+	    };
+	  }
+	  if (!plainRelativeTo) throw new RangeError("a starting point is required for ".concat(largestUnit, "s balancing"));
+	  const untilOptions = ObjectCreate$8(null);
+	  untilOptions.largestUnit = largestUnit;
 	  switch (largestUnit) {
 	    case 'year':
 	      {
-	        // balance days up to years
-	        let newRelativeTo, oneYearDays;
-	        ({
-	          relativeTo: newRelativeTo,
-	          days: oneYearDays
-	        } = MoveRelativeDate(calendarRec, plainRelativeTo, oneYear));
-	        while (days.abs().geq(MathAbs$2(oneYearDays))) {
-	          days = days.subtract(oneYearDays);
-	          years = years.add(sign);
-	          plainRelativeTo = newRelativeTo;
-	          ({
-	            relativeTo: newRelativeTo,
-	            days: oneYearDays
-	          } = MoveRelativeDate(calendarRec, plainRelativeTo, oneYear));
+	        // There is a special case for smallestUnit === week, because months and
+	        // years aren't equal to an integer number of weeks. We don't want "1 year
+	        // and 5 weeks" to balance to "1 year, 1 month, and 5 days" which would
+	        // contravene the requested smallestUnit.
+	        if (smallestUnit === 'week') {
+	          // balance months up to years
+	          const later = AddDate(calendarRec, plainRelativeTo, new TemporalDuration(years, months));
+	          const untilResult = CalendarDateUntil(calendarRec, plainRelativeTo, later, untilOptions);
+	          return {
+	            years: GetSlot(untilResult, YEARS),
+	            months: GetSlot(untilResult, MONTHS),
+	            weeks,
+	            days: 0
+	          };
 	        }
-
-	        // balance days up to months
-	        let oneMonthDays;
-	        ({
-	          relativeTo: newRelativeTo,
-	          days: oneMonthDays
-	        } = MoveRelativeDate(calendarRec, plainRelativeTo, oneMonth));
-	        while (days.abs().geq(MathAbs$2(oneMonthDays))) {
-	          days = days.subtract(oneMonthDays);
-	          months = months.add(sign);
-	          plainRelativeTo = newRelativeTo;
-	          ({
-	            relativeTo: newRelativeTo,
-	            days: oneMonthDays
-	          } = MoveRelativeDate(calendarRec, plainRelativeTo, oneMonth));
-	        }
-
-	        // balance months up to years
-	        newRelativeTo = CalendarDateAdd(calendarRec, plainRelativeTo, oneYear);
-	        const untilOptions = ObjectCreate$8(null);
-	        untilOptions.largestUnit = 'month';
-	        let untilResult = CalendarDateUntil(calendarRec, plainRelativeTo, newRelativeTo, untilOptions);
-	        let oneYearMonths = GetSlot(untilResult, MONTHS);
-	        while (months.abs().geq(MathAbs$2(oneYearMonths))) {
-	          months = months.subtract(oneYearMonths);
-	          years = years.add(sign);
-	          plainRelativeTo = newRelativeTo;
-	          newRelativeTo = CalendarDateAdd(calendarRec, plainRelativeTo, oneYear);
-	          const untilOptions = ObjectCreate$8(null);
-	          untilOptions.largestUnit = 'month';
-	          untilResult = CalendarDateUntil(calendarRec, plainRelativeTo, newRelativeTo, untilOptions);
-	          oneYearMonths = GetSlot(untilResult, MONTHS);
-	        }
-	        break;
+	        // balance weeks, months and days up to years
+	        const later = AddDate(calendarRec, plainRelativeTo, new TemporalDuration(years, months, weeks, days));
+	        const untilResult = CalendarDateUntil(calendarRec, plainRelativeTo, later, untilOptions);
+	        return {
+	          years: GetSlot(untilResult, YEARS),
+	          months: GetSlot(untilResult, MONTHS),
+	          weeks: GetSlot(untilResult, WEEKS),
+	          days: GetSlot(untilResult, DAYS)
+	        };
 	      }
 	    case 'month':
 	      {
-	        // balance days up to months
-	        let newRelativeTo, oneMonthDays;
-	        ({
-	          relativeTo: newRelativeTo,
-	          days: oneMonthDays
-	        } = MoveRelativeDate(calendarRec, plainRelativeTo, oneMonth));
-	        while (days.abs().geq(MathAbs$2(oneMonthDays))) {
-	          days = days.subtract(oneMonthDays);
-	          months = months.add(sign);
-	          plainRelativeTo = newRelativeTo;
-	          ({
-	            relativeTo: newRelativeTo,
-	            days: oneMonthDays
-	          } = MoveRelativeDate(calendarRec, plainRelativeTo, oneMonth));
+	        // Same special case for rounding to weeks as above; in this case we
+	        // don't need to balance.
+	        if (smallestUnit === 'week') {
+	          return {
+	            years: 0,
+	            months,
+	            weeks,
+	            days: 0
+	          };
 	        }
-	        break;
+	        // balance weeks and days up to months
+	        const later = AddDate(calendarRec, plainRelativeTo, new TemporalDuration(0, months, weeks, days));
+	        const untilResult = CalendarDateUntil(calendarRec, plainRelativeTo, later, untilOptions);
+	        return {
+	          years: 0,
+	          months: GetSlot(untilResult, MONTHS),
+	          weeks: GetSlot(untilResult, WEEKS),
+	          days: GetSlot(untilResult, DAYS)
+	        };
 	      }
 	    case 'week':
 	      {
 	        // balance days up to weeks
-	        let newRelativeTo, oneWeekDays;
-	        ({
-	          relativeTo: newRelativeTo,
-	          days: oneWeekDays
-	        } = MoveRelativeDate(calendarRec, plainRelativeTo, oneWeek));
-	        while (days.abs().geq(MathAbs$2(oneWeekDays))) {
-	          days = days.subtract(oneWeekDays);
-	          weeks = weeks.add(sign);
-	          plainRelativeTo = newRelativeTo;
-	          ({
-	            relativeTo: newRelativeTo,
-	            days: oneWeekDays
-	          } = MoveRelativeDate(calendarRec, plainRelativeTo, oneWeek));
-	        }
-	        break;
+	        const later = AddDate(calendarRec, plainRelativeTo, new TemporalDuration(0, 0, weeks, days));
+	        const untilResult = CalendarDateUntil(calendarRec, plainRelativeTo, later, untilOptions);
+	        return {
+	          years: 0,
+	          months: 0,
+	          weeks: GetSlot(untilResult, WEEKS),
+	          days: GetSlot(untilResult, DAYS)
+	        };
 	      }
+	    // not reached
 	  }
-	  return {
-	    years: years.toJSNumber(),
-	    months: months.toJSNumber(),
-	    weeks: weeks.toJSNumber(),
-	    days: days.toJSNumber()
-	  };
 	}
 	function CreateNegatedTemporalDuration(duration) {
 	  const TemporalDuration = GetIntrinsic('%Temporal.Duration%');
@@ -12276,7 +11993,7 @@
 	  };
 	}
 	function RejectToRange(value, min, max) {
-	  if (value < min || value > max) throw new RangeError(`value out of range: ${min} <= ${value} <= ${max}`);
+	  if (value < min || value > max) throw new RangeError("value out of range: ".concat(min, " <= ").concat(value, " <= ").concat(max));
 	}
 	function RejectISODate(year, month, day) {
 	  RejectToRange(month, 1, 12);
@@ -12333,212 +12050,99 @@
 	    const propSign = MathSign(prop);
 	    if (propSign !== 0 && propSign !== sign) throw new RangeError('mixed-sign values not allowed as duration fields');
 	  }
+	  if (MathAbs$2(y) >= 2 ** 32 || MathAbs$2(mon) >= 2 ** 32 || MathAbs$2(w) >= 2 ** 32) {
+	    throw new RangeError('years, months, and weeks must be < 2³²');
+	  }
+	  const msResult = TruncatingDivModByPowerOf10(ms, 3);
+	  const µsResult = TruncatingDivModByPowerOf10(µs, 6);
+	  const nsResult = TruncatingDivModByPowerOf10(ns, 9);
+	  const remainderSec = TruncatingDivModByPowerOf10(msResult.mod * 1e6 + µsResult.mod * 1e3 + nsResult.mod, 9).div;
+	  const totalSec = d * 86400 + h * 3600 + min * 60 + s + msResult.div + µsResult.div + nsResult.div + remainderSec;
+	  if (!NumberIsSafeInteger(totalSec)) {
+	    throw new RangeError('total of duration time units cannot exceed 9007199254740991.999999999 s');
+	  }
+	}
+	function ISODateSurpasses(sign, y1, m1, d1, y2, m2, d2) {
+	  const cmp = CompareISODate(y1, m1, d1, y2, m2, d2);
+	  return sign * cmp === 1;
+	}
+	function CombineDateAndNormalizedTimeDuration(y, m, w, d, norm) {
+	  const dateSign = DurationSign(y, m, w, d, 0, 0, 0, 0, 0, 0);
+	  const timeSign = norm.sign();
+	  if (dateSign !== 0 && timeSign !== 0 && dateSign !== timeSign) {
+	    throw new RangeError('mixed-sign values not allowed as duration fields');
+	  }
+	}
+	function ISODateToEpochDays(y, m, d) {
+	  // This is inefficient, but we use GetUTCEpochNanoseconds to avoid duplicating
+	  // the workarounds for legacy Date. (see that function for explanation)
+	  return GetUTCEpochNanoseconds(y, m, d, 0, 0, 0, 0, 0, 0).divide(DAY_NANOS).toJSNumber();
 	}
 	function DifferenceISODate(y1, m1, d1, y2, m2, d2) {
 	  let largestUnit = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : 'days';
-	  switch (largestUnit) {
-	    case 'year':
-	    case 'month':
-	      {
-	        const sign = -CompareISODate(y1, m1, d1, y2, m2, d2);
-	        if (sign === 0) return {
-	          years: 0,
-	          months: 0,
-	          weeks: 0,
-	          days: 0
-	        };
-	        const start = {
-	          year: y1,
-	          month: m1,
-	          day: d1
-	        };
-	        const end = {
-	          year: y2,
-	          month: m2,
-	          day: d2
-	        };
-	        let years = end.year - start.year;
-	        let mid = AddISODate(y1, m1, d1, years, 0, 0, 0, 'constrain');
-	        let midSign = -CompareISODate(mid.year, mid.month, mid.day, y2, m2, d2);
-	        if (midSign === 0) {
-	          return largestUnit === 'year' ? {
-	            years,
-	            months: 0,
-	            weeks: 0,
-	            days: 0
-	          } : {
-	            years: 0,
-	            months: years * 12,
-	            weeks: 0,
-	            days: 0
-	          };
-	        }
-	        let months = end.month - start.month;
-	        if (midSign !== sign) {
-	          years -= sign;
-	          months += sign * 12;
-	        }
-	        mid = AddISODate(y1, m1, d1, years, months, 0, 0, 'constrain');
-	        midSign = -CompareISODate(mid.year, mid.month, mid.day, y2, m2, d2);
-	        if (midSign === 0) {
-	          return largestUnit === 'year' ? {
-	            years,
-	            months,
-	            weeks: 0,
-	            days: 0
-	          } : {
-	            years: 0,
-	            months: months + years * 12,
-	            weeks: 0,
-	            days: 0
-	          };
-	        }
-	        if (midSign !== sign) {
-	          // The end date is later in the month than mid date (or earlier for
-	          // negative durations). Back up one month.
-	          months -= sign;
-	          mid = AddISODate(y1, m1, d1, years, months, 0, 0, 'constrain');
-	        }
-	        let days = 0;
-	        // If we get here, months and years are correct (no overflow), and `mid`
-	        // is within the range from `start` to `end`. To count the days between
-	        // `mid` and `end`, there are 3 cases:
-	        // 1) same month: use simple subtraction
-	        // 2) end is previous month from intermediate (negative duration)
-	        // 3) end is next month from intermediate (positive duration)
-	        if (mid.month === end.month) {
-	          // 1) same month: use simple subtraction
-	          days = end.day - mid.day;
-	        } else if (sign < 0) {
-	          // 2) end is previous month from intermediate (negative duration)
-	          // Example: intermediate: Feb 1, end: Jan 30, DaysInMonth = 31, days = -2
-	          days = -mid.day - (ISODaysInMonth(end.year, end.month) - end.day);
-	        } else {
-	          // 3) end is next month from intermediate (positive duration)
-	          // Example: intermediate: Jan 29, end: Feb 1, DaysInMonth = 31, days = 3
-	          days = end.day + (ISODaysInMonth(mid.year, mid.month) - mid.day);
-	        }
-	        if (largestUnit === 'month') {
-	          months += years * 12;
-	          years = 0;
-	        }
-	        return {
-	          years,
-	          months,
-	          weeks: 0,
-	          days
-	        };
-	      }
-	    case 'week':
-	    case 'day':
-	      {
-	        let larger, smaller, sign;
-	        if (CompareISODate(y1, m1, d1, y2, m2, d2) < 0) {
-	          smaller = {
-	            year: y1,
-	            month: m1,
-	            day: d1
-	          };
-	          larger = {
-	            year: y2,
-	            month: m2,
-	            day: d2
-	          };
-	          sign = 1;
-	        } else {
-	          smaller = {
-	            year: y2,
-	            month: m2,
-	            day: d2
-	          };
-	          larger = {
-	            year: y1,
-	            month: m1,
-	            day: d1
-	          };
-	          sign = -1;
-	        }
-	        let days = DayOfYear(larger.year, larger.month, larger.day) - DayOfYear(smaller.year, smaller.month, smaller.day);
-	        for (let year = smaller.year; year < larger.year; ++year) {
-	          days += LeapYear(year) ? 366 : 365;
-	        }
-	        let weeks = 0;
-	        if (largestUnit === 'week') {
-	          weeks = MathFloor$1(days / 7);
-	          days %= 7;
-	        }
-	        weeks *= sign;
-	        days *= sign;
-	        return {
-	          years: 0,
-	          months: 0,
-	          weeks,
-	          days
-	        };
-	      }
-	    default:
-	      throw new Error('assert not reached');
+	  const sign = -CompareISODate(y1, m1, d1, y2, m2, d2);
+	  if (sign === 0) return {
+	    years: 0,
+	    months: 0,
+	    weeks: 0,
+	    days: 0
+	  };
+	  let years = 0;
+	  let months = 0;
+	  let intermediate;
+	  if (largestUnit === 'year' || largestUnit === 'month') {
+	    // We can skip right to the neighbourhood of the correct number of years,
+	    // it'll be at least one less than y2 - y1 (unless it's zero)
+	    let candidateYears = y2 - y1;
+	    if (candidateYears !== 0) candidateYears -= sign;
+	    // loops at most twice
+	    while (!ISODateSurpasses(sign, y1 + candidateYears, m1, d1, y2, m2, d2)) {
+	      years = candidateYears;
+	      candidateYears += sign;
+	    }
+	    let candidateMonths = sign;
+	    intermediate = BalanceISOYearMonth(y1 + years, m1 + candidateMonths);
+	    // loops at most 12 times
+	    while (!ISODateSurpasses(sign, intermediate.year, intermediate.month, d1, y2, m2, d2)) {
+	      months = candidateMonths;
+	      candidateMonths += sign;
+	      intermediate = BalanceISOYearMonth(intermediate.year, intermediate.month + sign);
+	    }
+	    if (largestUnit === 'month') {
+	      months += years * 12;
+	      years = 0;
+	    }
 	  }
-	}
-	function DifferenceTime(h1, min1, s1, ms1, µs1, ns1, h2, min2, s2, ms2, µs2, ns2) {
-	  let hours = h2 - h1;
-	  let minutes = min2 - min1;
-	  let seconds = s2 - s1;
-	  let milliseconds = ms2 - ms1;
-	  let microseconds = µs2 - µs1;
-	  let nanoseconds = ns2 - ns1;
-	  const sign = DurationSign(0, 0, 0, 0, hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
-	  hours *= sign;
-	  minutes *= sign;
-	  seconds *= sign;
-	  milliseconds *= sign;
-	  microseconds *= sign;
-	  nanoseconds *= sign;
-	  let deltaDays = 0;
-	  ({
-	    deltaDays,
-	    hour: hours,
-	    minute: minutes,
-	    second: seconds,
-	    millisecond: milliseconds,
-	    microsecond: microseconds,
-	    nanosecond: nanoseconds
-	  } = BalanceTime(hours, minutes, seconds, milliseconds, microseconds, nanoseconds));
-	  if (deltaDays != 0) throw new Error('assertion failure in DifferenceTime: _bt_.[[Days]] should be 0');
-	  hours *= sign;
-	  minutes *= sign;
-	  seconds *= sign;
-	  milliseconds *= sign;
-	  microseconds *= sign;
-	  nanoseconds *= sign;
+	  intermediate = BalanceISOYearMonth(y1 + years, m1 + months);
+	  const constrained = ConstrainISODate(intermediate.year, intermediate.month, d1);
+	  let weeks = 0;
+	  let days = ISODateToEpochDays(y2, m2, d2) - ISODateToEpochDays(constrained.year, constrained.month, constrained.day);
+	  if (largestUnit === 'week') {
+	    weeks = MathTrunc(days / 7);
+	    days %= 7;
+	  }
 	  return {
-	    hours,
-	    minutes,
-	    seconds,
-	    milliseconds,
-	    microseconds,
-	    nanoseconds
+	    years,
+	    months,
+	    weeks,
+	    days
 	  };
 	}
-	function DifferenceInstant(ns1, ns2, increment, smallestUnit, largestUnit, roundingMode) {
-	  const diff = ns2.minus(ns1);
-	  let hours = 0;
-	  let minutes = 0;
-	  let nanoseconds = diff.mod(1e3).toJSNumber();
-	  let microseconds = diff.divide(1e3).mod(1e3).toJSNumber();
-	  let milliseconds = diff.divide(1e6).mod(1e3).toJSNumber();
-	  let seconds = diff.divide(1e9).toJSNumber();
-	  if (smallestUnit !== 'nanosecond' || increment !== 1) {
-	    ({
-	      hours,
-	      minutes,
-	      seconds,
-	      milliseconds,
-	      microseconds,
-	      nanoseconds
-	    } = RoundDuration(0, 0, 0, 0, 0, 0, seconds, milliseconds, microseconds, nanoseconds, increment, smallestUnit, roundingMode));
-	  }
-	  return BalanceTimeDuration(0, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, largestUnit);
+	function DifferenceTime(h1, min1, s1, ms1, µs1, ns1, h2, min2, s2, ms2, µs2, ns2) {
+	  const hours = h2 - h1;
+	  const minutes = min2 - min1;
+	  const seconds = s2 - s1;
+	  const milliseconds = ms2 - ms1;
+	  const microseconds = µs2 - µs1;
+	  const nanoseconds = ns2 - ns1;
+	  const norm = TimeDuration.normalize(hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
+	  if (norm.abs().sec >= 86400) throw new Error('assertion failure in DifferenceTime: _bt_.[[Days]] should be 0');
+	  return norm;
+	}
+	function DifferenceInstant(ns1, ns2, increment, smallestUnit, roundingMode) {
+	  const diff = TimeDuration.fromEpochNsDiff(ns2, ns1);
+	  if (smallestUnit === 'nanosecond' && increment === 1) return diff;
+	  return RoundDuration(0, 0, 0, 0, diff, increment, smallestUnit, roundingMode).norm;
 	}
 	function DifferenceDate(calendarRec, plainDate1, plainDate2, options) {
 	  const TemporalDuration = GetIntrinsic('%Temporal.Duration%');
@@ -12553,15 +12157,8 @@
 	function DifferenceISODateTime(y1, mon1, d1, h1, min1, s1, ms1, µs1, ns1, y2, mon2, d2, h2, min2, s2, ms2, µs2, ns2, calendarRec, largestUnit, options) {
 	  // dateUntil must be looked up if date parts are not identical and largestUnit
 	  // is greater than 'day'
-	  let {
-	    hours,
-	    minutes,
-	    seconds,
-	    milliseconds,
-	    microseconds,
-	    nanoseconds
-	  } = DifferenceTime(h1, min1, s1, ms1, µs1, ns1, h2, min2, s2, ms2, µs2, ns2);
-	  const timeSign = DurationSign(0, 0, 0, 0, hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
+	  let timeDuration = DifferenceTime(h1, min1, s1, ms1, µs1, ns1, h2, min2, s2, ms2, µs2, ns2);
+	  const timeSign = timeDuration.sign();
 	  const dateSign = CompareISODate(y2, mon2, d2, y1, mon1, d1);
 	  if (dateSign === -timeSign) {
 	    ({
@@ -12569,46 +12166,25 @@
 	      month: mon1,
 	      day: d1
 	    } = BalanceISODate(y1, mon1, d1 - timeSign));
-	    ({
-	      hours,
-	      minutes,
-	      seconds,
-	      milliseconds,
-	      microseconds,
-	      nanoseconds
-	    } = BalanceTimeDuration(-timeSign, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, largestUnit));
+	    timeDuration = timeDuration.add24HourDays(-timeSign);
 	  }
 	  const date1 = CreateTemporalDate(y1, mon1, d1, calendarRec.receiver);
 	  const date2 = CreateTemporalDate(y2, mon2, d2, calendarRec.receiver);
 	  const dateLargestUnit = LargerOfTwoTemporalUnits('day', largestUnit);
-	  const untilOptions = SnapshotOwnProperties(GetOptionsObject(options), null);
+	  const untilOptions = SnapshotOwnProperties(options, null);
 	  untilOptions.largestUnit = dateLargestUnit;
 	  const untilResult = DifferenceDate(calendarRec, date1, date2, untilOptions);
 	  const years = GetSlot(untilResult, YEARS);
 	  const months = GetSlot(untilResult, MONTHS);
 	  const weeks = GetSlot(untilResult, WEEKS);
-	  let days = GetSlot(untilResult, DAYS);
-	  // Signs of date part and time part may not agree; balance them together
-	  ({
-	    days,
-	    hours,
-	    minutes,
-	    seconds,
-	    milliseconds,
-	    microseconds,
-	    nanoseconds
-	  } = BalanceTimeDuration(days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, largestUnit));
+	  const days = GetSlot(untilResult, DAYS);
+	  CombineDateAndNormalizedTimeDuration(years, months, weeks, days, timeDuration);
 	  return {
 	    years,
 	    months,
 	    weeks,
 	    days,
-	    hours,
-	    minutes,
-	    seconds,
-	    milliseconds,
-	    microseconds,
-	    nanoseconds
+	    norm: timeDuration
 	  };
 	}
 	function DifferenceZonedDateTime(ns1, ns2, timeZoneRec, calendarRec, largestUnit, options) {
@@ -12625,12 +12201,7 @@
 	      months: 0,
 	      weeks: 0,
 	      days: 0,
-	      hours: 0,
-	      minutes: 0,
-	      seconds: 0,
-	      milliseconds: 0,
-	      microseconds: 0,
-	      nanoseconds: 0
+	      norm: TimeDuration.ZERO
 	    };
 	  }
 
@@ -12638,43 +12209,30 @@
 	  const TemporalInstant = GetIntrinsic('%Temporal.Instant%');
 	  const start = new TemporalInstant(ns1);
 	  const end = new TemporalInstant(ns2);
-	  const dtStart = precalculatedDtStart ?? GetPlainDateTimeFor(timeZoneRec, start, calendarRec.receiver);
+	  const dtStart = precalculatedDtStart !== null && precalculatedDtStart !== void 0 ? precalculatedDtStart : GetPlainDateTimeFor(timeZoneRec, start, calendarRec.receiver);
 	  const dtEnd = GetPlainDateTimeFor(timeZoneRec, end, calendarRec.receiver);
 	  let {
 	    years,
 	    months,
-	    weeks,
-	    days
+	    weeks
 	  } = DifferenceISODateTime(GetSlot(dtStart, ISO_YEAR), GetSlot(dtStart, ISO_MONTH), GetSlot(dtStart, ISO_DAY), GetSlot(dtStart, ISO_HOUR), GetSlot(dtStart, ISO_MINUTE), GetSlot(dtStart, ISO_SECOND), GetSlot(dtStart, ISO_MILLISECOND), GetSlot(dtStart, ISO_MICROSECOND), GetSlot(dtStart, ISO_NANOSECOND), GetSlot(dtEnd, ISO_YEAR), GetSlot(dtEnd, ISO_MONTH), GetSlot(dtEnd, ISO_DAY), GetSlot(dtEnd, ISO_HOUR), GetSlot(dtEnd, ISO_MINUTE), GetSlot(dtEnd, ISO_SECOND), GetSlot(dtEnd, ISO_MILLISECOND), GetSlot(dtEnd, ISO_MICROSECOND), GetSlot(dtEnd, ISO_NANOSECOND), calendarRec, largestUnit, options);
-	  let intermediateNs = AddZonedDateTime(start, timeZoneRec, calendarRec, years, months, weeks, 0, 0, 0, 0, 0, 0, 0, dtStart);
+	  let intermediateNs = AddZonedDateTime(start, timeZoneRec, calendarRec, years, months, weeks, 0, TimeDuration.ZERO, dtStart);
 	  // may disambiguate
-	  let timeRemainderNs = ns2.subtract(intermediateNs);
-	  const intermediate = CreateTemporalZonedDateTime(intermediateNs, timeZoneRec.receiver, calendarRec.receiver);
-	  ({
-	    nanoseconds: timeRemainderNs,
-	    days
-	  } = NanosecondsToDays(timeRemainderNs, intermediate, timeZoneRec));
 
-	  // Finally, merge the date and time durations and return the merged result.
-	  let {
-	    hours,
-	    minutes,
-	    seconds,
-	    milliseconds,
-	    microseconds,
-	    nanoseconds
-	  } = BalanceTimeDuration(0, 0, 0, 0, 0, 0, timeRemainderNs, 'hour');
+	  let norm = TimeDuration.fromEpochNsDiff(ns2, intermediateNs);
+	  const intermediate = CreateTemporalZonedDateTime(intermediateNs, timeZoneRec.receiver, calendarRec.receiver);
+	  let days;
+	  ({
+	    norm,
+	    days
+	  } = NormalizedTimeDurationToDays(norm, intermediate, timeZoneRec));
+	  CombineDateAndNormalizedTimeDuration(years, months, weeks, days, norm);
 	  return {
 	    years,
 	    months,
 	    weeks,
 	    days,
-	    hours,
-	    minutes,
-	    seconds,
-	    milliseconds,
-	    microseconds,
-	    nanoseconds
+	    norm
 	  };
 	}
 	function GetDifferenceSettings(op, options, group, disallowed, fallbackSmallest, smallestLargestDefaultUnit) {
@@ -12682,26 +12240,26 @@
 	    const p = unitInfo[0];
 	    const s = unitInfo[1];
 	    const c = unitInfo[2];
-	    if ((group === 'datetime' || c === group) && !Call$3(ArrayIncludes$1, disallowed, [s])) {
+	    if ((group === 'datetime' || c === group) && !Call$4(ArrayIncludes$1, disallowed, [s])) {
 	      allowed.push(s, p);
 	    }
 	    return allowed;
 	  }, []);
 	  let largestUnit = GetTemporalUnit(options, 'largestUnit', group, 'auto');
-	  if (Call$3(ArrayIncludes$1, disallowed, [largestUnit])) {
-	    throw new RangeError(`largestUnit must be one of ${ALLOWED_UNITS.join(', ')}, not ${largestUnit}`);
+	  if (Call$4(ArrayIncludes$1, disallowed, [largestUnit])) {
+	    throw new RangeError("largestUnit must be one of ".concat(ALLOWED_UNITS.join(', '), ", not ").concat(largestUnit));
 	  }
 	  const roundingIncrement = ToTemporalRoundingIncrement(options);
 	  let roundingMode = ToTemporalRoundingMode(options, 'trunc');
 	  if (op === 'since') roundingMode = NegateTemporalRoundingMode(roundingMode);
 	  const smallestUnit = GetTemporalUnit(options, 'smallestUnit', group, fallbackSmallest);
-	  if (Call$3(ArrayIncludes$1, disallowed, [smallestUnit])) {
-	    throw new RangeError(`smallestUnit must be one of ${ALLOWED_UNITS.join(', ')}, not ${smallestUnit}`);
+	  if (Call$4(ArrayIncludes$1, disallowed, [smallestUnit])) {
+	    throw new RangeError("smallestUnit must be one of ".concat(ALLOWED_UNITS.join(', '), ", not ").concat(smallestUnit));
 	  }
 	  const defaultLargestUnit = LargerOfTwoTemporalUnits(smallestLargestDefaultUnit, smallestUnit);
 	  if (largestUnit === 'auto') largestUnit = defaultLargestUnit;
 	  if (LargerOfTwoTemporalUnits(largestUnit, smallestUnit) !== largestUnit) {
-	    throw new RangeError(`largestUnit ${largestUnit} cannot be smaller than smallestUnit ${smallestUnit}`);
+	    throw new RangeError("largestUnit ".concat(largestUnit, " cannot be smaller than smallestUnit ").concat(smallestUnit));
 	  }
 	  const MAX_DIFFERENCE_INCREMENTS = {
 	    hour: 24,
@@ -12727,14 +12285,15 @@
 	  const settings = GetDifferenceSettings(operation, resolvedOptions, 'time', [], 'nanosecond', 'second');
 	  const onens = GetSlot(instant, EPOCHNANOSECONDS);
 	  const twons = GetSlot(other, EPOCHNANOSECONDS);
-	  let {
+	  const norm = DifferenceInstant(onens, twons, settings.roundingIncrement, settings.smallestUnit, settings.roundingMode);
+	  const {
 	    hours,
 	    minutes,
 	    seconds,
 	    milliseconds,
 	    microseconds,
 	    nanoseconds
-	  } = DifferenceInstant(onens, twons, settings.roundingIncrement, settings.smallestUnit, settings.largestUnit, settings.roundingMode);
+	  } = BalanceTimeDuration(norm, settings.largestUnit);
 	  const Duration = GetIntrinsic('%Temporal.Duration%');
 	  return new Duration(0, 0, 0, 0, sign * hours, sign * minutes, sign * seconds, sign * milliseconds, sign * microseconds, sign * nanoseconds);
 	}
@@ -12750,26 +12309,27 @@
 	  if (GetSlot(plainDate, ISO_YEAR) === GetSlot(other, ISO_YEAR) && GetSlot(plainDate, ISO_MONTH) === GetSlot(other, ISO_MONTH) && GetSlot(plainDate, ISO_DAY) === GetSlot(other, ISO_DAY)) {
 	    return new Duration();
 	  }
-	  const calendarRec = new CalendarMethodRecord(calendar);
-	  if (settings.smallestUnit === 'year' || settings.smallestUnit === 'month' || settings.smallestUnit === 'week') {
-	    calendarRec.lookup('dateAdd');
-	  }
-	  if (settings.largestUnit === 'year' || settings.largestUnit === 'month' || settings.largestUnit === 'week' || settings.smallestUnit === 'year') {
-	    calendarRec.lookup('dateUntil');
-	  }
+	  const calendarRec = new CalendarMethodRecord(calendar, ['dateAdd', 'dateUntil']);
 	  resolvedOptions.largestUnit = settings.largestUnit;
 	  const untilResult = DifferenceDate(calendarRec, plainDate, other, resolvedOptions);
 	  let years = GetSlot(untilResult, YEARS);
 	  let months = GetSlot(untilResult, MONTHS);
 	  let weeks = GetSlot(untilResult, WEEKS);
 	  let days = GetSlot(untilResult, DAYS);
-	  if (settings.smallestUnit !== 'day' || settings.roundingIncrement !== 1) {
+	  const roundingIsNoop = settings.smallestUnit === 'day' && settings.roundingIncrement === 1;
+	  if (!roundingIsNoop) {
 	    ({
 	      years,
 	      months,
 	      weeks,
 	      days
-	    } = RoundDuration(years, months, weeks, days, 0, 0, 0, 0, 0, 0, settings.roundingIncrement, settings.smallestUnit, settings.roundingMode, plainDate, calendarRec));
+	    } = RoundDuration(years, months, weeks, days, TimeDuration.ZERO, settings.roundingIncrement, settings.smallestUnit, settings.roundingMode, plainDate, calendarRec));
+	    ({
+	      years,
+	      months,
+	      weeks,
+	      days
+	    } = BalanceDateDurationRelative(years, months, weeks, days, settings.largestUnit, settings.smallestUnit, plainDate, calendarRec));
 	  }
 	  return new Duration(sign * years, sign * months, sign * weeks, sign * days, 0, 0, 0, 0, 0, 0);
 	}
@@ -12786,39 +12346,25 @@
 	  if (datePartsIdentical && GetSlot(plainDateTime, ISO_HOUR) == GetSlot(other, ISO_HOUR) && GetSlot(plainDateTime, ISO_MINUTE) == GetSlot(other, ISO_MINUTE) && GetSlot(plainDateTime, ISO_SECOND) == GetSlot(other, ISO_SECOND) && GetSlot(plainDateTime, ISO_MILLISECOND) == GetSlot(other, ISO_MILLISECOND) && GetSlot(plainDateTime, ISO_MICROSECOND) == GetSlot(other, ISO_MICROSECOND) && GetSlot(plainDateTime, ISO_NANOSECOND) == GetSlot(other, ISO_NANOSECOND)) {
 	    return new Duration();
 	  }
-	  const calendarRec = new CalendarMethodRecord(calendar);
-	  if (settings.smallestUnit === 'year' || settings.smallestUnit === 'month' || settings.smallestUnit === 'week') {
-	    calendarRec.lookup('dateAdd');
-	  }
-	  if (!datePartsIdentical && (settings.largestUnit === 'year' || settings.largestUnit === 'month' || settings.largestUnit === 'week') || settings.smallestUnit === 'year') {
-	    calendarRec.lookup('dateUntil');
-	  }
+	  const calendarRec = new CalendarMethodRecord(calendar, ['dateAdd', 'dateUntil']);
 	  let {
 	    years,
 	    months,
 	    weeks,
 	    days,
-	    hours,
-	    minutes,
-	    seconds,
-	    milliseconds,
-	    microseconds,
-	    nanoseconds
+	    norm
 	  } = DifferenceISODateTime(GetSlot(plainDateTime, ISO_YEAR), GetSlot(plainDateTime, ISO_MONTH), GetSlot(plainDateTime, ISO_DAY), GetSlot(plainDateTime, ISO_HOUR), GetSlot(plainDateTime, ISO_MINUTE), GetSlot(plainDateTime, ISO_SECOND), GetSlot(plainDateTime, ISO_MILLISECOND), GetSlot(plainDateTime, ISO_MICROSECOND), GetSlot(plainDateTime, ISO_NANOSECOND), GetSlot(other, ISO_YEAR), GetSlot(other, ISO_MONTH), GetSlot(other, ISO_DAY), GetSlot(other, ISO_HOUR), GetSlot(other, ISO_MINUTE), GetSlot(other, ISO_SECOND), GetSlot(other, ISO_MILLISECOND), GetSlot(other, ISO_MICROSECOND), GetSlot(other, ISO_NANOSECOND), calendarRec, settings.largestUnit, resolvedOptions);
-	  if (settings.smallestUnit !== 'nanosecond' || settings.roundingIncrement !== 1) {
+	  let hours, minutes, seconds, milliseconds, microseconds, nanoseconds;
+	  const roundingIsNoop = settings.smallestUnit === 'nanosecond' && settings.roundingIncrement === 1;
+	  if (!roundingIsNoop) {
 	    const relativeTo = TemporalDateTimeToDate(plainDateTime);
 	    ({
 	      years,
 	      months,
 	      weeks,
 	      days,
-	      hours,
-	      minutes,
-	      seconds,
-	      milliseconds,
-	      microseconds,
-	      nanoseconds
-	    } = RoundDuration(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, settings.roundingIncrement, settings.smallestUnit, settings.roundingMode, relativeTo, calendarRec));
+	      norm
+	    } = RoundDuration(years, months, weeks, days, norm, settings.roundingIncrement, settings.smallestUnit, settings.roundingMode, relativeTo, calendarRec));
 	    ({
 	      days,
 	      hours,
@@ -12827,7 +12373,23 @@
 	      milliseconds,
 	      microseconds,
 	      nanoseconds
-	    } = BalanceTimeDuration(days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, settings.largestUnit));
+	    } = BalanceTimeDuration(norm.add24HourDays(days), settings.largestUnit));
+	    ({
+	      years,
+	      months,
+	      weeks,
+	      days
+	    } = BalanceDateDurationRelative(years, months, weeks, days, settings.largestUnit, settings.smallestUnit, relativeTo, calendarRec));
+	  } else {
+	    ({
+	      days,
+	      hours,
+	      minutes,
+	      seconds,
+	      milliseconds,
+	      microseconds,
+	      nanoseconds
+	    } = BalanceTimeDuration(norm.add24HourDays(days), settings.largestUnit));
 	  }
 	  return new Duration(sign * years, sign * months, sign * weeks, sign * days, sign * hours, sign * minutes, sign * seconds, sign * milliseconds, sign * microseconds, sign * nanoseconds);
 	}
@@ -12836,32 +12398,20 @@
 	  other = ToTemporalTime(other);
 	  const resolvedOptions = SnapshotOwnProperties(GetOptionsObject(options), null);
 	  const settings = GetDifferenceSettings(operation, resolvedOptions, 'time', [], 'nanosecond', 'hour');
-	  let {
-	    hours,
-	    minutes,
-	    seconds,
-	    milliseconds,
-	    microseconds,
-	    nanoseconds
-	  } = DifferenceTime(GetSlot(plainTime, ISO_HOUR), GetSlot(plainTime, ISO_MINUTE), GetSlot(plainTime, ISO_SECOND), GetSlot(plainTime, ISO_MILLISECOND), GetSlot(plainTime, ISO_MICROSECOND), GetSlot(plainTime, ISO_NANOSECOND), GetSlot(other, ISO_HOUR), GetSlot(other, ISO_MINUTE), GetSlot(other, ISO_SECOND), GetSlot(other, ISO_MILLISECOND), GetSlot(other, ISO_MICROSECOND), GetSlot(other, ISO_NANOSECOND));
+	  let norm = DifferenceTime(GetSlot(plainTime, ISO_HOUR), GetSlot(plainTime, ISO_MINUTE), GetSlot(plainTime, ISO_SECOND), GetSlot(plainTime, ISO_MILLISECOND), GetSlot(plainTime, ISO_MICROSECOND), GetSlot(plainTime, ISO_NANOSECOND), GetSlot(other, ISO_HOUR), GetSlot(other, ISO_MINUTE), GetSlot(other, ISO_SECOND), GetSlot(other, ISO_MILLISECOND), GetSlot(other, ISO_MICROSECOND), GetSlot(other, ISO_NANOSECOND));
 	  if (settings.smallestUnit !== 'nanosecond' || settings.roundingIncrement !== 1) {
 	    ({
-	      hours,
-	      minutes,
-	      seconds,
-	      milliseconds,
-	      microseconds,
-	      nanoseconds
-	    } = RoundDuration(0, 0, 0, 0, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, settings.roundingIncrement, settings.smallestUnit, settings.roundingMode));
+	      norm
+	    } = RoundDuration(0, 0, 0, 0, norm, settings.roundingIncrement, settings.smallestUnit, settings.roundingMode));
 	  }
-	  ({
+	  const {
 	    hours,
 	    minutes,
 	    seconds,
 	    milliseconds,
 	    microseconds,
 	    nanoseconds
-	  } = BalanceTimeDuration(0, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, settings.largestUnit));
+	  } = BalanceTimeDuration(norm, settings.largestUnit);
 	  const Duration = GetIntrinsic('%Temporal.Duration%');
 	  return new Duration(0, 0, 0, 0, sign * hours, sign * minutes, sign * seconds, sign * milliseconds, sign * microseconds, sign * nanoseconds);
 	}
@@ -12873,18 +12423,11 @@
 	  ThrowIfCalendarsNotEqual(calendar, otherCalendar, 'compute difference between months');
 	  const resolvedOptions = SnapshotOwnProperties(GetOptionsObject(options), null);
 	  const settings = GetDifferenceSettings(operation, resolvedOptions, 'date', ['week', 'day'], 'month', 'year');
-	  resolvedOptions.largestUnit = settings.largestUnit;
 	  const Duration = GetIntrinsic('%Temporal.Duration%');
 	  if (GetSlot(yearMonth, ISO_YEAR) === GetSlot(other, ISO_YEAR) && GetSlot(yearMonth, ISO_MONTH) === GetSlot(other, ISO_MONTH) && GetSlot(yearMonth, ISO_DAY) === GetSlot(other, ISO_DAY)) {
 	    return new Duration();
 	  }
-	  const calendarRec = new CalendarMethodRecord(calendar);
-	  if (settings.smallestUnit !== 'month' || settings.roundingIncrement !== 1) {
-	    calendarRec.lookup('dateAdd');
-	  }
-	  calendarRec.lookup('dateFromFields');
-	  calendarRec.lookup('dateUntil');
-	  calendarRec.lookup('fields');
+	  const calendarRec = new CalendarMethodRecord(calendar, ['dateAdd', 'dateFromFields', 'dateUntil', 'fields']);
 	  const fieldNames = CalendarFields(calendarRec, ['monthCode', 'year']);
 	  const thisFields = PrepareTemporalFields(yearMonth, fieldNames, []);
 	  thisFields.day = 1;
@@ -12901,7 +12444,11 @@
 	    ({
 	      years,
 	      months
-	    } = RoundDuration(years, months, 0, 0, 0, 0, 0, 0, 0, 0, settings.roundingIncrement, settings.smallestUnit, settings.roundingMode, thisDate, calendarRec));
+	    } = RoundDuration(years, months, 0, 0, TimeDuration.ZERO, settings.roundingIncrement, settings.smallestUnit, settings.roundingMode, thisDate, calendarRec));
+	    ({
+	      years,
+	      months
+	    } = BalanceDateDurationRelative(years, months, 0, 0, settings.largestUnit, settings.smallestUnit, thisDate, calendarRec));
 	  }
 	  return new Duration(sign * years, sign * months, 0, 0, 0, 0, 0, 0, 0, 0);
 	}
@@ -12923,6 +12470,7 @@
 	    months = 0;
 	    weeks = 0;
 	    days = 0;
+	    const norm = DifferenceInstant(ns1, ns2, settings.roundingIncrement, settings.smallestUnit, settings.roundingMode);
 	    ({
 	      hours,
 	      minutes,
@@ -12930,7 +12478,7 @@
 	      milliseconds,
 	      microseconds,
 	      nanoseconds
-	    } = DifferenceInstant(ns1, ns2, settings.roundingIncrement, settings.smallestUnit, settings.largestUnit, settings.roundingMode));
+	    } = BalanceTimeDuration(norm, settings.largestUnit));
 	  } else {
 	    const timeZone = GetSlot(zonedDateTime, TIME_ZONE);
 	    if (!TimeZoneEquals(timeZone, GetSlot(other, TIME_ZONE))) {
@@ -12944,18 +12492,13 @@
 	    const calendarRec = new CalendarMethodRecord(calendar, ['dateAdd', 'dateUntil']);
 	    const precalculatedPlainDateTime = GetPlainDateTimeFor(timeZoneRec, GetSlot(zonedDateTime, INSTANT), calendarRec.receiver);
 	    const plainRelativeTo = TemporalDateTimeToDate(precalculatedPlainDateTime);
-	    resolvedOptions.largestUnit = settings.largestUnit;
+	    let norm;
 	    ({
 	      years,
 	      months,
 	      weeks,
 	      days,
-	      hours,
-	      minutes,
-	      seconds,
-	      milliseconds,
-	      microseconds,
-	      nanoseconds
+	      norm
 	    } = DifferenceZonedDateTime(ns1, ns2, timeZoneRec, calendarRec, settings.largestUnit, resolvedOptions, precalculatedPlainDateTime));
 	    const roundingIsNoop = settings.smallestUnit === 'nanosecond' && settings.roundingIncrement === 1;
 	    if (!roundingIsNoop) {
@@ -12964,26 +12507,38 @@
 	        months,
 	        weeks,
 	        days,
-	        hours,
-	        minutes,
-	        seconds,
-	        milliseconds,
-	        microseconds,
-	        nanoseconds
-	      } = RoundDuration(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, settings.roundingIncrement, settings.smallestUnit, settings.roundingMode, plainRelativeTo, calendarRec, zonedDateTime, timeZoneRec, precalculatedPlainDateTime));
+	        norm
+	      } = RoundDuration(years, months, weeks, days, norm, settings.roundingIncrement, settings.smallestUnit, settings.roundingMode, plainRelativeTo, calendarRec, zonedDateTime, timeZoneRec, precalculatedPlainDateTime));
+	      let deltaDays;
+	      ({
+	        days: deltaDays,
+	        norm
+	      } = NormalizedTimeDurationToDays(norm, zonedDateTime, timeZoneRec));
+	      days += deltaDays;
 	      ({
 	        years,
 	        months,
 	        weeks,
 	        days,
-	        hours,
-	        minutes,
-	        seconds,
-	        milliseconds,
-	        microseconds,
-	        nanoseconds
-	      } = AdjustRoundedDurationDays(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, settings.roundingIncrement, settings.smallestUnit, settings.roundingMode, zonedDateTime, calendarRec, timeZoneRec, precalculatedPlainDateTime));
+	        norm
+	      } = AdjustRoundedDurationDays(years, months, weeks, days, norm, settings.roundingIncrement, settings.smallestUnit, settings.roundingMode, zonedDateTime, calendarRec, timeZoneRec, precalculatedPlainDateTime));
+	      // BalanceTimeDuration already performed in AdjustRoundedDurationDays
+	      ({
+	        years,
+	        months,
+	        weeks,
+	        days
+	      } = BalanceDateDurationRelative(years, months, weeks, days, settings.largestUnit, settings.smallestUnit, plainRelativeTo, calendarRec));
+	      CombineDateAndNormalizedTimeDuration(years, months, weeks, days, norm);
 	    }
+	    ({
+	      hours,
+	      minutes,
+	      seconds,
+	      milliseconds,
+	      microseconds,
+	      nanoseconds
+	    } = BalanceTimeDuration(norm, 'hour'));
 	  }
 	  return new Duration(sign * years, sign * months, sign * weeks, sign * days, sign * hours, sign * minutes, sign * seconds, sign * milliseconds, sign * microseconds, sign * nanoseconds);
 	}
@@ -13014,7 +12569,7 @@
 	}
 	function AddDate(calendarRec, plainDate, duration) {
 	  let options = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : undefined;
-	  // dateAdd must be looked up if years, months, weeks != 0
+	  // dateAdd must be looked up
 	  const years = GetSlot(duration, YEARS);
 	  const months = GetSlot(duration, MONTHS);
 	  const weeks = GetSlot(duration, WEEKS);
@@ -13027,9 +12582,8 @@
 	  let month = GetSlot(plainDate, ISO_MONTH);
 	  let day = GetSlot(plainDate, ISO_DAY);
 	  const overflow = ToTemporalOverflow(options);
-	  const {
-	    days
-	  } = BalanceTimeDuration(GetSlot(duration, DAYS), GetSlot(duration, HOURS), GetSlot(duration, MINUTES), GetSlot(duration, SECONDS), GetSlot(duration, MILLISECONDS), GetSlot(duration, MICROSECONDS), GetSlot(duration, NANOSECONDS), 'day');
+	  const norm = TimeDuration.normalize(GetSlot(duration, HOURS), GetSlot(duration, MINUTES), GetSlot(duration, SECONDS), GetSlot(duration, MILLISECONDS), GetSlot(duration, MICROSECONDS), GetSlot(duration, NANOSECONDS));
+	  const days = GetSlot(duration, DAYS) + BalanceTimeDuration(norm, 'day').days;
 	  ({
 	    year,
 	    month,
@@ -13037,32 +12591,10 @@
 	  } = AddISODate(year, month, day, 0, 0, 0, days, overflow));
 	  return CreateTemporalDate(year, month, day, calendarRec.receiver);
 	}
-	function AddTime(hour, minute, second, millisecond, microsecond, nanosecond, hours, minutes, seconds, milliseconds, microseconds, nanoseconds) {
-	  hour += hours;
-	  minute += minutes;
-	  second += seconds;
-	  millisecond += milliseconds;
-	  microsecond += microseconds;
-	  nanosecond += nanoseconds;
-	  let deltaDays = 0;
-	  ({
-	    deltaDays,
-	    hour,
-	    minute,
-	    second,
-	    millisecond,
-	    microsecond,
-	    nanosecond
-	  } = BalanceTime(hour, minute, second, millisecond, microsecond, nanosecond));
-	  return {
-	    deltaDays,
-	    hour,
-	    minute,
-	    second,
-	    millisecond,
-	    microsecond,
-	    nanosecond
-	  };
+	function AddTime(hour, minute, second, millisecond, microsecond, nanosecond, norm) {
+	  second += norm.sec;
+	  nanosecond += norm.subsec;
+	  return BalanceTime(hour, minute, second, millisecond, microsecond, nanosecond);
 	}
 	function AddDuration(y1, mon1, w1, d1, h1, min1, s1, ms1, µs1, ns1, y2, mon2, w2, d2, h2, min2, s2, ms2, µs2, ns2, plainRelativeTo, zonedRelativeTo, calendarRec, timeZoneRec, precalculatedPlainDateTime) {
 	  // dateAdd must be looked up if zonedRelativeTo or plainRelativeTo not
@@ -13073,10 +12605,12 @@
 	  const largestUnit = LargerOfTwoTemporalUnits(largestUnit1, largestUnit2);
 	  let years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds;
 	  if (!zonedRelativeTo && !plainRelativeTo) {
-	    if (largestUnit === 'year' || largestUnit === 'month' || largestUnit === 'week') {
+	    if (IsCalendarUnit(largestUnit)) {
 	      throw new RangeError('relativeTo is required for years, months, or weeks arithmetic');
 	    }
 	    years = months = weeks = 0;
+	    const norm1 = TimeDuration.normalize(h1, min1, s1, ms1, µs1, ns1);
+	    const norm2 = TimeDuration.normalize(h2, min2, s2, ms2, µs2, ns2);
 	    ({
 	      days,
 	      hours,
@@ -13085,7 +12619,7 @@
 	      milliseconds,
 	      microseconds,
 	      nanoseconds
-	    } = BalanceTimeDuration(d1 + d2, bigInt(h1).add(h2), bigInt(min1).add(min2), bigInt(s1).add(s2), bigInt(ms1).add(ms2), bigInt(µs1).add(µs2), bigInt(ns1).add(ns2), largestUnit));
+	    } = BalanceTimeDuration(norm1.add(norm2).add24HourDays(d1 + d2), largestUnit));
 	  } else if (plainRelativeTo) {
 	    const TemporalDuration = GetIntrinsic('%Temporal.Duration%');
 	    const dateDuration1 = new TemporalDuration(y1, mon1, w1, d1, 0, 0, 0, 0, 0, 0);
@@ -13101,6 +12635,8 @@
 	    weeks = GetSlot(untilResult, WEEKS);
 	    days = GetSlot(untilResult, DAYS);
 	    // Signs of date part and time part may not agree; balance them together
+	    const norm1 = TimeDuration.normalize(h1, min1, s1, ms1, µs1, ns1);
+	    const norm2 = TimeDuration.normalize(h2, min2, s2, ms2, µs2, ns2);
 	    ({
 	      days,
 	      hours,
@@ -13109,24 +12645,28 @@
 	      milliseconds,
 	      microseconds,
 	      nanoseconds
-	    } = BalanceTimeDuration(days, bigInt(h1).add(h2), bigInt(min1).add(min2), bigInt(s1).add(s2), bigInt(ms1).add(ms2), bigInt(µs1).add(µs2), bigInt(ns1).add(ns2), largestUnit));
+	    } = BalanceTimeDuration(norm1.add(norm2).add24HourDays(days), largestUnit));
 	  } else {
 	    // zonedRelativeTo is defined
 	    const TemporalInstant = GetIntrinsic('%Temporal.Instant%');
 	    const calendar = GetSlot(zonedRelativeTo, CALENDAR);
 	    const startInstant = GetSlot(zonedRelativeTo, INSTANT);
 	    let startDateTime = precalculatedPlainDateTime;
-	    if (largestUnit === 'year' || largestUnit === 'month' || largestUnit === 'week' || largestUnit === 'day') {
-	      startDateTime ??= GetPlainDateTimeFor(timeZoneRec, startInstant, calendar);
+	    if (IsCalendarUnit(largestUnit) || largestUnit === 'day') {
+	      var _startDateTime;
+	      (_startDateTime = startDateTime) !== null && _startDateTime !== void 0 ? _startDateTime : startDateTime = GetPlainDateTimeFor(timeZoneRec, startInstant, calendar);
 	    }
-	    const intermediateNs = AddZonedDateTime(startInstant, timeZoneRec, calendarRec, y1, mon1, w1, d1, h1, min1, s1, ms1, µs1, ns1, startDateTime);
-	    const endNs = AddZonedDateTime(new TemporalInstant(intermediateNs), timeZoneRec, calendarRec, y2, mon2, w2, d2, h2, min2, s2, ms2, µs2, ns2);
+	    const norm1 = TimeDuration.normalize(h1, min1, s1, ms1, µs1, ns1);
+	    const norm2 = TimeDuration.normalize(h2, min2, s2, ms2, µs2, ns2);
+	    const intermediateNs = AddZonedDateTime(startInstant, timeZoneRec, calendarRec, y1, mon1, w1, d1, norm1, startDateTime);
+	    const endNs = AddZonedDateTime(new TemporalInstant(intermediateNs), timeZoneRec, calendarRec, y2, mon2, w2, d2, norm2);
 	    if (largestUnit !== 'year' && largestUnit !== 'month' && largestUnit !== 'week' && largestUnit !== 'day') {
 	      // The user is only asking for a time difference, so return difference of instants.
 	      years = 0;
 	      months = 0;
 	      weeks = 0;
 	      days = 0;
+	      const norm = TimeDuration.fromEpochNsDiff(endNs, GetSlot(zonedRelativeTo, EPOCHNANOSECONDS));
 	      ({
 	        hours,
 	        minutes,
@@ -13134,23 +12674,26 @@
 	        milliseconds,
 	        microseconds,
 	        nanoseconds
-	      } = DifferenceInstant(GetSlot(zonedRelativeTo, EPOCHNANOSECONDS), endNs, 1, 'nanosecond', largestUnit, 'halfExpand'));
+	      } = BalanceTimeDuration(norm, largestUnit));
 	    } else {
+	      let norm;
 	      ({
 	        years,
 	        months,
 	        weeks,
 	        days,
+	        norm
+	      } = DifferenceZonedDateTime(GetSlot(zonedRelativeTo, EPOCHNANOSECONDS), endNs, timeZoneRec, calendarRec, largestUnit, ObjectCreate$8(null), startDateTime));
+	      ({
 	        hours,
 	        minutes,
 	        seconds,
 	        milliseconds,
 	        microseconds,
 	        nanoseconds
-	      } = DifferenceZonedDateTime(GetSlot(zonedRelativeTo, EPOCHNANOSECONDS), endNs, timeZoneRec, calendarRec, largestUnit, ObjectCreate$8(null), startDateTime));
+	      } = BalanceTimeDuration(norm, 'hour'));
 	    }
 	  }
-	  RejectDuration(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
 	  return {
 	    years,
 	    months,
@@ -13164,19 +12707,12 @@
 	    nanoseconds
 	  };
 	}
-	function AddInstant(epochNanoseconds, h, min, s, ms, µs, ns) {
-	  let sum = bigInt.zero;
-	  sum = sum.plus(bigInt(ns));
-	  sum = sum.plus(bigInt(µs).multiply(1e3));
-	  sum = sum.plus(bigInt(ms).multiply(1e6));
-	  sum = sum.plus(bigInt(s).multiply(1e9));
-	  sum = sum.plus(bigInt(min).multiply(60 * 1e9));
-	  sum = sum.plus(bigInt(h).multiply(60 * 60 * 1e9));
-	  const result = bigInt(epochNanoseconds).plus(sum);
+	function AddInstant(epochNanoseconds, norm) {
+	  const result = norm.addToEpochNs(epochNanoseconds);
 	  ValidateEpochNanoseconds(result);
 	  return result;
 	}
-	function AddDateTime(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond, calendarRec, years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, options) {
+	function AddDateTime(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond, calendarRec, years, months, weeks, days, norm, options) {
 	  // dateAdd must be looked up if years, months, weeks != 0
 	  // Add the time part
 	  let deltaDays = 0;
@@ -13188,7 +12724,7 @@
 	    millisecond,
 	    microsecond,
 	    nanosecond
-	  } = AddTime(hour, minute, second, millisecond, microsecond, nanosecond, hours, minutes, seconds, milliseconds, microseconds, nanoseconds));
+	  } = AddTime(hour, minute, second, millisecond, microsecond, nanosecond, norm));
 	  days += deltaDays;
 
 	  // Delegate the date part addition to the calendar
@@ -13208,9 +12744,9 @@
 	    nanosecond
 	  };
 	}
-	function AddZonedDateTime(instant, timeZoneRec, calendarRec, years, months, weeks, days, h, min, s, ms, µs, ns) {
-	  let precalculatedPlainDateTime = arguments.length > 13 && arguments[13] !== undefined ? arguments[13] : undefined;
-	  let options = arguments.length > 14 && arguments[14] !== undefined ? arguments[14] : undefined;
+	function AddZonedDateTime(instant, timeZoneRec, calendarRec, years, months, weeks, days, norm) {
+	  let precalculatedPlainDateTime = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : undefined;
+	  let options = arguments.length > 9 && arguments[9] !== undefined ? arguments[9] : undefined;
 	  // getPossibleInstantsFor must be looked up
 	  // getOffsetNanosecondsFor must be looked up if precalculatedDateTime is not
 	  // supplied
@@ -13229,13 +12765,13 @@
 	  // BTW, this behavior is similar in spirit to offset: 'prefer' in `with`.
 	  const TemporalDuration = GetIntrinsic('%Temporal.Duration%');
 	  if (DurationSign(years, months, weeks, days, 0, 0, 0, 0, 0, 0) === 0) {
-	    return AddInstant(GetSlot(instant, EPOCHNANOSECONDS), h, min, s, ms, µs, ns);
+	    return AddInstant(GetSlot(instant, EPOCHNANOSECONDS), norm);
 	  }
-	  const dt = precalculatedPlainDateTime ?? GetPlainDateTimeFor(timeZoneRec, instant, calendarRec.receiver);
+	  const dt = precalculatedPlainDateTime !== null && precalculatedPlainDateTime !== void 0 ? precalculatedPlainDateTime : GetPlainDateTimeFor(timeZoneRec, instant, calendarRec.receiver);
 	  if (DurationSign(years, months, weeks, 0, 0, 0, 0, 0, 0, 0) === 0) {
 	    const overflow = ToTemporalOverflow(options);
 	    const intermediate = AddDaysToZonedDateTime(instant, dt, timeZoneRec, calendarRec.receiver, days, overflow).epochNs;
-	    return AddInstant(intermediate, h, min, s, ms, µs, ns);
+	    return AddInstant(intermediate, norm);
 	  }
 
 	  // RFC 5545 requires the date portion to be added in calendar days and the
@@ -13248,7 +12784,7 @@
 	  // Note that 'compatible' is used below because this disambiguation behavior
 	  // is required by RFC 5545.
 	  const instantIntermediate = GetInstantFor(timeZoneRec, dtIntermediate, 'compatible');
-	  return AddInstant(GetSlot(instantIntermediate, EPOCHNANOSECONDS), h, min, s, ms, µs, ns);
+	  return AddInstant(GetSlot(instantIntermediate, EPOCHNANOSECONDS), norm);
 	}
 	function AddDaysToZonedDateTime(instant, dateTime, timeZoneRec, calendar, days) {
 	  let overflow = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : 'constrain';
@@ -13295,16 +12831,7 @@
 	    zonedRelativeTo,
 	    timeZoneRec
 	  } = ToRelativeTemporalObject(options);
-	  let calendarRec;
-	  if (plainRelativeTo || zonedRelativeTo) {
-	    calendarRec = new CalendarMethodRecord(GetSlot(zonedRelativeTo ?? plainRelativeTo, CALENDAR));
-	    if (GetSlot(duration, YEARS) !== 0 || GetSlot(duration, MONTHS) !== 0 || GetSlot(duration, WEEKS) !== 0 || years !== 0 || months !== 0 || weeks !== 0) {
-	      calendarRec.lookup('dateAdd');
-	      if (years !== 0 || months !== 0 || weeks !== 0 || days !== 0 || hours !== 0 || minutes !== 0 || seconds !== 0 || milliseconds !== 0 || microseconds !== 0 || nanoseconds !== 0) {
-	        calendarRec.lookup('dateUntil');
-	      }
-	    }
-	  }
+	  const calendarRec = CalendarMethodRecord.CreateFromRelativeTo(plainRelativeTo, zonedRelativeTo, ['dateAdd', 'dateUntil']);
 	  ({
 	    years,
 	    months,
@@ -13330,7 +12857,8 @@
 	    microseconds,
 	    nanoseconds
 	  } = ToLimitedTemporalDuration(durationLike, ['years', 'months', 'weeks', 'days']);
-	  const ns = AddInstant(GetSlot(instant, EPOCHNANOSECONDS), sign * hours, sign * minutes, sign * seconds, sign * milliseconds, sign * microseconds, sign * nanoseconds);
+	  const norm = TimeDuration.normalize(sign * hours, sign * minutes, sign * seconds, sign * milliseconds, sign * microseconds, sign * nanoseconds);
+	  const ns = AddInstant(GetSlot(instant, EPOCHNANOSECONDS), norm);
 	  const Instant = GetIntrinsic('%Temporal.Instant%');
 	  return new Instant(ns);
 	}
@@ -13349,10 +12877,8 @@
 	    nanoseconds
 	  } = ToTemporalDurationRecord(durationLike);
 	  options = GetOptionsObject(options);
-	  const calendarRec = new CalendarMethodRecord(GetSlot(dateTime, CALENDAR));
-	  if (years !== 0 || months !== 0 || weeks !== 0) {
-	    calendarRec.lookup('dateAdd');
-	  }
+	  const calendarRec = new CalendarMethodRecord(GetSlot(dateTime, CALENDAR), ['dateAdd']);
+	  const norm = TimeDuration.normalize(sign * hours, sign * minutes, sign * seconds, sign * milliseconds, sign * microseconds, sign * nanoseconds);
 	  const {
 	    year,
 	    month,
@@ -13363,7 +12889,7 @@
 	    millisecond,
 	    microsecond,
 	    nanosecond
-	  } = AddDateTime(GetSlot(dateTime, ISO_YEAR), GetSlot(dateTime, ISO_MONTH), GetSlot(dateTime, ISO_DAY), GetSlot(dateTime, ISO_HOUR), GetSlot(dateTime, ISO_MINUTE), GetSlot(dateTime, ISO_SECOND), GetSlot(dateTime, ISO_MILLISECOND), GetSlot(dateTime, ISO_MICROSECOND), GetSlot(dateTime, ISO_NANOSECOND), calendarRec, sign * years, sign * months, sign * weeks, sign * days, sign * hours, sign * minutes, sign * seconds, sign * milliseconds, sign * microseconds, sign * nanoseconds, options);
+	  } = AddDateTime(GetSlot(dateTime, ISO_YEAR), GetSlot(dateTime, ISO_MONTH), GetSlot(dateTime, ISO_DAY), GetSlot(dateTime, ISO_HOUR), GetSlot(dateTime, ISO_MINUTE), GetSlot(dateTime, ISO_SECOND), GetSlot(dateTime, ISO_MILLISECOND), GetSlot(dateTime, ISO_MICROSECOND), GetSlot(dateTime, ISO_NANOSECOND), calendarRec, sign * years, sign * months, sign * weeks, sign * days, norm, options);
 	  return CreateTemporalDateTime(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond, calendarRec.receiver);
 	}
 	function AddDurationToOrSubtractDurationFromPlainTime(operation, temporalTime, durationLike) {
@@ -13376,6 +12902,7 @@
 	    microseconds,
 	    nanoseconds
 	  } = ToTemporalDurationRecord(durationLike);
+	  const norm = TimeDuration.normalize(sign * hours, sign * minutes, sign * seconds, sign * milliseconds, sign * microseconds, sign * nanoseconds);
 	  let {
 	    hour,
 	    minute,
@@ -13383,7 +12910,7 @@
 	    millisecond,
 	    microsecond,
 	    nanosecond
-	  } = AddTime(GetSlot(temporalTime, ISO_HOUR), GetSlot(temporalTime, ISO_MINUTE), GetSlot(temporalTime, ISO_SECOND), GetSlot(temporalTime, ISO_MILLISECOND), GetSlot(temporalTime, ISO_MICROSECOND), GetSlot(temporalTime, ISO_NANOSECOND), sign * hours, sign * minutes, sign * seconds, sign * milliseconds, sign * microseconds, sign * nanoseconds);
+	  } = AddTime(GetSlot(temporalTime, ISO_HOUR), GetSlot(temporalTime, ISO_MINUTE), GetSlot(temporalTime, ISO_SECOND), GetSlot(temporalTime, ISO_MILLISECOND), GetSlot(temporalTime, ISO_MICROSECOND), GetSlot(temporalTime, ISO_NANOSECOND), norm);
 	  ({
 	    hour,
 	    minute,
@@ -13423,18 +12950,11 @@
 	    microseconds,
 	    nanoseconds
 	  } = duration;
-	  ({
-	    days
-	  } = BalanceTimeDuration(days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, 'day'));
+	  options = GetOptionsObject(options);
+	  const norm = TimeDuration.normalize(hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
+	  days += BalanceTimeDuration(norm, 'day').days;
 	  const sign = DurationSign(years, months, weeks, days, 0, 0, 0, 0, 0, 0);
-	  const calendarRec = new CalendarMethodRecord(GetSlot(yearMonth, CALENDAR));
-	  if (sign < 0 || years !== 0 || months !== 0 || weeks !== 0) {
-	    calendarRec.lookup('dateAdd');
-	  }
-	  calendarRec.lookup('dateFromFields');
-	  if (sign < 0) calendarRec.lookup('day');
-	  calendarRec.lookup('fields');
-	  calendarRec.lookup('yearMonthFromFields');
+	  const calendarRec = new CalendarMethodRecord(GetSlot(yearMonth, CALENDAR), ['dateAdd', 'dateFromFields', 'day', 'fields', 'yearMonthFromFields']);
 	  const fieldNames = CalendarFields(calendarRec, ['monthCode', 'year']);
 	  const fields = PrepareTemporalFields(yearMonth, fieldNames, []);
 	  const fieldsCopy = SnapshotOwnProperties(fields, null);
@@ -13444,13 +12964,12 @@
 	  if (sign < 0) {
 	    const oneMonthDuration = new Duration(0, 1, 0, 0, 0, 0, 0, 0, 0, 0);
 	    const nextMonth = CalendarDateAdd(calendarRec, startDate, oneMonthDuration);
-	    const endOfMonthISO = AddISODate(GetSlot(nextMonth, ISO_YEAR), GetSlot(nextMonth, ISO_MONTH), GetSlot(nextMonth, ISO_DAY), 0, 0, 0, -1, 'constrain');
+	    const endOfMonthISO = BalanceISODate(GetSlot(nextMonth, ISO_YEAR), GetSlot(nextMonth, ISO_MONTH), GetSlot(nextMonth, ISO_DAY) - 1);
 	    const endOfMonth = CreateTemporalDate(endOfMonthISO.year, endOfMonthISO.month, endOfMonthISO.day, calendarRec.receiver);
 	    fieldsCopy.day = CalendarDay(calendarRec, endOfMonth);
 	    startDate = CalendarDateFromFields(calendarRec, fieldsCopy);
 	  }
 	  const durationToAdd = new Duration(years, months, weeks, days, 0, 0, 0, 0, 0, 0);
-	  options = GetOptionsObject(options);
 	  const optionsCopy = SnapshotOwnProperties(options, null);
 	  const addedDate = AddDate(calendarRec, startDate, durationToAdd, options);
 	  const addedDateFields = PrepareTemporalFields(addedDate, fieldNames, []);
@@ -13472,11 +12991,9 @@
 	  } = ToTemporalDurationRecord(durationLike);
 	  options = GetOptionsObject(options);
 	  const timeZoneRec = new TimeZoneMethodRecord(GetSlot(zonedDateTime, TIME_ZONE), ['getOffsetNanosecondsFor', 'getPossibleInstantsFor']);
-	  const calendarRec = new CalendarMethodRecord(GetSlot(zonedDateTime, CALENDAR));
-	  if (years !== 0 || months !== 0 || weeks !== 0) {
-	    calendarRec.lookup('dateAdd');
-	  }
-	  const epochNanoseconds = AddZonedDateTime(GetSlot(zonedDateTime, INSTANT), timeZoneRec, calendarRec, sign * years, sign * months, sign * weeks, sign * days, sign * hours, sign * minutes, sign * seconds, sign * milliseconds, sign * microseconds, sign * nanoseconds, undefined, options);
+	  const calendarRec = new CalendarMethodRecord(GetSlot(zonedDateTime, CALENDAR), ['dateAdd']);
+	  const norm = TimeDuration.normalize(sign * hours, sign * minutes, sign * seconds, sign * milliseconds, sign * microseconds, sign * nanoseconds);
+	  const epochNanoseconds = AddZonedDateTime(GetSlot(zonedDateTime, INSTANT), timeZoneRec, calendarRec, sign * years, sign * months, sign * weeks, sign * days, norm, undefined, options);
 	  return CreateTemporalZonedDateTime(epochNanoseconds, timeZoneRec.receiver, calendarRec.receiver);
 	}
 	function RoundNumberToIncrement(quantity, increment, mode) {
@@ -13524,6 +13041,49 @@
 	      }
 	  }
 	  return quotient.multiply(increment);
+	}
+	function RoundJSNumberToIncrement(quantity, increment, mode) {
+	  let quotient = MathTrunc(quantity / increment);
+	  const remainder = quantity % increment;
+	  if (remainder === 0) return quantity;
+	  const sign = remainder < 0 ? -1 : 1;
+	  const tiebreaker = MathAbs$2(remainder * 2);
+	  const tie = tiebreaker === increment;
+	  const expandIsNearer = tiebreaker > increment;
+	  switch (mode) {
+	    case 'ceil':
+	      if (sign > 0) quotient += sign;
+	      break;
+	    case 'floor':
+	      if (sign < 0) quotient += sign;
+	      break;
+	    case 'expand':
+	      // always expand if there is a remainder
+	      quotient += sign;
+	      break;
+	    case 'trunc':
+	      // no change needed, because divmod is a truncation
+	      break;
+	    case 'halfCeil':
+	      if (expandIsNearer || tie && sign > 0) quotient += sign;
+	      break;
+	    case 'halfFloor':
+	      if (expandIsNearer || tie && sign < 0) quotient += sign;
+	      break;
+	    case 'halfExpand':
+	      // "half up away from zero"
+	      if (expandIsNearer || tie) quotient += sign;
+	      break;
+	    case 'halfTrunc':
+	      if (expandIsNearer) quotient += sign;
+	      break;
+	    case 'halfEven':
+	      {
+	        if (expandIsNearer || tie && quotient % 2 === 1) quotient += sign;
+	        break;
+	      }
+	  }
+	  return quotient * increment;
 	}
 	function RoundInstant(epochNs, increment, unit, roundingMode) {
 	  let {
@@ -13628,24 +13188,19 @@
 	function MoveRelativeZonedDateTime(relativeTo, calendarRec, timeZoneRec, years, months, weeks, days, precalculatedPlainDateTime) {
 	  // getOffsetNanosecondsFor and getPossibleInstantsFor must be looked up
 	  // dateAdd must be looked up if years, months, weeks != 0
-	  const intermediateNs = AddZonedDateTime(GetSlot(relativeTo, INSTANT), timeZoneRec, calendarRec, years, months, weeks, days, 0, 0, 0, 0, 0, 0, precalculatedPlainDateTime);
+	  const intermediateNs = AddZonedDateTime(GetSlot(relativeTo, INSTANT), timeZoneRec, calendarRec, years, months, weeks, days, TimeDuration.ZERO, precalculatedPlainDateTime);
 	  return CreateTemporalZonedDateTime(intermediateNs, timeZoneRec.receiver, calendarRec.receiver);
 	}
-	function AdjustRoundedDurationDays(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, increment, unit, roundingMode, zonedRelativeTo, calendarRec, timeZoneRec, precalculatedPlainDateTime) {
+	function AdjustRoundedDurationDays(years, months, weeks, days, norm, increment, unit, roundingMode, zonedRelativeTo, calendarRec, timeZoneRec, precalculatedPlainDateTime) {
 	  // both dateAdd and dateUntil must be looked up if unit <= hour, any rounding
 	  // is requested, and any of years...weeks != 0
-	  if (unit === 'year' || unit === 'month' || unit === 'week' || unit === 'day' || unit === 'nanosecond' && increment === 1) {
+	  if (IsCalendarUnit(unit) || unit === 'day' || unit === 'nanosecond' && increment === 1) {
 	    return {
 	      years,
 	      months,
 	      weeks,
 	      days,
-	      hours,
-	      minutes,
-	      seconds,
-	      milliseconds,
-	      microseconds,
-	      nanoseconds
+	      norm
 	    };
 	  }
 
@@ -13657,18 +13212,17 @@
 	  // duration, there's no way for another full day to come from the next
 	  // round of rounding. And if it were possible (e.g. contrived calendar
 	  // with 30-minute-long "days") then it'd risk an infinite loop.
-	  let timeRemainderNs = TotalDurationNanoseconds(hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
-	  const direction = MathSign(timeRemainderNs.toJSNumber());
+	  const direction = norm.sign();
 	  const calendar = GetSlot(zonedRelativeTo, CALENDAR);
 	  // requires dateAdd if years...weeks != 0
-	  const dayStart = AddZonedDateTime(GetSlot(zonedRelativeTo, INSTANT), timeZoneRec, calendarRec, years, months, weeks, days, 0, 0, 0, 0, 0, 0, precalculatedPlainDateTime);
+	  const dayStart = AddZonedDateTime(GetSlot(zonedRelativeTo, INSTANT), timeZoneRec, calendarRec, years, months, weeks, days, TimeDuration.ZERO, precalculatedPlainDateTime);
 	  const TemporalInstant = GetIntrinsic('%Temporal.Instant%');
 	  const dayStartInstant = new TemporalInstant(dayStart);
 	  const dayStartDateTime = GetPlainDateTimeFor(timeZoneRec, dayStartInstant, calendar);
 	  const dayEnd = AddDaysToZonedDateTime(dayStartInstant, dayStartDateTime, timeZoneRec, calendar, direction).epochNs;
-	  const dayLengthNs = dayEnd.subtract(dayStart);
-	  const oneDayLess = timeRemainderNs.subtract(dayLengthNs);
-	  if (oneDayLess.multiply(direction).geq(0)) {
+	  const dayLength = TimeDuration.fromEpochNsDiff(dayEnd, dayStart);
+	  const oneDayLess = norm.subtract(dayLength);
+	  if (oneDayLess.sign() * direction >= 0) {
 	    // requires dateAdd and dateUntil if years...weeks != 0
 	    ({
 	      years,
@@ -13676,75 +13230,51 @@
 	      weeks,
 	      days
 	    } = AddDuration(years, months, weeks, days, 0, 0, 0, 0, 0, 0, 0, 0, 0, direction, 0, 0, 0, 0, 0, 0, /* plainRelativeTo = */undefined, zonedRelativeTo, calendarRec, timeZoneRec, precalculatedPlainDateTime));
-	    // no calendar calls
 	    ({
-	      hours,
-	      minutes,
-	      seconds,
-	      milliseconds,
-	      microseconds,
-	      nanoseconds
-	    } = RoundDuration(0, 0, 0, 0, 0, 0, 0, 0, 0, oneDayLess.toJSNumber(), increment, unit, roundingMode));
-	    ({
-	      hours,
-	      minutes,
-	      seconds,
-	      milliseconds,
-	      microseconds,
-	      nanoseconds
-	    } = BalanceTimeDuration(0, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, 'hour'));
+	      norm
+	    } = RoundDuration(0, 0, 0, 0, oneDayLess, increment, unit, roundingMode));
 	  }
+	  CombineDateAndNormalizedTimeDuration(years, months, weeks, days, norm);
 	  return {
 	    years,
 	    months,
 	    weeks,
 	    days,
-	    hours,
-	    minutes,
-	    seconds,
-	    milliseconds,
-	    microseconds,
-	    nanoseconds
+	    norm
 	  };
 	}
-	function RoundDuration(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, increment, unit, roundingMode) {
-	  let plainRelativeTo = arguments.length > 13 && arguments[13] !== undefined ? arguments[13] : undefined;
-	  let calendarRec = arguments.length > 14 && arguments[14] !== undefined ? arguments[14] : undefined;
-	  let zonedRelativeTo = arguments.length > 15 && arguments[15] !== undefined ? arguments[15] : undefined;
-	  let timeZoneRec = arguments.length > 16 && arguments[16] !== undefined ? arguments[16] : undefined;
-	  let precalculatedPlainDateTime = arguments.length > 17 && arguments[17] !== undefined ? arguments[17] : undefined;
-	  // dateAdd must be looked up if:
-	  //  - unit is year, month, or week
-	  //  - unit is day, zonedRelativeTo defined, and any of years...weeks != 0
-	  // dateUntil must be looked up if unit is year
+	function RoundDuration(years, months, weeks, days, norm, increment, unit, roundingMode) {
+	  let plainRelativeTo = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : undefined;
+	  let calendarRec = arguments.length > 9 && arguments[9] !== undefined ? arguments[9] : undefined;
+	  let zonedRelativeTo = arguments.length > 10 && arguments[10] !== undefined ? arguments[10] : undefined;
+	  let timeZoneRec = arguments.length > 11 && arguments[11] !== undefined ? arguments[11] : undefined;
+	  let precalculatedPlainDateTime = arguments.length > 12 && arguments[12] !== undefined ? arguments[12] : undefined;
+	  // dateAdd and dateUntil must be looked up
 	  const TemporalDuration = GetIntrinsic('%Temporal.Duration%');
-	  if ((unit === 'year' || unit === 'month' || unit === 'week') && !plainRelativeTo) {
-	    throw new RangeError(`A starting point is required for ${unit}s rounding`);
+	  if (IsCalendarUnit(unit) && !plainRelativeTo) {
+	    throw new RangeError("A starting point is required for ".concat(unit, "s rounding"));
 	  }
 
 	  // First convert time units up to days, if rounding to days or higher units.
 	  // If rounding relative to a ZonedDateTime, then some days may not be 24h.
 	  let dayLengthNs;
-	  if (unit === 'year' || unit === 'month' || unit === 'week' || unit === 'day') {
-	    nanoseconds = TotalDurationNanoseconds(hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
+	  if (IsCalendarUnit(unit) || unit === 'day') {
 	    let deltaDays;
 	    if (zonedRelativeTo) {
 	      const intermediate = MoveRelativeZonedDateTime(zonedRelativeTo, calendarRec, timeZoneRec, years, months, weeks, days, precalculatedPlainDateTime);
 	      ({
 	        days: deltaDays,
-	        nanoseconds,
+	        norm,
 	        dayLengthNs
-	      } = NanosecondsToDays(nanoseconds, intermediate, timeZoneRec));
+	      } = NormalizedTimeDurationToDays(norm, intermediate, timeZoneRec));
 	    } else {
 	      ({
 	        quotient: deltaDays,
-	        remainder: nanoseconds
-	      } = nanoseconds.divmod(DAY_NANOS));
-	      deltaDays = deltaDays.toJSNumber();
-	      dayLengthNs = DAY_NANOS.toJSNumber();
+	        remainder: norm
+	      } = norm.divmod(DAY_NANOS));
+	      dayLengthNs = DAY_NANOS;
 	    }
 	    days += deltaDays;
-	    hours = minutes = seconds = milliseconds = microseconds = 0;
 	  }
 	  let total;
 	  switch (unit) {
@@ -13759,7 +13289,7 @@
 	        const monthsWeeksInDays = DaysUntil(yearsLater, yearsMonthsWeeksLater);
 	        plainRelativeTo = yearsLater;
 	        days += monthsWeeksInDays;
-	        const isoResult = AddISODate(GetSlot(plainRelativeTo, ISO_YEAR), GetSlot(plainRelativeTo, ISO_MONTH), GetSlot(plainRelativeTo, ISO_DAY), 0, 0, 0, days, 'constrain');
+	        const isoResult = BalanceISODate(GetSlot(plainRelativeTo, ISO_YEAR), GetSlot(plainRelativeTo, ISO_MONTH), GetSlot(plainRelativeTo, ISO_DAY) + days);
 	        const wholeDaysLater = CreateTemporalDate(isoResult.year, isoResult.month, isoResult.day, calendarRec.receiver);
 	        const untilOptions = ObjectCreate$8(null);
 	        untilOptions.largestUnit = 'year';
@@ -13776,24 +13306,12 @@
 	        let {
 	          days: oneYearDays
 	        } = MoveRelativeDate(calendarRec, plainRelativeTo, oneYear);
-
-	        // Note that `nanoseconds` below (here and in similar code for months,
-	        // weeks, and days further below) isn't actually nanoseconds for the
-	        // full date range.  Instead, it's a BigInt representation of total
-	        // days multiplied by the number of nanoseconds in the last day of
-	        // the duration. This lets us do days-or-larger rounding using BigInt
-	        // math which reduces precision loss.
 	        oneYearDays = MathAbs$2(oneYearDays);
-	        const divisor = bigInt(oneYearDays).multiply(dayLengthNs);
-	        nanoseconds = divisor.multiply(years).plus(bigInt(days).multiply(dayLengthNs)).plus(nanoseconds);
-	        const rounded = RoundNumberToIncrement(nanoseconds, divisor.multiply(increment).toJSNumber(), roundingMode);
-	        const {
-	          quotient,
-	          remainder
-	        } = nanoseconds.divmod(divisor);
-	        total = quotient.toJSNumber() + remainder.toJSNumber() / divisor;
-	        years = rounded.divide(divisor).toJSNumber();
-	        nanoseconds = months = weeks = days = 0;
+	        if (oneYearDays === 0) throw new RangeError('custom calendar reported that a year is 0 days long');
+	        total = years + (days + norm.fdiv(dayLengthNs)) / oneYearDays;
+	        years = RoundJSNumberToIncrement(total, increment, roundingMode);
+	        months = weeks = days = 0;
+	        norm = TimeDuration.ZERO;
 	        break;
 	      }
 	    case 'month':
@@ -13807,171 +13325,114 @@
 	        const weeksInDays = DaysUntil(yearsMonthsLater, yearsMonthsWeeksLater);
 	        plainRelativeTo = yearsMonthsLater;
 	        days += weeksInDays;
-
-	        // Months may be different lengths of days depending on the calendar,
-	        // convert days to months in a loop as described above under 'years'.
-	        const sign = MathSign(days);
-	        const oneMonth = new TemporalDuration(0, days < 0 ? -1 : 1);
-	        let oneMonthDays;
+	        const isoResult = BalanceISODate(GetSlot(plainRelativeTo, ISO_YEAR), GetSlot(plainRelativeTo, ISO_MONTH), GetSlot(plainRelativeTo, ISO_DAY) + days);
+	        const wholeDaysLater = CreateTemporalDate(isoResult.year, isoResult.month, isoResult.day, calendarRec.receiver);
+	        const untilOptions = ObjectCreate$8(null);
+	        untilOptions.largestUnit = 'month';
+	        const monthsPassed = GetSlot(DifferenceDate(calendarRec, plainRelativeTo, wholeDaysLater, untilOptions), MONTHS);
+	        months += monthsPassed;
+	        const monthsPassedDuration = new TemporalDuration(0, monthsPassed);
+	        let daysPassed;
 	        ({
 	          relativeTo: plainRelativeTo,
+	          days: daysPassed
+	        } = MoveRelativeDate(calendarRec, plainRelativeTo, monthsPassedDuration));
+	        days -= daysPassed;
+	        const oneMonth = new TemporalDuration(0, days < 0 ? -1 : 1);
+	        let {
 	          days: oneMonthDays
-	        } = MoveRelativeDate(calendarRec, plainRelativeTo, oneMonth));
-	        while (MathAbs$2(days) >= MathAbs$2(oneMonthDays)) {
-	          months += sign;
-	          days -= oneMonthDays;
-	          ({
-	            relativeTo: plainRelativeTo,
-	            days: oneMonthDays
-	          } = MoveRelativeDate(calendarRec, plainRelativeTo, oneMonth));
-	        }
+	        } = MoveRelativeDate(calendarRec, plainRelativeTo, oneMonth);
 	        oneMonthDays = MathAbs$2(oneMonthDays);
-	        const divisor = bigInt(oneMonthDays).multiply(dayLengthNs);
-	        nanoseconds = divisor.multiply(months).plus(bigInt(days).multiply(dayLengthNs)).plus(nanoseconds);
-	        const rounded = RoundNumberToIncrement(nanoseconds, divisor.multiply(increment), roundingMode);
-	        const {
-	          quotient,
-	          remainder
-	        } = nanoseconds.divmod(divisor);
-	        total = quotient.toJSNumber() + remainder.toJSNumber() / divisor;
-	        months = rounded.divide(divisor).toJSNumber();
-	        nanoseconds = weeks = days = 0;
+	        if (oneMonthDays === 0) throw new RangeError('custom calendar reported that a month is 0 days long');
+	        total = months + (days + norm.fdiv(dayLengthNs)) / oneMonthDays;
+	        months = RoundJSNumberToIncrement(total, increment, roundingMode);
+	        weeks = days = 0;
+	        norm = TimeDuration.ZERO;
 	        break;
 	      }
 	    case 'week':
 	      {
-	        // Weeks may be different lengths of days depending on the calendar,
-	        // convert days to weeks in a loop as described above under 'years'.
-	        const sign = MathSign(days);
-	        const oneWeek = new TemporalDuration(0, 0, days < 0 ? -1 : 1);
-	        let oneWeekDays;
+	        const isoResult = BalanceISODate(GetSlot(plainRelativeTo, ISO_YEAR), GetSlot(plainRelativeTo, ISO_MONTH), GetSlot(plainRelativeTo, ISO_DAY) + days);
+	        const wholeDaysLater = CreateTemporalDate(isoResult.year, isoResult.month, isoResult.day, calendarRec.receiver);
+	        const untilOptions = ObjectCreate$8(null);
+	        untilOptions.largestUnit = 'week';
+	        const weeksPassed = GetSlot(DifferenceDate(calendarRec, plainRelativeTo, wholeDaysLater, untilOptions), WEEKS);
+	        weeks += weeksPassed;
+	        const weeksPassedDuration = new TemporalDuration(0, 0, weeksPassed);
+	        let daysPassed;
 	        ({
 	          relativeTo: plainRelativeTo,
+	          days: daysPassed
+	        } = MoveRelativeDate(calendarRec, plainRelativeTo, weeksPassedDuration));
+	        days -= daysPassed;
+	        const oneWeek = new TemporalDuration(0, 0, days < 0 ? -1 : 1);
+	        let {
 	          days: oneWeekDays
-	        } = MoveRelativeDate(calendarRec, plainRelativeTo, oneWeek));
-	        while (MathAbs$2(days) >= MathAbs$2(oneWeekDays)) {
-	          weeks += sign;
-	          days -= oneWeekDays;
-	          ({
-	            relativeTo: plainRelativeTo,
-	            days: oneWeekDays
-	          } = MoveRelativeDate(calendarRec, plainRelativeTo, oneWeek));
-	        }
+	        } = MoveRelativeDate(calendarRec, plainRelativeTo, oneWeek);
 	        oneWeekDays = MathAbs$2(oneWeekDays);
-	        const divisor = bigInt(oneWeekDays).multiply(dayLengthNs);
-	        nanoseconds = divisor.multiply(weeks).plus(bigInt(days).multiply(dayLengthNs)).plus(nanoseconds);
-	        const rounded = RoundNumberToIncrement(nanoseconds, divisor.multiply(increment), roundingMode);
-	        const {
-	          quotient,
-	          remainder
-	        } = nanoseconds.divmod(divisor);
-	        total = quotient.toJSNumber() + remainder.toJSNumber() / divisor;
-	        weeks = rounded.divide(divisor).toJSNumber();
-	        nanoseconds = days = 0;
+	        if (oneWeekDays === 0) throw new RangeError('custom calendar reported that a week is 0 days long');
+	        total = weeks + (days + norm.fdiv(dayLengthNs)) / oneWeekDays;
+	        weeks = RoundJSNumberToIncrement(total, increment, roundingMode);
+	        days = 0;
+	        norm = TimeDuration.ZERO;
 	        break;
 	      }
 	    case 'day':
 	      {
-	        const divisor = bigInt(dayLengthNs);
-	        nanoseconds = divisor.multiply(days).plus(nanoseconds);
-	        const rounded = RoundNumberToIncrement(nanoseconds, divisor.multiply(increment), roundingMode);
-	        const {
-	          quotient,
-	          remainder
-	        } = nanoseconds.divmod(divisor);
-	        total = quotient.toJSNumber() + remainder.toJSNumber() / divisor;
-	        days = rounded.divide(divisor).toJSNumber();
-	        nanoseconds = 0;
+	        total = days + norm.fdiv(dayLengthNs);
+	        days = RoundJSNumberToIncrement(total, increment, roundingMode);
+	        norm = TimeDuration.ZERO;
 	        break;
 	      }
 	    case 'hour':
 	      {
 	        const divisor = 3600e9;
-	        nanoseconds = bigInt(hours).multiply(3600e9).plus(bigInt(minutes).multiply(60e9)).plus(bigInt(seconds).multiply(1e9)).plus(bigInt(milliseconds).multiply(1e6)).plus(bigInt(microseconds).multiply(1e3)).plus(nanoseconds);
-	        const {
-	          quotient,
-	          remainder
-	        } = nanoseconds.divmod(divisor);
-	        total = quotient.toJSNumber() + remainder.toJSNumber() / divisor;
-	        const rounded = RoundNumberToIncrement(nanoseconds, divisor * increment, roundingMode);
-	        hours = rounded.divide(divisor).toJSNumber();
-	        minutes = seconds = milliseconds = microseconds = nanoseconds = 0;
+	        total = norm.fdiv(divisor);
+	        norm = norm.round(divisor * increment, roundingMode);
 	        break;
 	      }
 	    case 'minute':
 	      {
 	        const divisor = 60e9;
-	        nanoseconds = bigInt(minutes).multiply(60e9).plus(bigInt(seconds).multiply(1e9)).plus(bigInt(milliseconds).multiply(1e6)).plus(bigInt(microseconds).multiply(1e3)).plus(nanoseconds);
-	        const {
-	          quotient,
-	          remainder
-	        } = nanoseconds.divmod(divisor);
-	        total = quotient.toJSNumber() + remainder.toJSNumber() / divisor;
-	        const rounded = RoundNumberToIncrement(nanoseconds, divisor * increment, roundingMode);
-	        minutes = rounded.divide(divisor).toJSNumber();
-	        seconds = milliseconds = microseconds = nanoseconds = 0;
+	        total = norm.fdiv(divisor);
+	        norm = norm.round(divisor * increment, roundingMode);
 	        break;
 	      }
 	    case 'second':
 	      {
 	        const divisor = 1e9;
-	        nanoseconds = bigInt(seconds).multiply(1e9).plus(bigInt(milliseconds).multiply(1e6)).plus(bigInt(microseconds).multiply(1e3)).plus(nanoseconds);
-	        const {
-	          quotient,
-	          remainder
-	        } = nanoseconds.divmod(divisor);
-	        total = quotient.toJSNumber() + remainder.toJSNumber() / divisor;
-	        const rounded = RoundNumberToIncrement(nanoseconds, divisor * increment, roundingMode);
-	        seconds = rounded.divide(divisor).toJSNumber();
-	        milliseconds = microseconds = nanoseconds = 0;
+	        total = norm.fdiv(divisor);
+	        norm = norm.round(divisor * increment, roundingMode);
 	        break;
 	      }
 	    case 'millisecond':
 	      {
 	        const divisor = 1e6;
-	        nanoseconds = bigInt(milliseconds).multiply(1e6).plus(bigInt(microseconds).multiply(1e3)).plus(nanoseconds);
-	        const {
-	          quotient,
-	          remainder
-	        } = nanoseconds.divmod(divisor);
-	        total = quotient.toJSNumber() + remainder.toJSNumber() / divisor;
-	        const rounded = RoundNumberToIncrement(nanoseconds, divisor * increment, roundingMode);
-	        milliseconds = rounded.divide(divisor).toJSNumber();
-	        microseconds = nanoseconds = 0;
+	        total = norm.fdiv(divisor);
+	        norm = norm.round(divisor * increment, roundingMode);
 	        break;
 	      }
 	    case 'microsecond':
 	      {
 	        const divisor = 1e3;
-	        nanoseconds = bigInt(microseconds).multiply(1e3).plus(nanoseconds);
-	        const {
-	          quotient,
-	          remainder
-	        } = nanoseconds.divmod(divisor);
-	        total = quotient.toJSNumber() + remainder.toJSNumber() / divisor;
-	        const rounded = RoundNumberToIncrement(nanoseconds, divisor * increment, roundingMode);
-	        microseconds = rounded.divide(divisor).toJSNumber();
-	        nanoseconds = 0;
+	        total = norm.fdiv(divisor);
+	        norm = norm.round(divisor * increment, roundingMode);
 	        break;
 	      }
 	    case 'nanosecond':
 	      {
-	        total = nanoseconds;
-	        nanoseconds = RoundNumberToIncrement(bigInt(nanoseconds), increment, roundingMode).toJSNumber();
+	        total = norm.totalNs.toJSNumber();
+	        norm = norm.round(increment, roundingMode);
 	        break;
 	      }
 	  }
+	  CombineDateAndNormalizedTimeDuration(years, months, weeks, days, norm);
 	  return {
 	    years,
 	    months,
 	    weeks,
 	    days,
-	    hours,
-	    minutes,
-	    seconds,
-	    milliseconds,
-	    microseconds,
-	    nanoseconds,
+	    norm,
 	    total
 	  };
 	}
@@ -14037,7 +13498,7 @@
 	    case 'object':
 	    case 'number':
 	    case 'symbol':
-	      throw new TypeError(`cannot convert ${typeof arg} to bigint`);
+	      throw new TypeError("cannot convert ".concat(typeof arg, " to bigint"));
 	    case 'string':
 	      if (!prim.match(/^\s*(?:[+-]?\d+\s*)?$/)) {
 	        throw new SyntaxError('invalid BigInt syntax');
@@ -14080,8 +13541,8 @@
 	}
 	function GetOptionsObject(options) {
 	  if (options === undefined) return ObjectCreate$8(null);
-	  if (Type$a(options) === 'Object') return options;
-	  throw new TypeError(`Options parameter must be an object, not ${options === null ? 'null' : `a ${typeof options}`}`);
+	  if (Type$d(options) === 'Object') return options;
+	  throw new TypeError("Options parameter must be an object, not ".concat(options === null ? 'null' : "a ".concat(typeof options)));
 	}
 	function SnapshotOwnProperties(source, proto) {
 	  let excludedKeys = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
@@ -14095,14 +13556,14 @@
 	  if (value !== undefined) {
 	    value = ToString$1(value);
 	    if (!allowedValues.includes(value)) {
-	      throw new RangeError(`${property} must be one of ${allowedValues.join(', ')}, not ${value}`);
+	      throw new RangeError("".concat(property, " must be one of ").concat(allowedValues.join(', '), ", not ").concat(value));
 	    }
 	    return value;
 	  }
 	  return fallback;
 	}
 	function IsBuiltinCalendar(id) {
-	  return Call$3(ArrayIncludes$1, BUILTIN_CALENDAR_IDS, [ASCIILowercase(id)]);
+	  return Call$4(ArrayIncludes$1, BUILTIN_CALENDAR_IDS, [ASCIILowercase(id)]);
 	}
 	function ASCIILowercase(str) {
 	  // The spec defines this operation distinct from String.prototype.lowercase,
@@ -14111,8 +13572,8 @@
 	  // values. For example, Turkish's "I" character was the source of a security
 	  // issue involving "file://" URLs. See
 	  // https://haacked.com/archive/2012/07/05/turkish-i-problem-and-why-you-should-care.aspx/.
-	  return Call$3(StringPrototypeReplace, str, [/[A-Z]/g, l => {
-	    const code = Call$3(StringPrototypeCharCodeAt, l, [0]);
+	  return Call$4(StringPrototypeReplace, str, [/[A-Z]/g, l => {
+	    const code = Call$4(StringPrototypeCharCodeAt, l, [0]);
 	    return StringFromCharCode(code + 0x20);
 	  }]);
 	}
@@ -14120,11 +13581,11 @@
 	// This function isn't in the spec, but we put it in the polyfill to avoid
 	// repeating the same (long) error message in many files.
 	function ValueOfThrows(constructorName) {
-	  const compareCode = constructorName === 'PlainMonthDay' ? 'Temporal.PlainDate.compare(obj1.toPlainDate(year), obj2.toPlainDate(year))' : `Temporal.${constructorName}.compare(obj1, obj2)`;
-	  throw new TypeError('Do not use built-in arithmetic operators with Temporal objects. ' + `When comparing, use ${compareCode}, not obj1 > obj2. ` + "When coercing to strings, use `${obj}` or String(obj), not '' + obj. " + 'When coercing to numbers, use properties or methods of the object, not `+obj`. ' + 'When concatenating with strings, use `${str}${obj}` or str.concat(obj), not str + obj. ' + 'In React, coerce to a string before rendering a Temporal object.');
+	  const compareCode = constructorName === 'PlainMonthDay' ? 'Temporal.PlainDate.compare(obj1.toPlainDate(year), obj2.toPlainDate(year))' : "Temporal.".concat(constructorName, ".compare(obj1, obj2)");
+	  throw new TypeError('Do not use built-in arithmetic operators with Temporal objects. ' + "When comparing, use ".concat(compareCode, ", not obj1 > obj2. ") + "When coercing to strings, use `${obj}` or String(obj), not '' + obj. " + 'When coercing to numbers, use properties or methods of the object, not `+obj`. ' + 'When concatenating with strings, use `${str}${obj}` or str.concat(obj), not str + obj. ' + 'In React, coerce to a string before rendering a Temporal object.');
 	}
-	const OFFSET = new RegExp(`^${offset.source}$`);
-	const OFFSET_WITH_PARTS = new RegExp(`^${offsetWithParts.source}$`);
+	const OFFSET = new RegExp("^".concat(offset.source, "$"));
+	const OFFSET_WITH_PARTS = new RegExp("^".concat(offsetWithParts.source, "$"));
 	function bisect(getState, left, right) {
 	  let lstate = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : getState(left);
 	  let rstate = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : getState(right);
@@ -14140,7 +13601,7 @@
 	      right = middle;
 	      rstate = mstate;
 	    } else {
-	      throw new Error(`invalid state in bisection ${lstate} - ${mstate} - ${rstate}`);
+	      throw new Error("invalid state in bisection ".concat(lstate, " - ").concat(mstate, " - ").concat(rstate));
 	    }
 	  }
 	  return right;
@@ -14244,7 +13705,7 @@
 	      throw new RangeError('Intl.DateTimeFormat does not currently support offset time zones');
 	    }
 	    const record = GetAvailableNamedTimeZoneIdentifier(id);
-	    if (!record) throw new RangeError(`Intl.DateTimeFormat formats built-in time zones, not ${id}`);
+	    if (!record) throw new RangeError("Intl.DateTimeFormat formats built-in time zones, not ".concat(id));
 	    this[TZ_ORIGINAL] = record.identifier;
 	  }
 	}
@@ -14481,7 +13942,7 @@
 	    const microsecond = GetSlot(temporalObj, ISO_MICROSECOND);
 	    const nanosecond = GetSlot(temporalObj, ISO_NANOSECOND);
 	    const datetime = CreateTemporalDateTime(1970, 1, 1, hour, minute, second, millisecond, microsecond, nanosecond, 'iso8601');
-	    const timeZoneRec = new TimeZoneMethodRecord(main[TZ_CANONICAL], ['getPossibleInstantsFor']);
+	    const timeZoneRec = new TimeZoneMethodRecord(main[TZ_CANONICAL], ['getOffsetNanosecondsFor', 'getPossibleInstantsFor']);
 	    return {
 	      instant: GetInstantFor(timeZoneRec, datetime, 'compatible'),
 	      formatter: getPropLazy(main, TIME)
@@ -14493,10 +13954,10 @@
 	    const referenceISODay = GetSlot(temporalObj, ISO_DAY);
 	    const calendar = ToTemporalCalendarIdentifier(GetSlot(temporalObj, CALENDAR));
 	    if (calendar !== main[CAL_ID]) {
-	      throw new RangeError(`cannot format PlainYearMonth with calendar ${calendar} in locale with calendar ${main[CAL_ID]}`);
+	      throw new RangeError("cannot format PlainYearMonth with calendar ".concat(calendar, " in locale with calendar ").concat(main[CAL_ID]));
 	    }
 	    const datetime = CreateTemporalDateTime(isoYear, isoMonth, referenceISODay, 12, 0, 0, 0, 0, 0, calendar);
-	    const timeZoneRec = new TimeZoneMethodRecord(main[TZ_CANONICAL], ['getPossibleInstantsFor']);
+	    const timeZoneRec = new TimeZoneMethodRecord(main[TZ_CANONICAL], ['getOffsetNanosecondsFor', 'getPossibleInstantsFor']);
 	    return {
 	      instant: GetInstantFor(timeZoneRec, datetime, 'compatible'),
 	      formatter: getPropLazy(main, YM)
@@ -14508,10 +13969,10 @@
 	    const isoDay = GetSlot(temporalObj, ISO_DAY);
 	    const calendar = ToTemporalCalendarIdentifier(GetSlot(temporalObj, CALENDAR));
 	    if (calendar !== main[CAL_ID]) {
-	      throw new RangeError(`cannot format PlainMonthDay with calendar ${calendar} in locale with calendar ${main[CAL_ID]}`);
+	      throw new RangeError("cannot format PlainMonthDay with calendar ".concat(calendar, " in locale with calendar ").concat(main[CAL_ID]));
 	    }
 	    const datetime = CreateTemporalDateTime(referenceISOYear, isoMonth, isoDay, 12, 0, 0, 0, 0, 0, calendar);
-	    const timeZoneRec = new TimeZoneMethodRecord(main[TZ_CANONICAL], ['getPossibleInstantsFor']);
+	    const timeZoneRec = new TimeZoneMethodRecord(main[TZ_CANONICAL], ['getOffsetNanosecondsFor', 'getPossibleInstantsFor']);
 	    return {
 	      instant: GetInstantFor(timeZoneRec, datetime, 'compatible'),
 	      formatter: getPropLazy(main, MD)
@@ -14523,10 +13984,10 @@
 	    const isoDay = GetSlot(temporalObj, ISO_DAY);
 	    const calendar = ToTemporalCalendarIdentifier(GetSlot(temporalObj, CALENDAR));
 	    if (calendar !== 'iso8601' && calendar !== main[CAL_ID]) {
-	      throw new RangeError(`cannot format PlainDate with calendar ${calendar} in locale with calendar ${main[CAL_ID]}`);
+	      throw new RangeError("cannot format PlainDate with calendar ".concat(calendar, " in locale with calendar ").concat(main[CAL_ID]));
 	    }
 	    const datetime = CreateTemporalDateTime(isoYear, isoMonth, isoDay, 12, 0, 0, 0, 0, 0, main[CAL_ID]);
-	    const timeZoneRec = new TimeZoneMethodRecord(main[TZ_CANONICAL], ['getPossibleInstantsFor']);
+	    const timeZoneRec = new TimeZoneMethodRecord(main[TZ_CANONICAL], ['getOffsetNanosecondsFor', 'getPossibleInstantsFor']);
 	    return {
 	      instant: GetInstantFor(timeZoneRec, datetime, 'compatible'),
 	      formatter: getPropLazy(main, DATE)
@@ -14535,9 +13996,9 @@
 	  if (IsTemporalDateTime(temporalObj)) {
 	    const calendar = ToTemporalCalendarIdentifier(GetSlot(temporalObj, CALENDAR));
 	    if (calendar !== 'iso8601' && calendar !== main[CAL_ID]) {
-	      throw new RangeError(`cannot format PlainDateTime with calendar ${calendar} in locale with calendar ${main[CAL_ID]}`);
+	      throw new RangeError("cannot format PlainDateTime with calendar ".concat(calendar, " in locale with calendar ").concat(main[CAL_ID]));
 	    }
-	    const timeZoneRec = new TimeZoneMethodRecord(main[TZ_CANONICAL], ['getPossibleInstantsFor']);
+	    const timeZoneRec = new TimeZoneMethodRecord(main[TZ_CANONICAL], ['getOffsetNanosecondsFor', 'getPossibleInstantsFor']);
 	    return {
 	      instant: GetInstantFor(timeZoneRec, temporalObj, 'compatible'),
 	      formatter: getPropLazy(main, DATETIME)
@@ -14578,7 +14039,7 @@
 	      const dateTime = GetPlainDateTimeFor(undefined, this, 'iso8601', 0);
 	      const repr = TemporalDateTimeToString(dateTime, 'auto', 'never') + 'Z';
 	      Object.defineProperty(this, '_repr_', {
-	        value: `${this[Symbol.toStringTag]} <${repr}>`,
+	        value: "".concat(this[Symbol.toStringTag], " <").concat(repr, ">"),
 	        writable: false,
 	        enumerable: false,
 	        configurable: false
@@ -14625,7 +14086,7 @@
 	  round(roundTo) {
 	    if (!IsTemporalInstant(this)) throw new TypeError('invalid receiver');
 	    if (roundTo === undefined) throw new TypeError('options parameter is required');
-	    if (Type$a(roundTo) === 'String') {
+	    if (Type$d(roundTo) === 'String') {
 	      const stringParam = roundTo;
 	      roundTo = ObjectCreate$7(null);
 	      roundTo.smallestUnit = stringParam;
@@ -14690,7 +14151,7 @@
 	  }
 	  toZonedDateTime(item) {
 	    if (!IsTemporalInstant(this)) throw new TypeError('invalid receiver');
-	    if (Type$a(item) !== 'Object') {
+	    if (Type$d(item) !== 'Object') {
 	      throw new TypeError('invalid argument in toZonedDateTime');
 	    }
 	    const calendarLike = item.calendar;
@@ -14777,18 +14238,18 @@
 	const SymbolIterator = Symbol.iterator;
 	const WeakMapPrototypeGet = WeakMap.prototype.get;
 	const WeakMapPrototypeSet = WeakMap.prototype.set;
-	const MapIterator = Call$3(MapPrototypeEntries, new Map(), []);
+	const MapIterator = Call$4(MapPrototypeEntries, new Map(), []);
 	const MapIteratorPrototypeNext = MapIterator.next;
-	const SetIterator = Call$3(SetPrototypeValues, new Set(), []);
+	const SetIterator = Call$4(SetPrototypeValues, new Set(), []);
 	const SetIteratorPrototypeNext = SetIterator.next;
 	function arrayFromSet(src) {
-	  const valuesIterator = Call$3(SetPrototypeValues, src, []);
+	  const valuesIterator = Call$4(SetPrototypeValues, src, []);
 	  return ArrayFrom({
 	    [SymbolIterator]() {
 	      return this;
 	    },
 	    next() {
-	      return Call$3(SetIteratorPrototypeNext, valuesIterator, []);
+	      return Call$4(SetIteratorPrototypeNext, valuesIterator, []);
 	    }
 	  });
 	}
@@ -14796,13 +14257,13 @@
 	class Calendar {
 	  constructor(id) {
 	    let stringId = RequireString(id);
-	    if (!IsBuiltinCalendar(stringId)) throw new RangeError(`invalid calendar identifier ${stringId}`);
+	    if (!IsBuiltinCalendar(stringId)) throw new RangeError("invalid calendar identifier ".concat(stringId));
 	    CreateSlots(this);
 	    stringId = ASCIILowercase(stringId);
 	    SetSlot(this, CALENDAR_ID, stringId);
 	    {
 	      Object.defineProperty(this, '_repr_', {
-	        value: `Temporal.Calendar <${stringId}>`,
+	        value: "Temporal.Calendar <".concat(stringId, ">"),
 	        writable: false,
 	        enumerable: false,
 	        configurable: false
@@ -14816,7 +14277,7 @@
 	  dateFromFields(fields) {
 	    let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : undefined;
 	    if (!IsTemporalCalendar(this)) throw new TypeError('invalid receiver');
-	    if (Type$a(fields) !== 'Object') throw new TypeError('invalid fields');
+	    if (Type$d(fields) !== 'Object') throw new TypeError('invalid fields');
 	    options = GetOptionsObject(options);
 	    const id = GetSlot(this, CALENDAR_ID);
 	    return impl[id].dateFromFields(fields, options, id);
@@ -14824,7 +14285,7 @@
 	  yearMonthFromFields(fields) {
 	    let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : undefined;
 	    if (!IsTemporalCalendar(this)) throw new TypeError('invalid receiver');
-	    if (Type$a(fields) !== 'Object') throw new TypeError('invalid fields');
+	    if (Type$d(fields) !== 'Object') throw new TypeError('invalid fields');
 	    options = GetOptionsObject(options);
 	    const id = GetSlot(this, CALENDAR_ID);
 	    return impl[id].yearMonthFromFields(fields, options, id);
@@ -14832,7 +14293,7 @@
 	  monthDayFromFields(fields) {
 	    let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : undefined;
 	    if (!IsTemporalCalendar(this)) throw new TypeError('invalid receiver');
-	    if (Type$a(fields) !== 'Object') throw new TypeError('invalid fields');
+	    if (Type$d(fields) !== 'Object') throw new TypeError('invalid fields');
 	    options = GetOptionsObject(options);
 	    const id = GetSlot(this, CALENDAR_ID);
 	    return impl[id].monthDayFromFields(fields, options, id);
@@ -14851,12 +14312,12 @@
 	      next = IteratorStep$1(iteratorRecord);
 	      if (next !== false) {
 	        let name = IteratorValue$1(next);
-	        if (Type$a(name) !== 'String') return abort(new TypeError('invalid fields'));
-	        if (!Call$3(SetPrototypeHas, allowed, [name])) {
-	          return abort(new RangeError(`invalid or duplicate field name ${name}`));
+	        if (Type$d(name) !== 'String') return abort(new TypeError('invalid fields'));
+	        if (!Call$4(SetPrototypeHas, allowed, [name])) {
+	          return abort(new RangeError("invalid or duplicate field name ".concat(name)));
 	        }
-	        Call$3(SetPrototypeDelete, allowed, [name]);
-	        Call$3(ArrayPrototypePush$2, fieldsArray, [name]);
+	        Call$4(SetPrototypeDelete, allowed, [name]);
+	        Call$4(ArrayPrototypePush$2, fieldsArray, [name]);
 	      }
 	    }
 	    return impl[GetSlot(this, CALENDAR_ID)].fields(fieldsArray);
@@ -14872,7 +14333,7 @@
 	    for (let ix = 0; ix < fieldsKeys.length; ix++) {
 	      const key = fieldsKeys[ix];
 	      let propValue = undefined;
-	      if (Call$3(ArrayIncludes, overriddenKeys, [key])) propValue = additionalFieldsCopy[key];else propValue = fieldsCopy[key];
+	      if (Call$4(ArrayIncludes, overriddenKeys, [key])) propValue = additionalFieldsCopy[key];else propValue = fieldsCopy[key];
 	      if (propValue !== undefined) merged[key] = propValue;
 	    }
 	    CopyDataProperties(merged, additionalFieldsCopy, []);
@@ -14885,9 +14346,8 @@
 	    duration = ToTemporalDuration(duration);
 	    options = GetOptionsObject(options);
 	    const overflow = ToTemporalOverflow(options);
-	    const {
-	      days
-	    } = BalanceTimeDuration(GetSlot(duration, DAYS), GetSlot(duration, HOURS), GetSlot(duration, MINUTES), GetSlot(duration, SECONDS), GetSlot(duration, MILLISECONDS), GetSlot(duration, MICROSECONDS), GetSlot(duration, NANOSECONDS), 'day');
+	    const norm = TimeDuration.normalize(GetSlot(duration, HOURS), GetSlot(duration, MINUTES), GetSlot(duration, SECONDS), GetSlot(duration, MILLISECONDS), GetSlot(duration, MICROSECONDS), GetSlot(duration, NANOSECONDS));
+	    const days = GetSlot(duration, DAYS) + BalanceTimeDuration(norm, 'day').days;
 	    const id = GetSlot(this, CALENDAR_ID);
 	    return impl[id].dateAdd(date, GetSlot(duration, YEARS), GetSlot(duration, MONTHS), GetSlot(duration, WEEKS), days, overflow, id);
 	  }
@@ -14949,15 +14409,73 @@
 	    date = ToTemporalDate(date);
 	    return impl[GetSlot(this, CALENDAR_ID)].dayOfYear(date);
 	  }
-	  weekOfYear(date) {
+	  calendarDateWeekOfYear(date) {
+	    // Supports only Gregorian and ISO8601 calendar; can be updated to add support for other calendars.
+	    // Returns undefined for calendars without a well-defined week calendar system.
+	    // eslint-disable-next-line max-len
+	    // Also see: https://github.com/unicode-org/icu/blob/ab72ab1d4a3c3f9beeb7d92b0c7817ca93dfdb04/icu4c/source/i18n/calendar.cpp#L1606
 	    if (!IsTemporalCalendar(this)) throw new TypeError('invalid receiver');
 	    date = ToTemporalDate(date);
-	    return impl[GetSlot(this, CALENDAR_ID)].weekOfYear(date);
+	    const id = GetSlot(this, CALENDAR_ID);
+	    if (id !== 'gregory' && id !== 'iso8601') {
+	      return {
+	        week: undefined,
+	        year: undefined
+	      };
+	    }
+	    const calendar = impl[id];
+	    let yow = GetSlot(date, ISO_YEAR);
+	    const dayOfWeek = this.dayOfWeek(date);
+	    const dayOfYear = this.dayOfYear(date);
+	    const fdow = id === 'iso8601' ? 1 : calendar.helper.getFirstDayOfWeek();
+	    const mdow = id === 'iso8601' ? 4 : calendar.helper.getMinimalDaysInFirstWeek();
+
+	    // For both the input date and the first day of its calendar year, calculate the day of week
+	    // relative to first day of week in the relevant calendar (e.g., in iso8601, relative to Monday).
+	    var relDow = (dayOfWeek + 7 - fdow) % 7;
+	    // Assuming the year length is less than 7000 days.
+	    var relDowJan1 = (dayOfWeek - dayOfYear + 7001 - fdow) % 7;
+	    var woy = MathFloor((dayOfYear - 1 + relDowJan1) / 7);
+	    if (7 - relDowJan1 >= mdow) {
+	      ++woy;
+	    }
+
+	    // Adjust for weeks at the year end that overlap into the previous or next calendar year.
+	    if (woy == 0) {
+	      // Check for last week of previous year; if true, handle the case for
+	      // first week of next year
+	      var prevDoy = dayOfYear + this.daysInYear(this.dateAdd(date, {
+	        years: -1
+	      }));
+	      woy = weekNumber(fdow, mdow, prevDoy, dayOfWeek);
+	      yow--;
+	    } else {
+	      // For it to be week 1 of the next year, dayOfYear must be >= lastDoy - 5
+	      //          L-5                  L
+	      // doy: 359 360 361 362 363 364 365 001
+	      // dow:      1   2   3   4   5   6   7
+	      var lastDoy = this.daysInYear(date);
+	      if (dayOfYear >= lastDoy - 5) {
+	        var lastRelDow = (relDow + lastDoy - dayOfYear) % 7;
+	        if (lastRelDow < 0) {
+	          lastRelDow += 7;
+	        }
+	        if (6 - lastRelDow >= mdow && dayOfYear + 7 - relDow > lastDoy) {
+	          woy = 1;
+	          yow++;
+	        }
+	      }
+	    }
+	    return {
+	      week: woy,
+	      year: yow
+	    };
+	  }
+	  weekOfYear(date) {
+	    return this.calendarDateWeekOfYear(date).week;
 	  }
 	  yearOfWeek(date) {
-	    if (!IsTemporalCalendar(this)) throw new TypeError('invalid receiver');
-	    date = ToTemporalDate(date);
-	    return impl[GetSlot(this, CALENDAR_ID)].yearOfWeek(date);
+	    return this.calendarDateWeekOfYear(date).year;
 	  }
 	  daysInWeek(date) {
 	    if (!IsTemporalCalendar(this)) throw new TypeError('invalid receiver');
@@ -15075,11 +14593,11 @@
 	    const result = new OriginalSet();
 	    for (let ix = 0; ix < keys.length; ix++) {
 	      const key = keys[ix];
-	      Call$3(SetPrototypeAdd, result, [key]);
+	      Call$4(SetPrototypeAdd, result, [key]);
 	      if (key === 'month') {
-	        Call$3(SetPrototypeAdd, result, ['monthCode']);
+	        Call$4(SetPrototypeAdd, result, ['monthCode']);
 	      } else if (key === 'monthCode') {
-	        Call$3(SetPrototypeAdd, result, ['month']);
+	        Call$4(SetPrototypeAdd, result, ['month']);
 	      }
 	    }
 	    return arrayFromSet(result);
@@ -15122,12 +14640,6 @@
 	  dayOfYear(date) {
 	    return DayOfYear(GetSlot(date, ISO_YEAR), GetSlot(date, ISO_MONTH), GetSlot(date, ISO_DAY));
 	  },
-	  weekOfYear(date) {
-	    return WeekOfYear(GetSlot(date, ISO_YEAR), GetSlot(date, ISO_MONTH), GetSlot(date, ISO_DAY)).week;
-	  },
-	  yearOfWeek(date) {
-	    return WeekOfYear(GetSlot(date, ISO_YEAR), GetSlot(date, ISO_MONTH), GetSlot(date, ISO_DAY)).year;
-	  },
 	  daysInWeek() {
 	    return 7;
 	  },
@@ -15153,15 +14665,15 @@
 
 	function monthCodeNumberPart(monthCode) {
 	  if (!monthCode.startsWith('M')) {
-	    throw new RangeError(`Invalid month code: ${monthCode}.  Month codes must start with M.`);
+	    throw new RangeError("Invalid month code: ".concat(monthCode, ".  Month codes must start with M."));
 	  }
 	  const month = +monthCode.slice(1);
-	  if (isNaN(month)) throw new RangeError(`Invalid month code: ${monthCode}`);
+	  if (isNaN(month)) throw new RangeError("Invalid month code: ".concat(monthCode));
 	  return month;
 	}
 	function buildMonthCode(month) {
 	  let leap = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-	  return `M${month.toString().padStart(2, '0')}${leap ? 'L' : ''}`;
+	  return "M".concat(month.toString().padStart(2, '0')).concat(leap ? 'L' : '');
 	}
 
 	/**
@@ -15187,19 +14699,28 @@
 	  } else {
 	    const numberPart = monthCodeNumberPart(monthCode);
 	    if (month !== undefined && month !== numberPart) {
-	      throw new RangeError(`monthCode ${monthCode} and month ${month} must match if both are present`);
+	      throw new RangeError("monthCode ".concat(monthCode, " and month ").concat(month, " must match if both are present"));
 	    }
 	    if (monthCode !== buildMonthCode(numberPart)) {
-	      throw new RangeError(`Invalid month code: ${monthCode}`);
+	      throw new RangeError("Invalid month code: ".concat(monthCode));
 	    }
 	    month = numberPart;
-	    if (month < 1 || month > monthsPerYear) throw new RangeError(`Invalid monthCode: ${monthCode}`);
+	    if (month < 1 || month > monthsPerYear) throw new RangeError("Invalid monthCode: ".concat(monthCode));
 	  }
 	  return {
 	    ...calendarDate,
 	    month,
 	    monthCode
 	  };
+	}
+	function weekNumber(firstDayOfWeek, minimalDaysInFirstWeek, desiredDay, dayOfWeek) {
+	  var periodStartDayOfWeek = (dayOfWeek - firstDayOfWeek - desiredDay + 1) % 7;
+	  if (periodStartDayOfWeek < 0) periodStartDayOfWeek += 7;
+	  var weekNo = MathFloor((desiredDay + periodStartDayOfWeek - 1) / 7);
+	  if (7 - periodStartDayOfWeek >= minimalDaysInFirstWeek) {
+	    ++weekNo;
+	  }
+	  return weekNo;
 	}
 
 	// Note: other built-in calendars than iso8601 are not part of the Temporal
@@ -15226,17 +14747,17 @@
 	    this.misses = 0;
 	    if (cacheToClone !== undefined) {
 	      let i = 0;
-	      const entriesIterator = Call$3(MapPrototypeEntries, cacheToClone.map, []);
+	      const entriesIterator = Call$4(MapPrototypeEntries, cacheToClone.map, []);
 	      for (;;) {
-	        const iterResult = Call$3(MapIteratorPrototypeNext, entriesIterator, []);
+	        const iterResult = Call$4(MapIteratorPrototypeNext, entriesIterator, []);
 	        if (iterResult.done) break;
 	        if (++i > OneObjectCache.MAX_CACHE_ENTRIES) break;
-	        Call$3(MapPrototypeSet, this.map, iterResult.value);
+	        Call$4(MapPrototypeSet, this.map, iterResult.value);
 	      }
 	    }
 	  }
 	  get(key) {
-	    const result = Call$3(MapPrototypeGet, this.map, [key]);
+	    const result = Call$4(MapPrototypeGet, this.map, [key]);
 	    if (result) {
 	      this.hits++;
 	      this.report();
@@ -15245,7 +14766,7 @@
 	    return result;
 	  }
 	  set(key, value) {
-	    Call$3(MapPrototypeSet, this.map, [key, value]);
+	    Call$4(MapPrototypeSet, this.map, [key, value]);
 	    this.misses++;
 	    this.report();
 	  }
@@ -15258,8 +14779,8 @@
 	    */
 	  }
 	  setObject(obj) {
-	    if (Call$3(WeakMapPrototypeGet, OneObjectCache.objectMap, [obj])) throw new RangeError('object already cached');
-	    Call$3(WeakMapPrototypeSet, OneObjectCache.objectMap, [obj, this]);
+	    if (Call$4(WeakMapPrototypeGet, OneObjectCache.objectMap, [obj])) throw new RangeError('object already cached');
+	    Call$4(WeakMapPrototypeSet, OneObjectCache.objectMap, [obj, this]);
 	    this.report();
 	  }
 	}
@@ -15272,10 +14793,10 @@
 	 * @param obj - object to associate with the cache
 	 */
 	OneObjectCache.getCacheForObject = function (obj) {
-	  let cache = Call$3(WeakMapPrototypeGet, OneObjectCache.objectMap, [obj]);
+	  let cache = Call$4(WeakMapPrototypeGet, OneObjectCache.objectMap, [obj]);
 	  if (!cache) {
 	    cache = new OneObjectCache();
-	    Call$3(WeakMapPrototypeSet, OneObjectCache.objectMap, [obj, cache]);
+	    Call$4(WeakMapPrototypeSet, OneObjectCache.objectMap, [obj, cache]);
 	  }
 	  return cache;
 	};
@@ -15288,7 +14809,7 @@
 	  const yearString = ISOYearString(isoYear);
 	  const monthString = ISODateTimePartString(isoMonth);
 	  const dayString = ISODateTimePartString(isoDay);
-	  return `${yearString}-${monthString}-${dayString}T00:00Z`;
+	  return "".concat(yearString, "-").concat(monthString, "-").concat(dayString, "T00:00Z");
 	}
 	function simpleDateDiff(one, two) {
 	  return {
@@ -15311,7 +14832,7 @@
 	    // into each calendar's implementation before any cache is created, so
 	    // each calendar gets its own separate cached formatter.
 	    if (typeof this.formatter === 'undefined') {
-	      this.formatter = new IntlDateTimeFormat(`en-US-u-ca-${this.id}`, {
+	      this.formatter = new IntlDateTimeFormat("en-US-u-ca-".concat(this.id), {
 	        day: 'numeric',
 	        month: 'numeric',
 	        year: 'numeric',
@@ -15346,11 +14867,11 @@
 	      });
 	      parts = dateTimeFormat.formatToParts(new Date(isoString));
 	    } catch (e) {
-	      throw new RangeError(`Invalid ISO date: ${JSON.stringify({
-        isoYear,
-        isoMonth,
-        isoDay
-      })}`);
+	      throw new RangeError("Invalid ISO date: ".concat(JSON.stringify({
+	        isoYear,
+	        isoMonth,
+	        isoDay
+	      })));
 	    }
 	    const result = {};
 	    for (let {
@@ -15362,7 +14883,7 @@
 	      if (type === 'month') {
 	        const matches = /^([0-9]*)(.*?)$/.exec(value);
 	        if (!matches || matches.length != 3 || !matches[1] && !matches[2]) {
-	          throw new RangeError(`Unexpected month: ${value}`);
+	          throw new RangeError("Unexpected month: ".concat(value));
 	        }
 	        // If the month has no numeric part (should only see this for the Hebrew
 	        // calendar with newer FF / Chromium versions; see
@@ -15372,10 +14893,10 @@
 	        // `monthExtra`.
 	        result.month = matches[1] ? +matches[1] : 1;
 	        if (result.month < 1) {
-	          throw new RangeError(`Invalid month ${value} from ${isoString}[u-ca-${this.id}]` + ' (probably due to https://bugs.chromium.org/p/v8/issues/detail?id=10527)');
+	          throw new RangeError("Invalid month ".concat(value, " from ").concat(isoString, "[u-ca-").concat(this.id, "]") + ' (probably due to https://bugs.chromium.org/p/v8/issues/detail?id=10527)');
 	        }
 	        if (result.month > 13) {
-	          throw new RangeError(`Invalid month ${value} from ${isoString}[u-ca-${this.id}]` + ' (probably due to https://bugs.chromium.org/p/v8/issues/detail?id=10529)');
+	          throw new RangeError("Invalid month ".concat(value, " from ").concat(isoString, "[u-ca-").concat(this.id, "]") + ' (probably due to https://bugs.chromium.org/p/v8/issues/detail?id=10529)');
 	        }
 
 	        // The ICU formats for the Hebrew calendar no longer support a numeric
@@ -15400,7 +14921,7 @@
 	    if (result.eraYear === undefined) {
 	      // Node 12 has outdated ICU data that lacks the `relatedYear` field in the
 	      // output of Intl.DateTimeFormat.formatToParts.
-	      throw new RangeError(`Intl.DateTimeFormat.formatToParts lacks relatedYear in ${this.id} calendar. Try Node 14+ or modern browsers.`);
+	      throw new RangeError("Intl.DateTimeFormat.formatToParts lacks relatedYear in ".concat(this.id, " calendar. Try Node 14+ or modern browsers."));
 	    }
 	    // Translate eras that may be handled differently by Temporal vs. by Intl
 	    // (e.g. Japanese pre-Meiji eras). See #526 for details.
@@ -15414,9 +14935,9 @@
 	    }
 	    if (this.checkIcuBugs) this.checkIcuBugs(isoDate);
 	    const calendarDate = this.adjustCalendarDate(result, cache, 'constrain', true);
-	    if (calendarDate.year === undefined) throw new RangeError(`Missing year converting ${JSON.stringify(isoDate)}`);
-	    if (calendarDate.month === undefined) throw new RangeError(`Missing month converting ${JSON.stringify(isoDate)}`);
-	    if (calendarDate.day === undefined) throw new RangeError(`Missing day converting ${JSON.stringify(isoDate)}`);
+	    if (calendarDate.year === undefined) throw new RangeError("Missing year converting ".concat(JSON.stringify(isoDate)));
+	    if (calendarDate.month === undefined) throw new RangeError("Missing month converting ".concat(JSON.stringify(isoDate)));
+	    if (calendarDate.day === undefined) throw new RangeError("Missing day converting ".concat(JSON.stringify(isoDate)));
 	    cache.set(key, calendarDate);
 	    // Also cache the reverse mapping
 	    ['constrain', 'reject'].forEach(overflow => {
@@ -15450,16 +14971,16 @@
 	    if (day === undefined) throw new RangeError('Missing day');
 	    if (monthCode !== undefined) {
 	      if (typeof monthCode !== 'string') {
-	        throw new RangeError(`monthCode must be a string, not ${Type$a(monthCode).toLowerCase()}`);
+	        throw new RangeError("monthCode must be a string, not ".concat(Type$d(monthCode).toLowerCase()));
 	      }
-	      if (!/^M([01]?\d)(L?)$/.test(monthCode)) throw new RangeError(`Invalid monthCode: ${monthCode}`);
+	      if (!/^M([01]?\d)(L?)$/.test(monthCode)) throw new RangeError("Invalid monthCode: ".concat(monthCode));
 	    }
 	    if (this.constantEra) {
 	      if (era !== undefined && era !== this.constantEra) {
-	        throw new RangeError(`era must be ${this.constantEra}, not ${era}`);
+	        throw new RangeError("era must be ".concat(this.constantEra, ", not ").concat(era));
 	      }
 	      if (eraYear !== undefined && year !== undefined && eraYear !== year) {
-	        throw new RangeError(`eraYear ${eraYear} does not match year ${year}`);
+	        throw new RangeError("eraYear ".concat(eraYear, " does not match year ").concat(year));
 	      }
 	    }
 	    if (this.hasEra) {
@@ -15600,7 +15121,7 @@
 	        let testCalendarDate = this.isoToCalendarDate(testIsoEstimate, cache);
 	        while (testCalendarDate.month !== month || testCalendarDate.year !== year) {
 	          if (overflow === 'reject') {
-	            throw new RangeError(`day ${day} does not exist in month ${month} of year ${year}`);
+	            throw new RangeError("day ".concat(day, " does not exist in month ").concat(month, " of year ").concat(year));
 	          }
 	          // Back up a day at a time until we're not hanging over the month end
 	          testIsoEstimate = this.addDaysIso(testIsoEstimate, -1);
@@ -15649,9 +15170,9 @@
 	            // original date was an invalid value that will be constrained or
 	            // rejected here.
 	            if (overflow === 'reject') {
-	              throw new RangeError(`Can't find ISO date from calendar date: ${JSON.stringify({
-                ...originalDate
-              })}`);
+	              throw new RangeError("Can't find ISO date from calendar date: ".concat(JSON.stringify({
+	                ...originalDate
+	              })));
 	            } else {
 	              // To constrain, pick the earliest value
 	              const order = this.compareCalendarDates(roundtripEstimate, oldRoundtripEstimate);
@@ -15741,7 +15262,7 @@
 	      }
 	    }
 	    if (overflow === 'reject' && calendarDate.day !== day) {
-	      throw new RangeError(`Day ${day} does not exist in resulting calendar month`);
+	      throw new RangeError("Day ".concat(day, " does not exist in resulting calendar month"));
 	    }
 	    return calendarDate;
 	  },
@@ -15981,7 +15502,7 @@
 	      }
 	    }
 	    if (overflow === 'constrain' && closestIso !== undefined) return closestIso;
-	    throw new RangeError(`No recent ${this.id} year with monthCode ${monthCode} and day ${day}`);
+	    throw new RangeError("No recent ".concat(this.id, " year with monthCode ").concat(monthCode, " and day ").concat(day));
 	  }
 	};
 	const helperHebrew = ObjectAssign$1({}, nonIsoHelperBase, {
@@ -16014,7 +15535,7 @@
 	    } = calendarDate;
 	    const monthCode = this.getMonthCode(year, month);
 	    const monthInfo = ObjectEntries(this.months).find(m => m[1].monthCode === monthCode);
-	    if (monthInfo === undefined) throw new RangeError(`unmatched Hebrew month: ${month}`);
+	    if (monthInfo === undefined) throw new RangeError("unmatched Hebrew month: ".concat(month));
 	    const daysInMonth = monthInfo[1].days;
 	    return typeof daysInMonth === 'number' ? daysInMonth : daysInMonth[minOrMax];
 	  },
@@ -16153,7 +15674,7 @@
 	      // correct `month` using the string name as a key.
 	      if (monthExtra) {
 	        const monthInfo = this.months[monthExtra];
-	        if (!monthInfo) throw new RangeError(`Unrecognized month from formatToParts: ${monthExtra}`);
+	        if (!monthInfo) throw new RangeError("Unrecognized month from formatToParts: ".concat(monthExtra));
 	        month = this.inLeapYear({
 	          year
 	        }) ? monthInfo.leap : monthInfo.regular;
@@ -16175,14 +15696,14 @@
 	      if (month === undefined) {
 	        if (monthCode.endsWith('L')) {
 	          if (monthCode !== 'M05L') {
-	            throw new RangeError(`Hebrew leap month must have monthCode M05L, not ${monthCode}`);
+	            throw new RangeError("Hebrew leap month must have monthCode M05L, not ".concat(monthCode));
 	          }
 	          month = 6;
 	          if (!this.inLeapYear({
 	            year
 	          })) {
 	            if (overflow === 'reject') {
-	              throw new RangeError(`Hebrew monthCode M05L is invalid in year ${year} which is not a leap year`);
+	              throw new RangeError("Hebrew monthCode M05L is invalid in year ".concat(year, " which is not a leap year"));
 	            } else {
 	              // constrain to same day of next month (Adar)
 	              month = 6;
@@ -16198,7 +15719,7 @@
 	          const largestMonth = this.monthsInYear({
 	            year
 	          });
-	          if (month < 1 || month > largestMonth) throw new RangeError(`Invalid monthCode: ${monthCode}`);
+	          if (month < 1 || month > largestMonth) throw new RangeError("Invalid monthCode: ".concat(monthCode));
 	        }
 	      } else {
 	        if (overflow === 'reject') {
@@ -16223,7 +15744,7 @@
 	        } else {
 	          const calculatedMonthCode = this.getMonthCode(year, month);
 	          if (calculatedMonthCode !== monthCode) {
-	            throw new RangeError(`monthCode ${monthCode} doesn't correspond to month ${month} in Hebrew year ${year}`);
+	            throw new RangeError("monthCode ".concat(monthCode, " doesn't correspond to month ").concat(month, " in Hebrew year ").concat(year));
 	          }
 	        }
 	      }
@@ -16249,13 +15770,20 @@
 	  id: 'islamic',
 	  calendarType: 'lunar',
 	  inLeapYear(calendarDate, cache) {
-	    // In leap years, the 12th month has 30 days. In non-leap years: 29.
-	    const days = this.daysInMonth({
+	    const startOfYearCalendar = {
 	      year: calendarDate.year,
-	      month: 12,
+	      month: 1,
+	      monthCode: 'M01',
 	      day: 1
-	    }, cache);
-	    return days === 30;
+	    };
+	    const startOfNextYearCalendar = {
+	      year: calendarDate.year + 1,
+	      month: 1,
+	      monthCode: 'M01',
+	      day: 1
+	    };
+	    const result = this.calendarDaysUntil(startOfYearCalendar, startOfNextYearCalendar, cache);
+	    return result === 355;
 	  },
 	  monthsInYear( /* calendarYear, cache */
 	  ) {
@@ -16281,9 +15809,12 @@
 	  id: 'persian',
 	  calendarType: 'solar',
 	  inLeapYear(calendarDate, cache) {
-	    // Same logic (count days in the last month) for Persian as for Islamic,
-	    // even though Persian is solar and Islamic is lunar.
-	    return helperIslamic.inLeapYear(calendarDate, cache);
+	    // If the last month has 30 days, it's a leap year.
+	    return this.daysInMonth({
+	      year: calendarDate.year,
+	      month: 12,
+	      day: 1
+	    }, cache) === 30;
 	  },
 	  monthsInYear( /* calendarYear, cache */
 	  ) {
@@ -16414,7 +15945,7 @@
 	      month
 	    } = calendarDate;
 	    let monthInfo = this.months[month];
-	    if (monthInfo === undefined) throw new RangeError(`Invalid month: ${month}`);
+	    if (monthInfo === undefined) throw new RangeError("Invalid month: ".concat(month));
 	    if (this.inLeapYear(calendarDate) && monthInfo.leap) monthInfo = monthInfo.leap;
 	    return monthInfo;
 	  },
@@ -16438,7 +15969,7 @@
 	  }) !== '10/11/-79 Saka',
 	  checkIcuBugs(isoDate) {
 	    if (this.vulnerableToBceBug && isoDate.year < 1) {
-	      throw new RangeError(`calendar '${this.id}' is broken for ISO dates before 0001-01-01` + ' (see https://bugs.chromium.org/p/v8/issues/detail?id=10529)');
+	      throw new RangeError("calendar '".concat(this.id, "' is broken for ISO dates before 0001-01-01") + ' (see https://bugs.chromium.org/p/v8/issues/detail?id=10529)');
 	    }
 	  }
 	});
@@ -16527,7 +16058,7 @@
 	    } = e;
 	    if (reverseOf) {
 	      const reversedEra = eras.find(era => era.name === reverseOf);
-	      if (reversedEra === undefined) throw new RangeError(`Invalid era data: unmatched reverseOf era: ${reverseOf}`);
+	      if (reversedEra === undefined) throw new RangeError("Invalid era data: unmatched reverseOf era: ".concat(reverseOf));
 	      e.reverseOf = reversedEra;
 	      e.anchorEpoch = reversedEra.anchorEpoch;
 	      e.isoEpoch = reversedEra.isoEpoch;
@@ -16539,7 +16070,7 @@
 	  // Ensure that the latest epoch is first in the array. This lets us try to
 	  // match eras in index order, with the last era getting the remaining older
 	  // years. Any reverse-signed era must be at the end.
-	  Call$3(ArrayPrototypeSort, eras, [(e1, e2) => {
+	  Call$4(ArrayPrototypeSort, eras, [(e1, e2) => {
 	    if (e1.reverseOf) return 1;
 	    if (e2.reverseOf) return -1;
 	    if (!e1.isoEpoch || !e2.isoEpoch) throw new RangeError('Invalid era data: missing ISO epoch');
@@ -16557,7 +16088,7 @@
 	  // zero-based index, with the oldest era being zero. This format is used by
 	  // older versions of ICU data.
 	  eras.forEach((e, i) => {
-	    e.genericName = `era${eras.length - 1 - i}`;
+	    e.genericName = "era".concat(eras.length - 1 - i);
 	  });
 	  return {
 	    eras,
@@ -16604,7 +16135,7 @@
 	      const checkField = (name, value) => {
 	        const currentValue = calendarDate[name];
 	        if (currentValue != null && currentValue != value) {
-	          throw new RangeError(`Input ${name} ${currentValue} doesn't match calculated value ${value}`);
+	          throw new RangeError("Input ".concat(name, " ").concat(currentValue, " doesn't match calculated value ").concat(value));
 	        }
 	      };
 	      const eraFromYear = year => {
@@ -16618,7 +16149,7 @@
 	            if (e.reverseOf) {
 	              // This is a reverse-sign era (like BCE) which must be the oldest
 	              // era. Count years backwards.
-	              if (year > 0) throw new RangeError(`Signed year ${year} is invalid for era ${e.name}`);
+	              if (year > 0) throw new RangeError("Signed year ".concat(year, " is invalid for era ").concat(e.name));
 	              eraYear = e.anchorEpoch.year - year;
 	              return true;
 	            }
@@ -16634,7 +16165,7 @@
 	          }
 	          return false;
 	        });
-	        if (!matchingEra) throw new RangeError(`Year ${year} was not matched by any era`);
+	        if (!matchingEra) throw new RangeError("Year ".concat(year, " was not matched by any era"));
 	        return {
 	          eraYear,
 	          era: matchingEra.name
@@ -16654,9 +16185,9 @@
 	        checkField('eraYear', eraYear);
 	      } else if (eraYear != null) {
 	        const matchingEra = era === undefined ? undefined : this.eras.find(e => e.name === era || e.genericName === era);
-	        if (!matchingEra) throw new RangeError(`Era ${era} (ISO year ${eraYear}) was not matched by any era`);
+	        if (!matchingEra) throw new RangeError("Era ".concat(era, " (ISO year ").concat(eraYear, ") was not matched by any era"));
 	        if (eraYear < 1 && matchingEra.reverseOf) {
-	          throw new RangeError(`Years in ${era} era must be positive, not ${year}`);
+	          throw new RangeError("Years in ".concat(era, " era must be positive, not ").concat(year));
 	        }
 	        if (matchingEra.reverseOf) {
 	          year = matchingEra.anchorEpoch.year - eraYear;
@@ -16694,7 +16225,7 @@
 	      };
 	      this.validateCalendarDate(calendarDate);
 	      calendarDate = this.completeEraYear(calendarDate);
-	      calendarDate = Call$3(nonIsoHelperBase.adjustCalendarDate, this, [calendarDate, cache, overflow]);
+	      calendarDate = Call$4(nonIsoHelperBase.adjustCalendarDate, this, [calendarDate, cache, overflow]);
 	      return calendarDate;
 	    },
 	    estimateIsoDate(calendarDate) {
@@ -16869,6 +16400,12 @@
 	      era,
 	      eraYear
 	    };
+	  },
+	  getFirstDayOfWeek() {
+	    return 1;
+	  },
+	  getMinimalDaysInFirstWeek() {
+	    return 1;
 	  }
 	});
 	const helperJapanese = ObjectAssign$1({},
@@ -17039,7 +16576,7 @@
 	      } else {
 	        // Node 12 has outdated ICU data that lacks the `relatedYear` field in the
 	        // output of Intl.DateTimeFormat.formatToParts.
-	        throw new RangeError(`Intl.DateTimeFormat.formatToParts lacks relatedYear in ${this.id} calendar. Try Node 14+ or modern browsers.`);
+	        throw new RangeError("Intl.DateTimeFormat.formatToParts lacks relatedYear in ".concat(this.id, " calendar. Try Node 14+ or modern browsers."));
 	      }
 	      return {
 	        calendarMonthString,
@@ -17129,12 +16666,12 @@
 	      // "bis" suffix used only by the Chinese/Dangi calendar to indicate a leap
 	      // month. Below we'll normalize the output.
 	      year = eraYear;
-	      if (monthExtra && monthExtra !== 'bis') throw new RangeError(`Unexpected leap month suffix: ${monthExtra}`);
+	      if (monthExtra && monthExtra !== 'bis') throw new RangeError("Unexpected leap month suffix: ".concat(monthExtra));
 	      const monthCode = buildMonthCode(month, monthExtra !== undefined);
-	      const monthString = `${month}${monthExtra || ''}`;
+	      const monthString = "".concat(month).concat(monthExtra || '');
 	      const months = this.getMonthList(year, cache);
 	      const monthInfo = months[monthString];
-	      if (monthInfo === undefined) throw new RangeError(`Unmatched month ${monthString} in Chinese year ${year}`);
+	      if (monthInfo === undefined) throw new RangeError("Unmatched month ".concat(monthString, " in Chinese year ").concat(year));
 	      month = monthInfo.monthIndex;
 	      return {
 	        year,
@@ -17168,7 +16705,7 @@
 	          }
 	        }
 	        if (month === undefined) {
-	          throw new RangeError(`Unmatched month ${monthCode} in Chinese year ${year}`);
+	          throw new RangeError("Unmatched month ".concat(monthCode, " in Chinese year ").concat(year));
 	        }
 	      } else if (monthCode === undefined) {
 	        const months = this.getMonthList(year, cache);
@@ -17186,7 +16723,7 @@
 	          return v.monthIndex === month;
 	        });
 	        if (matchingMonthEntry === undefined) {
-	          throw new RangeError(`Invalid month ${month} in Chinese year ${year}`);
+	          throw new RangeError("Invalid month ".concat(month, " in Chinese year ").concat(year));
 	        }
 	        monthCode = buildMonthCode(matchingMonthEntry[0].replace('bis', ''), matchingMonthEntry[0].indexOf('bis') !== -1);
 	      } else {
@@ -17195,9 +16732,9 @@
 	        let numberPart = monthCode.replace('L', 'bis').slice(1);
 	        if (numberPart[0] === '0') numberPart = numberPart.slice(1);
 	        const monthInfo = months[numberPart];
-	        if (!monthInfo) throw new RangeError(`Unmatched monthCode ${monthCode} in Chinese year ${year}`);
+	        if (!monthInfo) throw new RangeError("Unmatched monthCode ".concat(monthCode, " in Chinese year ").concat(year));
 	        if (month !== monthInfo.monthIndex) {
-	          throw new RangeError(`monthCode ${monthCode} doesn't correspond to month ${month} in Chinese year ${year}`);
+	          throw new RangeError("monthCode ".concat(monthCode, " doesn't correspond to month ").concat(month, " in Chinese year ").concat(year));
 	        }
 	      }
 	      return {
@@ -17294,8 +16831,8 @@
 	    return result;
 	  },
 	  fields(fields) {
-	    if (Call$3(ArrayIncludes, fields, ['year'])) {
-	      Call$3(ArrayPrototypePush$2, fields, ['era', 'eraYear']);
+	    if (Call$4(ArrayIncludes, fields, ['year'])) {
+	      Call$4(ArrayPrototypePush$2, fields, ['era', 'eraYear']);
 	    }
 	    return fields;
 	  },
@@ -17303,39 +16840,39 @@
 	    const result = new OriginalSet();
 	    for (let ix = 0; ix < keys.length; ix++) {
 	      const key = keys[ix];
-	      Call$3(SetPrototypeAdd, result, [key]);
+	      Call$4(SetPrototypeAdd, result, [key]);
 	      switch (key) {
 	        case 'era':
-	          Call$3(SetPrototypeAdd, result, ['eraYear']);
-	          Call$3(SetPrototypeAdd, result, ['year']);
+	          Call$4(SetPrototypeAdd, result, ['eraYear']);
+	          Call$4(SetPrototypeAdd, result, ['year']);
 	          break;
 	        case 'eraYear':
-	          Call$3(SetPrototypeAdd, result, ['era']);
-	          Call$3(SetPrototypeAdd, result, ['year']);
+	          Call$4(SetPrototypeAdd, result, ['era']);
+	          Call$4(SetPrototypeAdd, result, ['year']);
 	          break;
 	        case 'year':
-	          Call$3(SetPrototypeAdd, result, ['era']);
-	          Call$3(SetPrototypeAdd, result, ['eraYear']);
+	          Call$4(SetPrototypeAdd, result, ['era']);
+	          Call$4(SetPrototypeAdd, result, ['eraYear']);
 	          break;
 	        case 'month':
-	          Call$3(SetPrototypeAdd, result, ['monthCode']);
+	          Call$4(SetPrototypeAdd, result, ['monthCode']);
 	          // See https://github.com/tc39/proposal-temporal/issues/1784
 	          if (this.helper.erasBeginMidYear) {
-	            Call$3(SetPrototypeAdd, result, ['era']);
-	            Call$3(SetPrototypeAdd, result, ['eraYear']);
+	            Call$4(SetPrototypeAdd, result, ['era']);
+	            Call$4(SetPrototypeAdd, result, ['eraYear']);
 	          }
 	          break;
 	        case 'monthCode':
-	          Call$3(SetPrototypeAdd, result, ['month']);
+	          Call$4(SetPrototypeAdd, result, ['month']);
 	          if (this.helper.erasBeginMidYear) {
-	            Call$3(SetPrototypeAdd, result, ['era']);
-	            Call$3(SetPrototypeAdd, result, ['eraYear']);
+	            Call$4(SetPrototypeAdd, result, ['era']);
+	            Call$4(SetPrototypeAdd, result, ['eraYear']);
 	          }
 	          break;
 	        case 'day':
 	          if (this.helper.erasBeginMidYear) {
-	            Call$3(SetPrototypeAdd, result, ['era']);
-	            Call$3(SetPrototypeAdd, result, ['eraYear']);
+	            Call$4(SetPrototypeAdd, result, ['era']);
+	            Call$4(SetPrototypeAdd, result, ['eraYear']);
 	          }
 	          break;
 	      }
@@ -17408,16 +16945,10 @@
 	  },
 	  dayOfYear(date) {
 	    const cache = OneObjectCache.getCacheForObject(date);
-	    const calendarDate = this.helper.isoToCalendarDate(date, cache);
+	    const calendarDate = this.helper.temporalToCalendarDate(date, cache);
 	    const startOfYear = this.helper.startOfCalendarYear(calendarDate);
 	    const diffDays = this.helper.calendarDaysUntil(startOfYear, calendarDate, cache);
 	    return diffDays + 1;
-	  },
-	  weekOfYear(date) {
-	    return impl['iso8601'].weekOfYear(date);
-	  },
-	  yearOfWeek(date) {
-	    return impl['iso8601'].yearOfWeek(date);
 	  },
 	  daysInWeek(date) {
 	    return impl['iso8601'].daysInWeek(date);
@@ -17595,7 +17126,7 @@
 	  with(temporalDateLike) {
 	    let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : undefined;
 	    if (!IsTemporalDate(this)) throw new TypeError('invalid receiver');
-	    if (Type$a(temporalDateLike) !== 'Object') {
+	    if (Type$d(temporalDateLike) !== 'Object') {
 	      throw new TypeError('invalid argument');
 	    }
 	    RejectTemporalLikeObject(temporalDateLike);
@@ -17618,10 +17149,7 @@
 	    if (!IsTemporalDate(this)) throw new TypeError('invalid receiver');
 	    const duration = ToTemporalDuration(temporalDurationLike);
 	    options = GetOptionsObject(options);
-	    const calendarRec = new CalendarMethodRecord(GetSlot(this, CALENDAR));
-	    if (GetSlot(duration, YEARS) !== 0 || GetSlot(duration, MONTHS) !== 0 || GetSlot(duration, WEEKS) !== 0) {
-	      calendarRec.lookup('dateAdd');
-	    }
+	    const calendarRec = new CalendarMethodRecord(GetSlot(this, CALENDAR), ['dateAdd']);
 	    return AddDate(calendarRec, this, duration, options);
 	  }
 	  subtract(temporalDurationLike) {
@@ -17629,10 +17157,7 @@
 	    if (!IsTemporalDate(this)) throw new TypeError('invalid receiver');
 	    const duration = CreateNegatedTemporalDuration(ToTemporalDuration(temporalDurationLike));
 	    options = GetOptionsObject(options);
-	    const calendarRec = new CalendarMethodRecord(GetSlot(this, CALENDAR));
-	    if (GetSlot(duration, YEARS) !== 0 || GetSlot(duration, MONTHS) !== 0 || GetSlot(duration, WEEKS) !== 0) {
-	      calendarRec.lookup('dateAdd');
-	    }
+	    const calendarRec = new CalendarMethodRecord(GetSlot(this, CALENDAR), ['dateAdd']);
 	    return AddDate(calendarRec, this, duration, options);
 	  }
 	  until(other) {
@@ -17693,7 +17218,7 @@
 	  toZonedDateTime(item) {
 	    if (!IsTemporalDate(this)) throw new TypeError('invalid receiver');
 	    let timeZone, temporalTime;
-	    if (Type$a(item) === 'Object') {
+	    if (Type$d(item) === 'Object') {
 	      if (IsTemporalTimeZone(item)) {
 	        timeZone = item;
 	      } else {
@@ -17728,7 +17253,7 @@
 	      nanosecond = GetSlot(temporalTime, ISO_NANOSECOND);
 	    }
 	    const dt = CreateTemporalDateTime(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond, calendar);
-	    const timeZoneRec = new TimeZoneMethodRecord(timeZone, ['getPossibleInstantsFor']);
+	    const timeZoneRec = new TimeZoneMethodRecord(timeZone, ['getOffsetNanosecondsFor', 'getPossibleInstantsFor']);
 	    const instant = GetInstantFor(timeZoneRec, dt, 'compatible');
 	    return CreateTemporalZonedDateTime(GetSlot(instant, EPOCHNANOSECONDS), timeZone, calendar);
 	  }
@@ -17891,7 +17416,7 @@
 	  with(temporalDateTimeLike) {
 	    let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : undefined;
 	    if (!IsTemporalDateTime(this)) throw new TypeError('invalid receiver');
-	    if (Type$a(temporalDateTimeLike) !== 'Object') {
+	    if (Type$d(temporalDateTimeLike) !== 'Object') {
 	      throw new TypeError('invalid argument');
 	    }
 	    RejectTemporalLikeObject(temporalDateTimeLike);
@@ -17905,7 +17430,7 @@
 	    fields.millisecond = GetSlot(this, ISO_MILLISECOND);
 	    fields.microsecond = GetSlot(this, ISO_MICROSECOND);
 	    fields.nanosecond = GetSlot(this, ISO_NANOSECOND);
-	    Call$3(ArrayPrototypePush$1, fieldNames, ['hour', 'microsecond', 'millisecond', 'minute', 'nanosecond', 'second']);
+	    Call$4(ArrayPrototypePush$1, fieldNames, ['hour', 'microsecond', 'millisecond', 'minute', 'nanosecond', 'second']);
 	    const partialDateTime = PrepareTemporalFields(temporalDateTimeLike, fieldNames, 'partial');
 	    fields = CalendarMergeFields(calendarRec, fields, partialDateTime);
 	    fields = PrepareTemporalFields(fields, fieldNames, []);
@@ -17983,7 +17508,7 @@
 	  round(roundTo) {
 	    if (!IsTemporalDateTime(this)) throw new TypeError('invalid receiver');
 	    if (roundTo === undefined) throw new TypeError('options parameter is required');
-	    if (Type$a(roundTo) === 'String') {
+	    if (Type$d(roundTo) === 'String') {
 	      const stringParam = roundTo;
 	      roundTo = ObjectCreate$5(null);
 	      roundTo.smallestUnit = stringParam;
@@ -18077,7 +17602,7 @@
 	    const timeZone = ToTemporalTimeZoneSlotValue(temporalTimeZoneLike);
 	    options = GetOptionsObject(options);
 	    const disambiguation = ToTemporalDisambiguation(options);
-	    const timeZoneRec = new TimeZoneMethodRecord(timeZone, ['getPossibleInstantsFor']);
+	    const timeZoneRec = new TimeZoneMethodRecord(timeZone, ['getOffsetNanosecondsFor', 'getPossibleInstantsFor']);
 	    const instant = GetInstantFor(timeZoneRec, this, disambiguation);
 	    return CreateTemporalZonedDateTime(GetSlot(instant, EPOCHNANOSECONDS), timeZone, GetSlot(this, CALENDAR));
 	  }
@@ -18178,8 +17703,9 @@
 	    SetSlot(this, MICROSECONDS, microseconds);
 	    SetSlot(this, NANOSECONDS, nanoseconds);
 	    {
+	      const normSeconds = TimeDuration.normalize(0, 0, seconds, milliseconds, microseconds, nanoseconds);
 	      Object.defineProperty(this, '_repr_', {
-	        value: `Temporal.Duration <${TemporalDurationToString(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds)}>`,
+	        value: "Temporal.Duration <".concat(TemporalDurationToString(years, months, weeks, days, hours, minutes, normSeconds), ">"),
 	        writable: false,
 	        enumerable: false,
 	        configurable: false
@@ -18283,7 +17809,7 @@
 	    let microseconds = GetSlot(this, MICROSECONDS);
 	    let nanoseconds = GetSlot(this, NANOSECONDS);
 	    const existingLargestUnit = DefaultTemporalLargestUnit(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
-	    if (Type$a(roundTo) === 'String') {
+	    if (Type$d(roundTo) === 'String') {
 	      const stringParam = roundTo;
 	      roundTo = ObjectCreate$4(null);
 	      roundTo.smallestUnit = stringParam;
@@ -18315,7 +17841,7 @@
 	      throw new RangeError('at least one of smallestUnit or largestUnit is required');
 	    }
 	    if (LargerOfTwoTemporalUnits(largestUnit, smallestUnit) !== largestUnit) {
-	      throw new RangeError(`largestUnit ${largestUnit} cannot be smaller than smallestUnit ${smallestUnit}`);
+	      throw new RangeError("largestUnit ".concat(largestUnit, " cannot be smaller than smallestUnit ").concat(smallestUnit));
 	    }
 	    const maximumIncrements = {
 	      hour: 24,
@@ -18336,7 +17862,7 @@
 	      return new Duration(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
 	    }
 	    let precalculatedPlainDateTime;
-	    const plainDateTimeOrRelativeToWillBeUsed = !roundingGranularityIsNoop || largestUnit === 'year' || largestUnit === 'month' || largestUnit === 'week' || largestUnit === 'day' || calendarUnitsPresent || days !== 0;
+	    const plainDateTimeOrRelativeToWillBeUsed = !roundingGranularityIsNoop || IsCalendarUnit(largestUnit) || largestUnit === 'day' || calendarUnitsPresent || days !== 0;
 	    if (zonedRelativeTo && plainDateTimeOrRelativeToWillBeUsed) {
 	      // Convert a ZonedDateTime relativeTo to PlainDateTime and PlainDate only
 	      // if either is needed in one of the operations below, because the
@@ -18344,50 +17870,29 @@
 	      precalculatedPlainDateTime = GetPlainDateTimeFor(timeZoneRec, GetSlot(zonedRelativeTo, INSTANT), GetSlot(zonedRelativeTo, CALENDAR));
 	      plainRelativeTo = TemporalDateTimeToDate(precalculatedPlainDateTime);
 	    }
-	    let calendarRec;
-	    if (zonedRelativeTo || plainRelativeTo) {
-	      const calendar = GetSlot(zonedRelativeTo ?? plainRelativeTo, CALENDAR);
-	      calendarRec = new CalendarMethodRecord(calendar);
-	      if (years !== 0 || months !== 0 || weeks !== 0 || largestUnit === 'year' || largestUnit === 'month' || largestUnit === 'week' || smallestUnit === 'year' || smallestUnit === 'month' || smallestUnit === 'week') {
-	        calendarRec.lookup('dateAdd');
-	      }
-	      if (largestUnit === 'year' || largestUnit === 'month' && years !== 0 || smallestUnit === 'year' ||
-	      // Edge condition in AdjustRoundedDurationDays:
-	      zonedRelativeTo && !roundingGranularityIsNoop && smallestUnit !== 'year' && smallestUnit !== 'month' && smallestUnit !== 'week' && smallestUnit !== 'day' && (largestUnit === 'year' || largestUnit === 'month' || largestUnit === 'week')) {
-	        calendarRec.lookup('dateUntil');
-	      }
-	    }
+	    const calendarRec = CalendarMethodRecord.CreateFromRelativeTo(plainRelativeTo, zonedRelativeTo, ['dateAdd', 'dateUntil']);
 	    ({
 	      years,
 	      months,
 	      weeks,
 	      days
 	    } = UnbalanceDateDurationRelative(years, months, weeks, days, largestUnit, plainRelativeTo, calendarRec));
+	    let norm = TimeDuration.normalize(hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
 	    ({
 	      years,
 	      months,
 	      weeks,
 	      days,
-	      hours,
-	      minutes,
-	      seconds,
-	      milliseconds,
-	      microseconds,
-	      nanoseconds
-	    } = RoundDuration(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, roundingIncrement, smallestUnit, roundingMode, plainRelativeTo, calendarRec, zonedRelativeTo, timeZoneRec, precalculatedPlainDateTime));
+	      norm
+	    } = RoundDuration(years, months, weeks, days, norm, roundingIncrement, smallestUnit, roundingMode, plainRelativeTo, calendarRec, zonedRelativeTo, timeZoneRec, precalculatedPlainDateTime));
 	    if (zonedRelativeTo) {
 	      ({
 	        years,
 	        months,
 	        weeks,
 	        days,
-	        hours,
-	        minutes,
-	        seconds,
-	        milliseconds,
-	        microseconds,
-	        nanoseconds
-	      } = AdjustRoundedDurationDays(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, roundingIncrement, smallestUnit, roundingMode, zonedRelativeTo, calendarRec, timeZoneRec, precalculatedPlainDateTime));
+	        norm
+	      } = AdjustRoundedDurationDays(years, months, weeks, days, norm, roundingIncrement, smallestUnit, roundingMode, zonedRelativeTo, calendarRec, timeZoneRec, precalculatedPlainDateTime));
 	      ({
 	        days,
 	        hours,
@@ -18396,7 +17901,7 @@
 	        milliseconds,
 	        microseconds,
 	        nanoseconds
-	      } = BalanceTimeDurationRelative(days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, largestUnit, zonedRelativeTo, timeZoneRec, precalculatedPlainDateTime));
+	      } = BalanceTimeDurationRelative(days, norm, largestUnit, zonedRelativeTo, timeZoneRec, precalculatedPlainDateTime));
 	    } else {
 	      ({
 	        days,
@@ -18406,14 +17911,14 @@
 	        milliseconds,
 	        microseconds,
 	        nanoseconds
-	      } = BalanceTimeDuration(days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, largestUnit));
+	      } = BalanceTimeDuration(norm.add24HourDays(days), largestUnit));
 	    }
 	    ({
 	      years,
 	      months,
 	      weeks,
 	      days
-	    } = BalanceDateDurationRelative(years, months, weeks, days, largestUnit, plainRelativeTo, calendarRec));
+	    } = BalanceDateDurationRelative(years, months, weeks, days, largestUnit, smallestUnit, plainRelativeTo, calendarRec));
 	    return new Duration(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
 	  }
 	  total(totalOf) {
@@ -18429,7 +17934,7 @@
 	    let microseconds = GetSlot(this, MICROSECONDS);
 	    let nanoseconds = GetSlot(this, NANOSECONDS);
 	    if (totalOf === undefined) throw new TypeError('options argument is required');
-	    if (Type$a(totalOf) === 'String') {
+	    if (Type$d(totalOf) === 'String') {
 	      const stringParam = totalOf;
 	      totalOf = ObjectCreate$4(null);
 	      totalOf.unit = stringParam;
@@ -18443,28 +17948,14 @@
 	    } = ToRelativeTemporalObject(totalOf);
 	    const unit = GetTemporalUnit(totalOf, 'unit', 'datetime', REQUIRED);
 	    let precalculatedPlainDateTime;
-	    const plainDateTimeOrRelativeToWillBeUsed = unit === 'year' || unit === 'month' || unit === 'week' || unit === 'day' || years !== 0 || months !== 0 || weeks !== 0 || days !== 0;
+	    const plainDateTimeOrRelativeToWillBeUsed = IsCalendarUnit(unit) || unit === 'day' || years !== 0 || months !== 0 || weeks !== 0 || days !== 0;
 	    if (zonedRelativeTo && plainDateTimeOrRelativeToWillBeUsed) {
 	      // Convert a ZonedDateTime relativeTo to PlainDate only if needed in one
 	      // of the operations below, because the conversion is user visible
 	      precalculatedPlainDateTime = GetPlainDateTimeFor(timeZoneRec, GetSlot(zonedRelativeTo, INSTANT), GetSlot(zonedRelativeTo, CALENDAR));
 	      plainRelativeTo = TemporalDateTimeToDate(precalculatedPlainDateTime);
 	    }
-	    let calendar, calendarRec;
-	    if (zonedRelativeTo) {
-	      calendar = GetSlot(zonedRelativeTo, CALENDAR);
-	    } else if (plainRelativeTo) {
-	      calendar = GetSlot(plainRelativeTo, CALENDAR);
-	    }
-	    if (calendar) {
-	      calendarRec = new CalendarMethodRecord(calendar);
-	      if (years !== 0 || months !== 0 || weeks !== 0 || unit === 'year' || unit === 'month' || unit === 'week') {
-	        calendarRec.lookup('dateAdd');
-	      }
-	      if (unit === 'year' || unit === 'month' && years !== 0) {
-	        calendarRec.lookup('dateUntil');
-	      }
-	    }
+	    const calendarRec = CalendarMethodRecord.CreateFromRelativeTo(plainRelativeTo, zonedRelativeTo, ['dateAdd', 'dateUntil']);
 
 	    // Convert larger units down to days
 	    ({
@@ -18473,32 +17964,42 @@
 	      weeks,
 	      days
 	    } = UnbalanceDateDurationRelative(years, months, weeks, days, unit, plainRelativeTo, calendarRec));
+	    let norm;
 	    // If the unit we're totalling is smaller than `days`, convert days down to that unit.
-	    let balanceResult;
 	    if (zonedRelativeTo) {
 	      const intermediate = MoveRelativeZonedDateTime(zonedRelativeTo, calendarRec, timeZoneRec, years, months, weeks, 0, precalculatedPlainDateTime);
-	      balanceResult = BalancePossiblyInfiniteTimeDurationRelative(days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, unit, intermediate, timeZoneRec);
+	      norm = TimeDuration.normalize(hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
+
+	      // Inline BalanceTimeDurationRelative, without the final balance step
+	      const start = GetSlot(intermediate, INSTANT);
+	      const startNs = GetSlot(intermediate, EPOCHNANOSECONDS);
+	      let intermediateNs = startNs;
+	      let startDt;
+	      if (days !== 0) {
+	        startDt = GetPlainDateTimeFor(timeZoneRec, start, 'iso8601');
+	        intermediateNs = AddDaysToZonedDateTime(start, startDt, timeZoneRec, 'iso8601', days).epochNs;
+	      }
+	      const endNs = AddInstant(intermediateNs, norm);
+	      norm = TimeDuration.fromEpochNsDiff(endNs, startNs);
+	      if (IsCalendarUnit(unit) || unit === 'day') {
+	        var _startDt;
+	        if (!norm.isZero()) (_startDt = startDt) !== null && _startDt !== void 0 ? _startDt : startDt = GetPlainDateTimeFor(timeZoneRec, start, 'iso8601');
+	        ({
+	          days,
+	          norm
+	        } = NormalizedTimeDurationToDays(norm, intermediate, timeZoneRec, startDt));
+	      } else {
+	        days = 0;
+	      }
 	    } else {
-	      balanceResult = BalancePossiblyInfiniteTimeDuration(days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, unit);
+	      norm = TimeDuration.normalize(hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
+	      norm = norm.add24HourDays(days);
+	      days = 0;
 	    }
-	    if (balanceResult === 'positive overflow') {
-	      return Infinity;
-	    } else if (balanceResult === 'negative overflow') {
-	      return -Infinity;
-	    }
-	    ({
-	      days,
-	      hours,
-	      minutes,
-	      seconds,
-	      milliseconds,
-	      microseconds,
-	      nanoseconds
-	    } = balanceResult);
 	    // Finally, truncate to the correct unit and calculate remainder
 	    const {
 	      total
-	    } = RoundDuration(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, 1, unit, 'trunc', plainRelativeTo, calendarRec, zonedRelativeTo, timeZoneRec, precalculatedPlainDateTime);
+	    } = RoundDuration(years, months, weeks, days, norm, 1, unit, 'trunc', plainRelativeTo, calendarRec, zonedRelativeTo, timeZoneRec, precalculatedPlainDateTime);
 	    return total;
 	  }
 	  toString() {
@@ -18516,17 +18017,43 @@
 	      unit,
 	      increment
 	    } = ToSecondsStringPrecisionRecord(smallestUnit, digits);
-	    const {
-	      seconds,
-	      milliseconds,
-	      microseconds,
-	      nanoseconds
-	    } = RoundDuration(0, 0, 0, 0, 0, 0, GetSlot(this, SECONDS), GetSlot(this, MILLISECONDS), GetSlot(this, MICROSECONDS), GetSlot(this, NANOSECONDS), increment, unit, roundingMode);
-	    return TemporalDurationToString(GetSlot(this, YEARS), GetSlot(this, MONTHS), GetSlot(this, WEEKS), GetSlot(this, DAYS), GetSlot(this, HOURS), GetSlot(this, MINUTES), seconds, milliseconds, microseconds, nanoseconds, precision);
+	    let years = GetSlot(this, YEARS);
+	    let months = GetSlot(this, MONTHS);
+	    let weeks = GetSlot(this, WEEKS);
+	    let days = GetSlot(this, DAYS);
+	    let hours = GetSlot(this, HOURS);
+	    let minutes = GetSlot(this, MINUTES);
+	    let seconds = GetSlot(this, SECONDS);
+	    let milliseconds = GetSlot(this, MILLISECONDS);
+	    let microseconds = GetSlot(this, MICROSECONDS);
+	    let nanoseconds = GetSlot(this, NANOSECONDS);
+	    if (unit !== 'nanosecond' || increment !== 1) {
+	      let norm = TimeDuration.normalize(hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
+	      const largestUnit = DefaultTemporalLargestUnit(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
+	      ({
+	        norm
+	      } = RoundDuration(0, 0, 0, 0, norm, increment, unit, roundingMode));
+	      let deltaDays;
+	      ({
+	        days: deltaDays,
+	        hours,
+	        minutes,
+	        seconds,
+	        milliseconds,
+	        microseconds,
+	        nanoseconds
+	      } = BalanceTimeDuration(norm, LargerOfTwoTemporalUnits(largestUnit, 'second')));
+	      // Keeping sub-second units separate avoids losing precision after
+	      // resolving any overflows from rounding
+	      days += deltaDays;
+	    }
+	    const normSeconds = TimeDuration.normalize(0, 0, seconds, milliseconds, microseconds, nanoseconds);
+	    return TemporalDurationToString(years, months, weeks, days, hours, minutes, normSeconds, precision);
 	  }
 	  toJSON() {
 	    if (!IsTemporalDuration(this)) throw new TypeError('invalid receiver');
-	    return TemporalDurationToString(GetSlot(this, YEARS), GetSlot(this, MONTHS), GetSlot(this, WEEKS), GetSlot(this, DAYS), GetSlot(this, HOURS), GetSlot(this, MINUTES), GetSlot(this, SECONDS), GetSlot(this, MILLISECONDS), GetSlot(this, MICROSECONDS), GetSlot(this, NANOSECONDS));
+	    const normSeconds = TimeDuration.normalize(0, 0, GetSlot(this, SECONDS), GetSlot(this, MILLISECONDS), GetSlot(this, MICROSECONDS), GetSlot(this, NANOSECONDS));
+	    return TemporalDurationToString(GetSlot(this, YEARS), GetSlot(this, MONTHS), GetSlot(this, WEEKS), GetSlot(this, DAYS), GetSlot(this, HOURS), GetSlot(this, MINUTES), normSeconds);
 	  }
 	  toLocaleString() {
 	    let locales = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : undefined;
@@ -18536,7 +18063,8 @@
 	      return new Intl.DurationFormat(locales, options).format(this);
 	    }
 	    console.warn('Temporal.Duration.prototype.toLocaleString() requires Intl.DurationFormat.');
-	    return TemporalDurationToString(GetSlot(this, YEARS), GetSlot(this, MONTHS), GetSlot(this, WEEKS), GetSlot(this, DAYS), GetSlot(this, HOURS), GetSlot(this, MINUTES), GetSlot(this, SECONDS), GetSlot(this, MILLISECONDS), GetSlot(this, MICROSECONDS), GetSlot(this, NANOSECONDS));
+	    const normSeconds = TimeDuration.normalize(0, 0, GetSlot(this, SECONDS), GetSlot(this, MILLISECONDS), GetSlot(this, MICROSECONDS), GetSlot(this, NANOSECONDS));
+	    return TemporalDurationToString(GetSlot(this, YEARS), GetSlot(this, MONTHS), GetSlot(this, WEEKS), GetSlot(this, DAYS), GetSlot(this, HOURS), GetSlot(this, MINUTES), normSeconds);
 	  }
 	  valueOf() {
 	    ValueOfThrows('Duration');
@@ -18581,16 +18109,14 @@
 	      timeZoneRec
 	    } = ToRelativeTemporalObject(options);
 	    const calendarUnitsPresent = y1 !== 0 || y2 !== 0 || mon1 !== 0 || mon2 !== 0 || w1 !== 0 || w2 !== 0;
-	    let calendarRec;
-	    if (zonedRelativeTo || plainRelativeTo) {
-	      calendarRec = new CalendarMethodRecord(GetSlot(zonedRelativeTo ?? plainRelativeTo, CALENDAR));
-	      if (calendarUnitsPresent) calendarRec.lookup('dateAdd');
-	    }
+	    const calendarRec = CalendarMethodRecord.CreateFromRelativeTo(plainRelativeTo, zonedRelativeTo, ['dateAdd']);
 	    if (zonedRelativeTo && (calendarUnitsPresent || d1 != 0 || d2 !== 0)) {
 	      const instant = GetSlot(zonedRelativeTo, INSTANT);
 	      const precalculatedPlainDateTime = GetPlainDateTimeFor(timeZoneRec, instant, calendarRec.receiver);
-	      const after1 = AddZonedDateTime(instant, timeZoneRec, calendarRec, y1, mon1, w1, d1, h1, min1, s1, ms1, µs1, ns1, precalculatedPlainDateTime);
-	      const after2 = AddZonedDateTime(instant, timeZoneRec, calendarRec, y2, mon2, w2, d2, h2, min2, s2, ms2, µs2, ns2, precalculatedPlainDateTime);
+	      const norm1 = TimeDuration.normalize(h1, min1, s1, ms1, µs1, ns1);
+	      const norm2 = TimeDuration.normalize(h2, min2, s2, ms2, µs2, ns2);
+	      const after1 = AddZonedDateTime(instant, timeZoneRec, calendarRec, y1, mon1, w1, d1, norm1, precalculatedPlainDateTime);
+	      const after2 = AddZonedDateTime(instant, timeZoneRec, calendarRec, y2, mon2, w2, d2, norm2, precalculatedPlainDateTime);
 	      return ComparisonResult(after1.minus(after2).toJSNumber());
 	    }
 	    if (calendarUnitsPresent) {
@@ -18602,11 +18128,9 @@
 	        days: d2
 	      } = UnbalanceDateDurationRelative(y2, mon2, w2, d2, 'day', plainRelativeTo, calendarRec));
 	    }
-	    h1 = bigInt(h1).add(bigInt(d1).multiply(24));
-	    h2 = bigInt(h2).add(bigInt(d2).multiply(24));
-	    ns1 = TotalDurationNanoseconds(h1, min1, s1, ms1, µs1, ns1);
-	    ns2 = TotalDurationNanoseconds(h2, min2, s2, ms2, µs2, ns2);
-	    return ComparisonResult(ns1.minus(ns2).toJSNumber());
+	    const norm1 = TimeDuration.normalize(h1, min1, s1, ms1, µs1, ns1).add24HourDays(d1);
+	    const norm2 = TimeDuration.normalize(h2, min2, s2, ms2, µs2, ns2).add24HourDays(d2);
+	    return norm1.cmp(norm2);
 	  }
 	}
 	MakeIntrinsicClass(Duration, 'Temporal.Duration');
@@ -18639,7 +18163,7 @@
 	  with(temporalMonthDayLike) {
 	    let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : undefined;
 	    if (!IsTemporalMonthDay(this)) throw new TypeError('invalid receiver');
-	    if (Type$a(temporalMonthDayLike) !== 'Object') {
+	    if (Type$d(temporalMonthDayLike) !== 'Object') {
 	      throw new TypeError('invalid argument');
 	    }
 	    RejectTemporalLikeObject(temporalMonthDayLike);
@@ -18682,17 +18206,17 @@
 	  }
 	  toPlainDate(item) {
 	    if (!IsTemporalMonthDay(this)) throw new TypeError('invalid receiver');
-	    if (Type$a(item) !== 'Object') throw new TypeError('argument should be an object');
+	    if (Type$d(item) !== 'Object') throw new TypeError('argument should be an object');
 	    const calendarRec = new CalendarMethodRecord(GetSlot(this, CALENDAR), ['dateFromFields', 'fields', 'mergeFields']);
 	    const receiverFieldNames = CalendarFields(calendarRec, ['day', 'monthCode']);
 	    let fields = PrepareTemporalFields(this, receiverFieldNames, []);
 	    const inputFieldNames = CalendarFields(calendarRec, ['year']);
 	    const inputFields = PrepareTemporalFields(item, inputFieldNames, []);
 	    let mergedFields = CalendarMergeFields(calendarRec, fields, inputFields);
-	    const concatenatedFieldNames = Call$3(ArrayPrototypeConcat$1, receiverFieldNames, inputFieldNames);
+	    const concatenatedFieldNames = Call$4(ArrayPrototypeConcat$1, receiverFieldNames, inputFieldNames);
 	    mergedFields = PrepareTemporalFields(mergedFields, concatenatedFieldNames, [], [], 'ignore');
 	    const options = ObjectCreate$3(null);
-	    options.overflow = 'reject';
+	    options.overflow = 'constrain';
 	    return CalendarDateFromFields(calendarRec, mergedFields, options);
 	  }
 	  getISOFields() {
@@ -18836,7 +18360,7 @@
 	    SetSlot(this, ISO_NANOSECOND, isoNanosecond);
 	    {
 	      Object.defineProperty(this, '_repr_', {
-	        value: `${this[Symbol.toStringTag]} <${TemporalTimeToString(this, 'auto')}>`,
+	        value: "".concat(this[Symbol.toStringTag], " <").concat(TemporalTimeToString(this, 'auto'), ">"),
 	        writable: false,
 	        enumerable: false,
 	        configurable: false
@@ -18870,7 +18394,7 @@
 	  with(temporalTimeLike) {
 	    let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : undefined;
 	    if (!IsTemporalTime(this)) throw new TypeError('invalid receiver');
-	    if (Type$a(temporalTimeLike) !== 'Object') {
+	    if (Type$d(temporalTimeLike) !== 'Object') {
 	      throw new TypeError('invalid argument');
 	    }
 	    RejectTemporalLikeObject(temporalTimeLike);
@@ -18917,7 +18441,7 @@
 	  round(roundTo) {
 	    if (!IsTemporalTime(this)) throw new TypeError('invalid receiver');
 	    if (roundTo === undefined) throw new TypeError('options parameter is required');
-	    if (Type$a(roundTo) === 'String') {
+	    if (Type$d(roundTo) === 'String') {
 	      const stringParam = roundTo;
 	      roundTo = ObjectCreate$2(null);
 	      roundTo.smallestUnit = stringParam;
@@ -19011,7 +18535,7 @@
 	  }
 	  toZonedDateTime(item) {
 	    if (!IsTemporalTime(this)) throw new TypeError('invalid receiver');
-	    if (Type$a(item) !== 'Object') {
+	    if (Type$d(item) !== 'Object') {
 	      throw new TypeError('invalid argument');
 	    }
 	    const dateLike = item.plainDate;
@@ -19035,7 +18559,7 @@
 	    const microsecond = GetSlot(this, ISO_MICROSECOND);
 	    const nanosecond = GetSlot(this, ISO_NANOSECOND);
 	    const dt = CreateTemporalDateTime(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond, calendar);
-	    const timeZoneRec = new TimeZoneMethodRecord(timeZone, ['getPossibleInstantsFor']);
+	    const timeZoneRec = new TimeZoneMethodRecord(timeZone, ['getOffsetNanosecondsFor', 'getPossibleInstantsFor']);
 	    const instant = GetInstantFor(timeZoneRec, dt, 'compatible');
 	    return CreateTemporalZonedDateTime(GetSlot(instant, EPOCHNANOSECONDS), timeZone, calendar);
 	  }
@@ -19077,14 +18601,14 @@
 	      stringIdentifier = FormatOffsetTimeZoneIdentifier(parseResult.offsetMinutes);
 	    } else {
 	      const record = GetAvailableNamedTimeZoneIdentifier(stringIdentifier);
-	      if (!record) throw new RangeError(`Invalid time zone identifier: ${stringIdentifier}`);
+	      if (!record) throw new RangeError("Invalid time zone identifier: ".concat(stringIdentifier));
 	      stringIdentifier = record.identifier;
 	    }
 	    CreateSlots(this);
 	    SetSlot(this, TIMEZONE_ID, stringIdentifier);
 	    {
 	      Object.defineProperty(this, '_repr_', {
-	        value: `Temporal.TimeZone <${stringIdentifier}>`,
+	        value: "Temporal.TimeZone <".concat(stringIdentifier, ">"),
 	        writable: false,
 	        enumerable: false,
 	        configurable: false
@@ -19128,7 +18652,7 @@
 	    dateTime = ToTemporalDateTime(dateTime);
 	    options = GetOptionsObject(options);
 	    const disambiguation = ToTemporalDisambiguation(options);
-	    const timeZoneRec = new TimeZoneMethodRecord(this, ['getPossibleInstantsFor']);
+	    const timeZoneRec = new TimeZoneMethodRecord(this, ['getOffsetNanosecondsFor', 'getPossibleInstantsFor']);
 	    return GetInstantFor(timeZoneRec, dateTime, disambiguation);
 	  }
 	  getPossibleInstantsFor(dateTime) {
@@ -19244,7 +18768,7 @@
 	  with(temporalYearMonthLike) {
 	    let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : undefined;
 	    if (!IsTemporalYearMonth(this)) throw new TypeError('invalid receiver');
-	    if (Type$a(temporalYearMonthLike) !== 'Object') {
+	    if (Type$d(temporalYearMonthLike) !== 'Object') {
 	      throw new TypeError('invalid argument');
 	    }
 	    RejectTemporalLikeObject(temporalYearMonthLike);
@@ -19307,17 +18831,17 @@
 	  }
 	  toPlainDate(item) {
 	    if (!IsTemporalYearMonth(this)) throw new TypeError('invalid receiver');
-	    if (Type$a(item) !== 'Object') throw new TypeError('argument should be an object');
+	    if (Type$d(item) !== 'Object') throw new TypeError('argument should be an object');
 	    const calendarRec = new CalendarMethodRecord(GetSlot(this, CALENDAR), ['dateFromFields', 'fields', 'mergeFields']);
 	    const receiverFieldNames = CalendarFields(calendarRec, ['monthCode', 'year']);
 	    let fields = PrepareTemporalFields(this, receiverFieldNames, []);
 	    const inputFieldNames = CalendarFields(calendarRec, ['day']);
 	    const inputFields = PrepareTemporalFields(item, inputFieldNames, []);
 	    let mergedFields = CalendarMergeFields(calendarRec, fields, inputFields);
-	    const concatenatedFieldNames = Call$3(ArrayPrototypeConcat, receiverFieldNames, inputFieldNames);
+	    const concatenatedFieldNames = Call$4(ArrayPrototypeConcat, receiverFieldNames, inputFieldNames);
 	    mergedFields = PrepareTemporalFields(mergedFields, concatenatedFieldNames, [], [], 'ignore');
 	    const options = ObjectCreate$1(null);
-	    options.overflow = 'reject';
+	    options.overflow = 'constrain';
 	    return CalendarDateFromFields(calendarRec, mergedFields, options);
 	  }
 	  getISOFields() {
@@ -19471,12 +18995,8 @@
 	    const tomorrow = CreateTemporalDateTime(tomorrowFields.year, tomorrowFields.month, tomorrowFields.day, 0, 0, 0, 0, 0, 0, 'iso8601');
 	    const todayNs = GetSlot(GetInstantFor(timeZoneRec, today, 'compatible'), EPOCHNANOSECONDS);
 	    const tomorrowNs = GetSlot(GetInstantFor(timeZoneRec, tomorrow, 'compatible'), EPOCHNANOSECONDS);
-	    const diffNs = tomorrowNs.subtract(todayNs);
-	    const {
-	      quotient,
-	      remainder
-	    } = diffNs.divmod(3.6e12);
-	    return quotient.toJSNumber() + remainder.toJSNumber() / 3.6e12;
+	    const diff = TimeDuration.fromEpochNsDiff(tomorrowNs, todayNs);
+	    return diff.fdiv(3.6e12);
 	  }
 	  get daysInWeek() {
 	    if (!IsTemporalZonedDateTime(this)) throw new TypeError('invalid receiver');
@@ -19511,7 +19031,7 @@
 	  with(temporalZonedDateTimeLike) {
 	    let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : undefined;
 	    if (!IsTemporalZonedDateTime(this)) throw new TypeError('invalid receiver');
-	    if (Type$a(temporalZonedDateTimeLike) !== 'Object') {
+	    if (Type$d(temporalZonedDateTimeLike) !== 'Object') {
 	      throw new TypeError('invalid zoned-date-time-like');
 	    }
 	    RejectTemporalLikeObject(temporalZonedDateTimeLike);
@@ -19529,7 +19049,7 @@
 	    fields.microsecond = GetSlot(dt, ISO_MICROSECOND);
 	    fields.nanosecond = GetSlot(dt, ISO_NANOSECOND);
 	    fields.offset = FormatUTCOffsetNanoseconds(offsetNs);
-	    Call$3(ArrayPrototypePush, fieldNames, ['hour', 'microsecond', 'millisecond', 'minute', 'nanosecond', 'offset', 'second']);
+	    Call$4(ArrayPrototypePush, fieldNames, ['hour', 'microsecond', 'millisecond', 'minute', 'nanosecond', 'offset', 'second']);
 	    const partialZonedDateTime = PrepareTemporalFields(temporalZonedDateTimeLike, fieldNames, 'partial');
 	    fields = CalendarMergeFields(calendarRec, fields, partialZonedDateTime);
 	    fields = PrepareTemporalFields(fields, fieldNames, ['offset']);
@@ -19624,7 +19144,7 @@
 	  round(roundTo) {
 	    if (!IsTemporalZonedDateTime(this)) throw new TypeError('invalid receiver');
 	    if (roundTo === undefined) throw new TypeError('options parameter is required');
-	    if (Type$a(roundTo) === 'String') {
+	    if (Type$d(roundTo) === 'String') {
 	      const stringParam = roundTo;
 	      roundTo = ObjectCreate(null);
 	      roundTo.smallestUnit = stringParam;
@@ -19740,21 +19260,20 @@
 	      optionsCopy.timeZoneName = 'short';
 	      // The rest of the defaults will be filled in by formatting the Instant
 	    }
-
 	    const timeZoneIdentifier = ToTemporalTimeZoneIdentifier(GetSlot(this, TIME_ZONE));
 	    if (IsOffsetTimeZoneIdentifier(timeZoneIdentifier)) {
 	      // Note: https://github.com/tc39/ecma402/issues/683 will remove this
 	      throw new RangeError('toLocaleString does not currently support offset time zones');
 	    } else {
 	      const record = GetAvailableNamedTimeZoneIdentifier(timeZoneIdentifier);
-	      if (!record) throw new RangeError(`toLocaleString formats built-in time zones, not ${timeZoneIdentifier}`);
+	      if (!record) throw new RangeError("toLocaleString formats built-in time zones, not ".concat(timeZoneIdentifier));
 	      optionsCopy.timeZone = record.identifier;
 	    }
 	    const formatter = new DateTimeFormat(locales, optionsCopy);
-	    const localeCalendarIdentifier = Call$3(customResolvedOptions, formatter, []).calendar;
+	    const localeCalendarIdentifier = Call$4(customResolvedOptions, formatter, []).calendar;
 	    const calendarIdentifier = ToTemporalCalendarIdentifier(GetSlot(this, CALENDAR));
 	    if (calendarIdentifier !== 'iso8601' && localeCalendarIdentifier !== 'iso8601' && localeCalendarIdentifier !== calendarIdentifier) {
-	      throw new RangeError(`cannot format ZonedDateTime with calendar ${calendarIdentifier}` + ` in locale with calendar ${localeCalendarIdentifier}`);
+	      throw new RangeError("cannot format ZonedDateTime with calendar ".concat(calendarIdentifier) + " in locale with calendar ".concat(localeCalendarIdentifier));
 	    }
 	    return formatter.format(GetSlot(this, INSTANT));
 	  }
@@ -19886,7 +19405,7 @@
 
 	const DatePrototypeValueOf = Date.prototype.valueOf;
 	function toTemporalInstant() {
-	  const epochNanoseconds = bigInt(Call$3(DatePrototypeValueOf, this, [])).multiply(1e6);
+	  const epochNanoseconds = bigInt(Call$4(DatePrototypeValueOf, this, [])).multiply(1e6);
 	  return new Instant(BigIntIfAvailable(epochNanoseconds));
 	}
 
