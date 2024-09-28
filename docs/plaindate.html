@@ -343,7 +343,7 @@ sorted<span class="token punctuation">.</span><span class="token function">join<
 <ul>
 <li><code>year</code> is a signed integer representing the number of years relative to a calendar-specific epoch.
 For calendars that use eras, the anchor is usually aligned with the latest era so that <code>eraYear === year</code> for all dates in that era.
-However, some calendars like Japanese may use a different anchor.</li>
+However, some calendars use a different anchor (e.g., the Japanese calendar <code>year</code> matches the ISO 8601 and Gregorian calendars in counting from ISO year 0001 as <code>1</code>).</li>
 <li><code>month</code> is a positive integer representing the ordinal index of the month in the current year.
 For calendars like Hebrew or Chinese that use leap months, the same-named month may have a different <code>month</code> value depending on the year.
 The first month in every year has <code>month</code> equal to <code>1</code>.
@@ -356,7 +356,7 @@ Examples: <code>&#39;M02&#39;</code> =&gt; February; <code>&#39;M08L&#39;</code>
 <li><code>day</code> is a positive integer representing the day of the month.</li>
 </ul>
 <p>Either <code>month</code> or <code>monthCode</code> can be used in <code>from</code> or <code>with</code> to refer to the month.
-Similarly, in calendars that user eras an <code>era</code>/<code>eraYear</code> pair can be used in place of <code>year</code> when calling <code>from</code> or <code>with</code>.</p>
+Similarly, in calendars that use eras, an <code>era</code>/<code>eraYear</code> pair can be used in place of <code>year</code> when calling <code>from</code> or <code>with</code>.</p>
 <p>Usage examples:</p>
 <!-- prettier-ignore-start -->
 <pre class="language-javascript"><code class="language-javascript">date <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>PlainDate<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'2006-08-24'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
@@ -371,8 +371,7 @@ date<span class="token punctuation">.</span>month<span class="token punctuation"
 date<span class="token punctuation">.</span>monthCode<span class="token punctuation">;</span> <span class="token comment">// => 'M05L'</span>
 date<span class="token punctuation">.</span>day<span class="token punctuation">;</span>       <span class="token comment">// => 18</span></code></pre><!-- prettier-ignore-end -->
 
-<h3 id="calendarId"><a class="heading-link" href="#calendarId"></a>date.<strong>calendarId</strong> : string</h3><p>The <code>calendarId</code> read-only property gives the identifier of the calendar that the <code>year</code>, <code>month</code>, <code>monthCode</code>, and <code>day</code> properties are interpreted in.
-If the date was created with a custom calendar object, this gives the <code>id</code> property of that object.</p>
+<h3 id="calendarId"><a class="heading-link" href="#calendarId"></a>date.<strong>calendarId</strong> : string</h3><p>The <code>calendarId</code> read-only property gives the identifier of the calendar that the <code>year</code>, <code>month</code>, <code>monthCode</code>, and <code>day</code> properties are interpreted in.</p>
 <h3 id="era"><a class="heading-link" href="#era"></a>date.<strong>era</strong> : string | undefined</h3><h3 id="eraYear"><a class="heading-link" href="#eraYear"></a>date.<strong>eraYear</strong> : number | undefined</h3><p>In calendars that use eras, the <code>era</code> and <code>eraYear</code> read-only properties can be used together to resolve an era-relative year.
 Both properties are <code>undefined</code> when using the ISO 8601 calendar.
 As inputs to <code>from</code> or <code>with</code>, <code>era</code> and <code>eraYear</code> can be used instead of <code>year</code>.
