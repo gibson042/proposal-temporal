@@ -261,8 +261,8 @@ date <span class="token operator">=</span> <span class="token keyword">new</span
 <li><code>options</code> (optional object): An object with properties representing options for constructing the date.
 The following options are recognized:<ul>
 <li><code>overflow</code> (string): How to deal with out-of-range values if <code>item</code> is an object.
-Allowed values are <code>constrain</code> and <code>reject</code>.
-The default is <code>constrain</code>.</li>
+Allowed values are <code>&#39;constrain&#39;</code> and <code>&#39;reject&#39;</code>.
+The default is <code>&#39;constrain&#39;</code>.</li>
 </ul>
 </li>
 </ul>
@@ -275,15 +275,18 @@ If the value is any other object, it:</p>
 <li>Must have either a number <code>month</code> property or a string <code>monthCode</code> property.</li>
 <li>May have a <code>calendar</code> property. If omitted, the <a href="https://en.wikipedia.org/wiki/ISO_8601#Dates">ISO 8601 calendar</a> will be used by default.</li>
 </ul>
-<p>If the value is not an object, it must be a string, which is expected to be in ISO 8601 format.
+<p>If the value is not an object, it must be a string, which is expected to be in RFC 9557 format, or a subset of that format that includes at least the date portion.
 Any time part is optional and will be ignored.
 Time zone or UTC offset information will also be ignored, with one exception: if a string contains a <code>Z</code> in place of a numeric UTC offset, then a <code>RangeError</code> will be thrown because interpreting these strings as a local date and time is usually a bug. <code>Temporal.Instant.from</code> should be used instead to parse these strings, and the result&#39;s <code>toZonedDateTimeISO</code> method can be used to obtain a timezone-local date and time.</p>
+<p>Note that ISO 8601 and RFC 3339 formats are also subsets of RFC 9557, so will also work.
+Temporal additionally accepts a few ISO 8601 extensions that RFC 9557 does not, like the use of 6-digit years.
+For more info, see <a href="https://tc39.es/proposal-temporal/#sec-temporal-iso8601grammar">RFC 9557 / ISO 8601 Grammar</a>.</p>
 <p>In unusual cases of needing date or time components of <code>Z</code>-terminated timestamp strings (e.g. daily rollover of a UTC-timestamped log file), use the time zone <code>&#39;UTC&#39;</code>. For example, the following code returns a &quot;UTC date&quot;: <code>Temporal.Instant.from(item).toZonedDateTimeISO(&#39;UTC&#39;).toPlainDate()</code>.</p>
-<p>If the string isn&#39;t valid according to ISO 8601, then a <code>RangeError</code> will be thrown regardless of the value of <code>overflow</code>.</p>
+<p>If the string isn&#39;t a valid subset of the RFC 9557 format, then a <code>RangeError</code> will be thrown regardless of the value of <code>overflow</code>.</p>
 <p>The <code>overflow</code> option works as follows, if <code>item</code> is an object:</p>
 <ul>
-<li>In <code>constrain</code> mode (the default), any out-of-range values are clamped to the nearest in-range value (after assuming extension of eras over arbitrary years to substitute <code>era</code> and <code>eraYear</code> with appropriate values for the <code>item</code>).</li>
-<li>In <code>reject</code> mode, the presence of out-of-range values (after assuming extension of eras over arbitrary years to substitute <code>era</code> and <code>eraYear</code> with appropriate values for the <code>item</code>) will cause the function to throw a <code>RangeError</code>.</li>
+<li>In <code>&#39;constrain&#39;</code> mode (the default), any out-of-range values are clamped to the nearest in-range value (after assuming extension of eras over arbitrary years to substitute <code>era</code> and <code>eraYear</code> with appropriate values for the <code>item</code>).</li>
+<li>In <code>&#39;reject&#39;</code> mode, the presence of out-of-range values (after assuming extension of eras over arbitrary years to substitute <code>era</code> and <code>eraYear</code> with appropriate values for the <code>item</code>) will cause the function to throw a <code>RangeError</code>.</li>
 </ul>
 <p>The <code>overflow</code> option is ignored if <code>item</code> is a string.</p>
 <p>Additionally, if the result is earlier or later than the range of dates that <code>Temporal.PlainDate</code> can represent (approximately half a million years centered on the <a href="https://en.wikipedia.org/wiki/Unix_time">Unix epoch</a>), then this function will throw a <code>RangeError</code> regardless of <code>overflow</code>.</p>
@@ -449,8 +452,8 @@ date<span class="token punctuation">.</span><span class="token function">with</s
 <li><code>options</code> (optional object): An object with properties representing options for the operation.
 The following options are recognized:<ul>
 <li><code>overflow</code> (string): How to deal with out-of-range values.
-Allowed values are <code>constrain</code> and <code>reject</code>.
-The default is <code>constrain</code>.</li>
+Allowed values are <code>&#39;constrain&#39;</code> and <code>&#39;reject&#39;</code>.
+The default is <code>&#39;constrain&#39;</code>.</li>
 </ul>
 </li>
 </ul>
@@ -484,8 +487,8 @@ date<span class="token punctuation">.</span><span class="token function">withCal
 <li><code>options</code> (optional object): An object with properties representing options for the addition.
 The following options are recognized:<ul>
 <li><code>overflow</code> (optional string): How to deal with additions that result in out-of-range values.
-Allowed values are <code>constrain</code> and <code>reject</code>.
-The default is <code>constrain</code>.</li>
+Allowed values are <code>&#39;constrain&#39;</code> and <code>&#39;reject&#39;</code>.
+The default is <code>&#39;constrain&#39;</code>.</li>
 </ul>
 </li>
 </ul>
@@ -499,8 +502,8 @@ Effectively, this means that adding things like <code>{ minutes: 5 }</code> will
 For example, adding one month to August 31 would result in September 31, which doesn&#39;t exist.
 For these cases, the <code>overflow</code> option tells what to do:</p>
 <ul>
-<li>In <code>constrain</code> mode (the default), out-of-range values are clamped to the nearest in-range value.</li>
-<li>In <code>reject</code> mode, an addition that would result in an out-of-range value fails, and a <code>RangeError</code> is thrown.</li>
+<li>In <code>&#39;constrain&#39;</code> mode (the default), out-of-range values are clamped to the nearest in-range value.</li>
+<li>In <code>&#39;reject&#39;</code> mode, an addition that would result in an out-of-range value fails, and a <code>RangeError</code> is thrown.</li>
 </ul>
 <p>Additionally, if the result is earlier or later than the range of dates that <code>Temporal.PlainDate</code> can represent (approximately half a million years centered on the <a href="https://en.wikipedia.org/wiki/Unix_time">Unix epoch</a>), then this method will throw a <code>RangeError</code> regardless of <code>overflow</code>.</p>
 <p>Adding a negative duration is equivalent to subtracting the absolute value of that duration.</p>
@@ -516,8 +519,8 @@ date<span class="token punctuation">.</span><span class="token function">add</sp
 <li><code>options</code> (optional object): An object with properties representing options for the subtraction.
 The following options are recognized:<ul>
 <li><code>overflow</code> (string): How to deal with subtractions that result in out-of-range values.
-Allowed values are <code>constrain</code> and <code>reject</code>.
-The default is <code>constrain</code>.</li>
+Allowed values are <code>&#39;constrain&#39;</code> and <code>&#39;reject&#39;</code>.
+The default is <code>&#39;constrain&#39;</code>.</li>
 </ul>
 </li>
 </ul>
@@ -531,8 +534,8 @@ Effectively, this means that subtracting things like <code>{ minutes: 5 }</code>
 For example, subtracting one month from July 31 would result in June 31, which doesn&#39;t exist.
 For these cases, the <code>overflow</code> option tells what to do:</p>
 <ul>
-<li>In <code>constrain</code> mode (the default), out-of-range values are clamped to the nearest in-range value.</li>
-<li>In <code>reject</code> mode, an addition that would result in an out-of-range value fails, and a <code>RangeError</code> is thrown.</li>
+<li>In <code>&#39;constrain&#39;</code> mode (the default), out-of-range values are clamped to the nearest in-range value.</li>
+<li>In <code>&#39;reject&#39;</code> mode, an addition that would result in an out-of-range value fails, and a <code>RangeError</code> is thrown.</li>
 </ul>
 <p>Additionally, if the result is earlier or later than the range of dates that <code>Temporal.PlainDate</code> can represent (approximately half a million years centered on the <a href="https://en.wikipedia.org/wiki/Unix_time">Unix epoch</a>), then this method will throw a <code>RangeError</code> regardless of <code>overflow</code>.</p>
 <p>Subtracting a negative duration is equivalent to adding the absolute value of that duration.</p>
@@ -568,8 +571,8 @@ If using the default <code>options</code>, adding the returned <code>Temporal.Du
 <p>If <code>other</code> is not a <code>Temporal.PlainDate</code> object, then it will be converted to one as if it were passed to <code>Temporal.PlainDate.from()</code>.</p>
 <p>The <code>largestUnit</code> option controls how the resulting duration is expressed.
 The returned <code>Temporal.Duration</code> object will not have any nonzero fields that are larger than the unit in <code>largestUnit</code>.
-A difference of two years will become 24 months when <code>largestUnit</code> is <code>&quot;months&quot;</code>, for example.
-However, a difference of two months will still be two months even if <code>largestUnit</code> is <code>&quot;years&quot;</code>.
+A difference of two years will become 24 months when <code>largestUnit</code> is <code>&#39;months&#39;</code>, for example.
+However, a difference of two months will still be two months even if <code>largestUnit</code> is <code>&#39;years&#39;</code>.
 A value of <code>&#39;auto&#39;</code> means <code>&#39;day&#39;</code>, unless <code>smallestUnit</code> is <code>&#39;year&#39;</code>, <code>&#39;month&#39;</code>, or <code>&#39;week&#39;</code>, in which case <code>largestUnit</code> is equal to <code>smallestUnit</code>.</p>
 <p>By default, the largest unit in the result is days.
 This is because months and years can be different lengths depending on which month is meant and whether the year is a leap year.</p>
@@ -657,11 +660,12 @@ The default is <code>&#39;auto&#39;</code>.</li>
 </ul>
 </li>
 </ul>
-<p><strong>Returns:</strong> a string in the ISO 8601 date format representing <code>date</code>.</p>
+<p><strong>Returns:</strong> a string in the RFC 9557 date format representing <code>date</code>.</p>
 <p>This method overrides the <code>Object.prototype.toString()</code> method and provides a convenient, unambiguous string representation of <code>date</code>.
 The string can be passed to <code>Temporal.PlainDate.from()</code> to create a new <code>Temporal.PlainDate</code> object.</p>
 <p>Normally, a calendar annotation is shown when <code>date</code>&#39;s calendar is not the ISO 8601 calendar.
 By setting the <code>calendarName</code> option to <code>&#39;always&#39;</code> or <code>&#39;never&#39;</code> this can be overridden to always or never show the annotation, respectively.
+With <code>calendarName: &#39;never&#39;</code> the returned string will additionally be valid in the ISO 8601 and RFC 3339 date formats.
 Normally not necessary, a value of <code>&#39;critical&#39;</code> is equivalent to <code>&#39;always&#39;</code> but the annotation will contain an additional <code>!</code> for certain interoperation use cases.
 For more information on the calendar annotation, see <a href="./strings.html#calendar-systems">the <code>Temporal</code> string formats documentation</a>.</p>
 <p>Example usage:</p>
@@ -679,7 +683,7 @@ date<span class="token punctuation">.</span><span class="token function">toStrin
 date<span class="token punctuation">.</span><span class="token function">toLocaleString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// example output: 8/24/2006</span>
 date<span class="token punctuation">.</span><span class="token function">toLocaleString</span><span class="token punctuation">(</span><span class="token string">'de-DE'</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// example output: '24.8.2006'</span>
 date<span class="token punctuation">.</span><span class="token function">toLocaleString</span><span class="token punctuation">(</span><span class="token string">'de-DE'</span><span class="token punctuation">,</span> <span class="token punctuation">{</span> <span class="token literal-property property">weekday</span><span class="token operator">:</span> <span class="token string">'long'</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => 'Donnerstag'</span>
-date<span class="token punctuation">.</span><span class="token function">toLocaleString</span><span class="token punctuation">(</span><span class="token string">'en-US-u-nu-fullwide'</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => '８/２４/２００６'</span></code></pre><h3 id="toJSON"><a class="heading-link" href="#toJSON"></a>date.<strong>toJSON</strong>() : string</h3><p><strong>Returns:</strong> a string in the ISO 8601 date format representing <code>date</code>.</p>
+date<span class="token punctuation">.</span><span class="token function">toLocaleString</span><span class="token punctuation">(</span><span class="token string">'en-US-u-nu-fullwide'</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => '８/２４/２００６'</span></code></pre><h3 id="toJSON"><a class="heading-link" href="#toJSON"></a>date.<strong>toJSON</strong>() : string</h3><p><strong>Returns:</strong> a string in the RFC 9557 date format representing <code>date</code>.</p>
 <p>This method is the same as <code>date.toString()</code>.
 It is usually not called directly, but it can be called automatically by <code>JSON.stringify()</code>.</p>
 <p>The reverse operation, recovering a <code>Temporal.PlainDate</code> object from a string, is <code>Temporal.PlainDate.from()</code>, but it cannot be called automatically by <code>JSON.parse()</code>.

@@ -353,11 +353,13 @@ Any other missing properties will be assumed to be 0 (for time fields).</p>
 <p>Date/time values will be interpreted in context of the provided offset and/or time zone, depending on the <code>offset</code> option.</p>
 <p>Date/time values in object inputs will be interpreted in the context of <code>calendar</code>.
 However, date/time values in string inputs are always interpreted in the context of the ISO 8601 calendar.</p>
-<p>If the value is not an object, it must be a string, which is expected to be an ISO 8601 string that includes a time zone ID in brackets, and an optional calendar.
+<p>If the value is not an object, it must be a string, which is expected to be an RFC 9557 string that includes a time zone ID in brackets, and an optional calendar.
 For example:</p>
 <pre><code>2020-08-05T20:06:13+09:00[Asia/Tokyo][u-ca=japanese]</code></pre><p>If the string isn&#39;t valid, then a <code>RangeError</code> will be thrown regardless of the value of <code>overflow</code>.</p>
 <p>Note that this string format (albeit limited to the ISO 8601 calendar system) is also used by <code>java.time</code> and some other time-zone-aware libraries.
-For more information on <code>Temporal</code>&#39;s extensions to the ISO 8601 / RFC 3339 string format and the progress towards becoming a published standard, see <a href="./strings.html">String Parsing, Serialization, and Formatting</a>.</p>
+For more information on RFC 9557&#39;s extensions to the ISO 8601 / RFC 3339 string format, see <a href="./strings.html">String Parsing, Serialization, and Formatting</a>.</p>
+<p>Temporal additionally accepts a few ISO 8601 extensions that RFC 9557 does not, like the use of 6-digit years.
+For more info, see <a href="https://tc39.es/proposal-temporal/#sec-temporal-iso8601grammar">RFC 9557 / ISO 8601 Grammar</a>.</p>
 <p>The time zone ID is always required.
 <code>2020-08-05T20:06:13+09:00</code> and <code>2020-08-05T11:06:13Z</code> are not valid inputs to this method because they don&#39;t include a time zone ID in square brackets.
 To parse these string formats, use <code>Temporal.Instant</code>:</p>
@@ -381,8 +383,8 @@ Instead of using <code>Temporal.ZonedDateTime</code> with an offset time zone, i
 <p>Additionally, if the result is earlier or later than the range of dates that <code>Temporal.PlainDateTime</code> can represent (approximately half a million years centered on the <a href="https://en.wikipedia.org/wiki/Unix_time">Unix epoch</a>), then this method will throw a <code>RangeError</code> regardless of <code>overflow</code>.</p>
 <blockquote>
 <p><strong>NOTE</strong>: Although Temporal does not deal with leap seconds, dates coming from other software may have a <code>second</code> value of 60.
-In the default <code>&#39;constrain&#39;</code> mode and when parsing an ISO 8601 string, this will be converted to 59.
-In <code>&#39;reject&#39;</code> mode, this function will throw, so if you have to interoperate with times that may contain leap seconds, don&#39;t use <code>reject</code>.</p>
+In the default <code>&#39;constrain&#39;</code> mode and when parsing an RFC 9557 string, this will be converted to 59.
+In <code>&#39;reject&#39;</code> mode, this function will throw, so if you have to interoperate with times that may contain leap seconds, don&#39;t use <code>&#39;reject&#39;</code>.</p>
 </blockquote>
 <p>If the input contains a time zone offset, in rare cases it&#39;s possible for those values to conflict for a particular local date and time.
 For example, this could happen if the definition of a time zone is changed (e.g. to abolish DST) after storing a <code>Temporal.ZonedDateTime</code> as a string representing a far-future event.
@@ -713,6 +715,9 @@ Normally days will be 24 hours long, but on days where there are DST changes or 
 In rare cases, other integers or even non-integer values may be returned, e.g. when time zone definitions change by less than one hour.</p>
 <p>If a time zone offset transition happens exactly at midnight, the transition will impact the previous day&#39;s length.</p>
 <p>Note that transitions that skip entire days (like the 2011 <a href="https://en.wikipedia.org/wiki/Time_in_Samoa#2011_time_zone_change">change</a> of <code>Pacific/Apia</code> to the opposite side of the International Date Line) will return <code>24</code> because there are 24 real-world hours between one day&#39;s midnight and the next day&#39;s midnight.</p>
+<p>When the same day starts twice (due to an offset transition), <code>hoursInDay</code> reflects the total amount of time between the first start of the day, and the second end of the day. For example, on 2010-11-07 at 00:00:59 (1 minute after midnight), the <code>America/St_Johns</code> time zone transitioned from offset <code>-02:30</code> to offset <code>-03:30</code>, meaning that the time transitioned to 23:01:00 on the previous day. After 1 hour of wall-clock time passed, 2010-11-07 began again:</p>
+<pre class="language-javascript"><code class="language-javascript"><span class="token keyword">const</span> zdt <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>ZonedDateTime<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span>'<span class="token number">2010</span><span class="token operator">-</span><span class="token number">11</span><span class="token operator">-</span>07T23<span class="token operator">:</span><span class="token number">00</span><span class="token operator">:</span><span class="token number">00</span><span class="token operator">-</span><span class="token number">03</span><span class="token operator">:</span><span class="token number">30</span><span class="token punctuation">[</span>America<span class="token operator">/</span>St_Johns<span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+zdt<span class="token punctuation">.</span>hoursInDay<span class="token punctuation">;</span> <span class="token comment">// 25</span></code></pre><p>Similar examples include <code>America/Goose_Bay</code> before 2010, <code>America/Moncton</code> before 2006, <code>Pacific/Guam</code> and <code>Pacific/Saipan</code> in 1969, and <code>America/Phoenix</code> in 1944.</p>
 <p>Usage example:</p>
 <!-- prettier-ignore-start -->
 <pre class="language-javascript"><code class="language-javascript">Temporal<span class="token punctuation">.</span>ZonedDateTime<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'2020-01-01T12:00-08:00[America/Los_Angeles]'</span><span class="token punctuation">)</span><span class="token punctuation">.</span>hoursInDay<span class="token punctuation">;</span>
@@ -844,8 +849,8 @@ zdt<span class="token punctuation">.</span><span class="token function">withCale
 <li><code>duration</code> (object): A <code>Temporal.Duration</code> object or a duration-like object.</li>
 <li><code>options</code> (optional object): An object which may have some or all of the following properties:<ul>
 <li><code>overflow</code> (string): How to deal with additions that result in out-of-range values.
-Allowed values are <code>constrain</code> and <code>reject</code>.
-The default is <code>constrain</code>.</li>
+Allowed values are <code>&#39;constrain&#39;</code> and <code>&#39;reject&#39;</code>.
+The default is <code>&#39;constrain&#39;</code>.</li>
 </ul>
 </li>
 </ul>
@@ -899,8 +904,8 @@ laterHours<span class="token punctuation">.</span><span class="token function">s
 <li><code>duration</code> (object): A <code>Temporal.Duration</code> object or a duration-like object.</li>
 <li><code>options</code> (optional object): An object which may have some or all of the following properties:<ul>
 <li><code>overflow</code> (string): How to deal with additions that result in out-of-range values.
-Allowed values are <code>constrain</code> and <code>reject</code>.
-The default is <code>constrain</code>.</li>
+Allowed values are <code>&#39;constrain&#39;</code> and <code>&#39;reject&#39;</code>.
+The default is <code>&#39;constrain&#39;</code>.</li>
 </ul>
 </li>
 </ul>
@@ -1105,7 +1110,9 @@ zdt<span class="token punctuation">.</span><span class="token function">round</s
 <p>This method returns a new <code>Temporal.ZonedDateTime</code> indicating the start of the day.
 The local time of the result is almost always <code>00:00</code>, but in rare cases it could be a later time e.g. if DST skips midnight in a time zone. For example:</p>
 <pre class="language-javascript"><code class="language-javascript"><span class="token keyword">const</span> zdt <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>ZonedDateTime<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'2015-10-18T12:00-02:00[America/Sao_Paulo]'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-zdt<span class="token punctuation">.</span><span class="token function">startOfDay</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => 2015-10-18T01:00:00-02:00[America/Sao_Paulo]</span></code></pre><p>Usage example:</p>
+zdt<span class="token punctuation">.</span><span class="token function">startOfDay</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => 2015-10-18T01:00:00-02:00[America/Sao_Paulo]</span></code></pre><p>When the same day starts twice (due to an offset transition), the earlier time is used for <code>startOfDay</code>. For example, the <code>America/St_Johns</code> time zone transitioned from offset <code>-02:30</code> to offset <code>-03:30</code> on 2010-11-07:</p>
+<pre class="language-javascript"><code class="language-javascript"><span class="token keyword">const</span> zdt <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>ZonedDateTime<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'2010-11-07T23:00:00-03:30[America/St_Johns]'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+zdt<span class="token punctuation">.</span><span class="token function">startOfDay</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// 2010-11-07T00:00:00-02:30[America/St_Johns]</span></code></pre><p>Usage example:</p>
 <!-- prettier-ignore-start -->
 <pre class="language-javascript"><code class="language-javascript">zdt <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>ZonedDateTime<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">'2020-01-01T12:00-08:00[America/Los_Angeles]'</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">startOfDay</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
   <span class="token comment">// => 2020-01-01T00:00:00-08:00[America/Los_Angeles]</span>
@@ -1214,7 +1221,7 @@ The default is <code>&#39;trunc&#39;</code>.</li>
 </ul>
 </li>
 </ul>
-<p><strong>Returns:</strong> a string containing an ISO 8601 date+time+offset format, a bracketed time zone suffix, and (if the calendar is not <code>iso8601</code>) a calendar suffix.</p>
+<p><strong>Returns:</strong> a string containing an RFC 9557 date+time+offset format with a bracketed time zone suffix, and (if the calendar is not <code>iso8601</code>) a calendar suffix.</p>
 <p>Examples:</p>
 <ul>
 <li><code>2011-12-03T10:15:30+01:00[Europe/Paris]</code></li>
@@ -1234,8 +1241,9 @@ For more information on the calendar annotation, see <a href="./strings.html#cal
 <p>Likewise, passing <code>&#39;never&#39;</code> to the <code>timeZoneName</code> or <code>offset</code> options controls whether the time zone offset (<code>+01:00</code>) or name annotation (<code>[Europe/Paris]</code>) are shown.
 If the time zone offset is shown, it is always shown rounded to the nearest minute.
 The <code>timeZoneName</code> option can additionally be <code>&#39;critical&#39;</code> which will add an additional <code>!</code> to the annotation, similar to <code>calendarName</code>.</p>
+<p>With <code>calendarName: &#39;never&#39;, timeZoneName: &#39;never&#39;</code> the output string will additionally be valid in the ISO 8601 and RFC 3339 date formats.</p>
 <p>The string format output by this method can be parsed by <a href="https://docs.oracle.com/javase/8/docs/api/java/time/ZonedDateTime.html"><code>java.time.ZonedDateTime</code></a> as long as the calendar annotation is not output and <code>&#39;critical&#39;</code> is not used.
-For more information on <code>Temporal</code>&#39;s extensions to the ISO 8601 / RFC 3339 string format and the progress towards becoming a published standard, see <a href="./strings.html">String Parsing, Serialization, and Formatting</a>.</p>
+For more information on RFC 9557&#39;s extensions to the ISO 8601 / RFC 3339 string format, see <a href="./strings.html">String Parsing, Serialization, and Formatting</a>.</p>
 <p>Example usage:</p>
 <pre class="language-javascript"><code class="language-javascript">zdt <span class="token operator">=</span> Temporal<span class="token punctuation">.</span>ZonedDateTime<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token punctuation">{</span> <span class="token literal-property property">year</span><span class="token operator">:</span> <span class="token number">2019</span><span class="token punctuation">,</span> <span class="token literal-property property">month</span><span class="token operator">:</span> <span class="token number">12</span><span class="token punctuation">,</span> <span class="token literal-property property">day</span><span class="token operator">:</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token literal-property property">hour</span><span class="token operator">:</span> <span class="token number">12</span><span class="token punctuation">,</span> <span class="token literal-property property">timeZone</span><span class="token operator">:</span> <span class="token string">'Africa/Lagos'</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 zdt<span class="token punctuation">.</span><span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => '2019-12-01T12:00:00+01:00[Africa/Lagos]'</span>
@@ -1263,7 +1271,7 @@ zdt<span class="token punctuation">.</span><span class="token function">toLocale
 zdt<span class="token punctuation">.</span><span class="token function">withTimeZone</span><span class="token punctuation">(</span><span class="token string">'Pacific/Auckland'</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">toLocaleString</span><span class="token punctuation">(</span><span class="token string">'de-DE'</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => '2.12.2019, 0:00:00 GMT+13'</span>
 zdt<span class="token punctuation">.</span><span class="token function">toLocaleString</span><span class="token punctuation">(</span><span class="token string">'en-US-u-nu-fullwide-hc-h12'</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => '１２/１/２０１９, １２:００:００ PM GMT+１'</span></code></pre><!-- prettier-ignore-end -->
 
-<h3 id="toJSON"><a class="heading-link" href="#toJSON"></a>zonedDateTime.<strong>toJSON</strong>() : string</h3><p><strong>Returns:</strong> a string in the ISO 8601 date format representing <code>zonedDateTime</code>.</p>
+<h3 id="toJSON"><a class="heading-link" href="#toJSON"></a>zonedDateTime.<strong>toJSON</strong>() : string</h3><p><strong>Returns:</strong> a string in the RFC 9557 date format representing <code>zonedDateTime</code>.</p>
 <p>This method is the same as <code>zonedDateTime.toString()</code>.
 It is usually not called directly, but it can be called automatically by <code>JSON.stringify()</code>.</p>
 <p>The reverse operation, recovering a <code>Temporal.ZonedDateTime</code> object from a string, is <code>Temporal.ZonedDateTime.from()</code>, but it cannot be called automatically by <code>JSON.parse()</code>.

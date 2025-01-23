@@ -234,13 +234,13 @@ Conversions to narrower types like <code>Temporal.PlainDate</code> or <code>Temp
 <!-- prettier-ignore-start -->
 <pre class="language-javascript"><code class="language-javascript">date <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Date</span><span class="token punctuation">(</span><span class="token number">2019</span><span class="token punctuation">,</span> <span class="token number">11</span><span class="token punctuation">,</span> <span class="token number">31</span><span class="token punctuation">,</span> <span class="token number">18</span><span class="token punctuation">,</span> <span class="token number">30</span><span class="token punctuation">)</span><span class="token punctuation">;</span>  <span class="token comment">// => Tue Dec 31 2019 18:30:00 GMT-0800 (Pacific Standard Time)</span>
 instant <span class="token operator">=</span> date<span class="token punctuation">.</span><span class="token function">toTemporalInstant</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>     <span class="token comment">// => 2020-01-01T02:30:00Z</span>
-zonedDateTime <span class="token operator">=</span> instant<span class="token punctuation">.</span><span class="token function">toZonedDateTimeISO</span><span class="token punctuation">(</span>Temporal<span class="token punctuation">.</span>Now<span class="token punctuation">.</span><span class="token function">timeZone</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+zonedDateTime <span class="token operator">=</span> instant<span class="token punctuation">.</span><span class="token function">toZonedDateTimeISO</span><span class="token punctuation">(</span>Temporal<span class="token punctuation">.</span>Now<span class="token punctuation">.</span><span class="token function">timeZoneId</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
                                         <span class="token comment">// => 2019-12-31T18:30:00-08:00[America/Los_Angeles]</span>
 zonedDateTime<span class="token punctuation">.</span>day<span class="token punctuation">;</span>                      <span class="token comment">// => 31</span>
 dateOnly <span class="token operator">=</span> zonedDateTime<span class="token punctuation">.</span><span class="token function">toPlainDate</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// => 2019-12-31</span></code></pre><!-- prettier-ignore-end -->
 
 <p>Bugs in <code>Date</code>=&gt;<code>Temporal</code> conversions can be caused by picking the wrong time zone when converting from <code>Temporal.Instant</code> to <code>Temporal.ZonedDateTime</code>.
-For example, the example above constructs the <code>Date</code> using local-timezone parameters, so it uses the system time zone: <code>Temporal.Now.timeZone()</code>.
+For example, the example above constructs the <code>Date</code> using local-timezone parameters, so it uses the system time zone: <code>Temporal.Now.timeZoneId()</code>.
 But if the <code>Date</code> had been initialized with a string like <code>&#39;2019-12-31&#39;</code>, then getting the same date back in a <code>Temporal.PlainDate</code> would require using the <code>&#39;UTC&#39;</code> time zone instead.</p>
 <p>For discussion and code examples about picking the correct time zone, and also about <code>Date</code>&lt;=&gt;<code>Temporal</code> interoperability in general, see <a href="cookbook.html#converting-between-temporal-types-and-legacy-date">Converting between <code>Temporal</code> types and legacy <code>Date</code></a> in the documentation cookbook.</p>
 <h2 id="constructor"><a class="heading-link" href="#constructor"></a>Constructor</h3><h3 id="new-Temporal-Instant"><a class="heading-link" href="#new-Temporal-Instant"></a><strong>new Temporal.Instant</strong>(<em>epochNanoseconds</em> : bigint) : Temporal.Instant</h3><p><strong>Parameters:</strong></p>
@@ -545,12 +545,12 @@ For example, to round to increments of a half hour, use <code>smallestUnit: &#39
 25 minutes, and 7 seconds are both not allowed.)</p>
 <p>The <code>roundingMode</code> option controls how the rounding is performed.</p>
 <ul>
-<li><code>ceil</code>, <code>expand</code>: Always round up, towards the end of time.</li>
-<li><code>floor</code>, <code>trunc</code>: Always round down, towards the beginning of time.</li>
-<li><code>halfCeil</code>, <code>halfExpand</code>: Round to the nearest of the values allowed by <code>roundingIncrement</code> and <code>smallestUnit</code>.
-When there is a tie, round up, like <code>ceil</code>.</li>
-<li><code>halfFloor</code>, <code>halfTrunc</code>: Round to the nearest of the allowed values, like <code>halfExpand</code>, but when there is a tie, round down, like <code>floor</code>.</li>
-<li><code>halfEven</code>: Round to the nearest of the allowed values, but when there is a tie, round towards the value that is an even multiple of <code>roundingIncrement</code>.
+<li><code>&#39;ceil&#39;</code>, <code>&#39;expand&#39;</code>: Always round up, towards the end of time.</li>
+<li><code>&#39;floor&#39;</code>, <code>&#39;trunc&#39;</code>: Always round down, towards the beginning of time.</li>
+<li><code>&#39;halfCeil&#39;</code>, <code>&#39;halfExpand&#39;</code>: Round to the nearest of the values allowed by <code>roundingIncrement</code> and <code>smallestUnit</code>.
+When there is a tie, round up, like <code>&#39;ceil&#39;</code>.</li>
+<li><code>&#39;halfFloor&#39;</code>, <code>&#39;halfTrunc&#39;</code>: Round to the nearest of the allowed values, like <code>&#39;halfExpand&#39;</code>, but when there is a tie, round down, like <code>&#39;floor&#39;</code>.</li>
+<li><code>&#39;halfEven&#39;</code>: Round to the nearest of the allowed values, but when there is a tie, round towards the value that is an even multiple of <code>roundingIncrement</code>.
 For example, with a <code>roundingIncrement</code> of 2, the number 7 would round up to 8 instead of down to 6, because 8 is an even multiple of 2 (2 × 4 = 8, and 4 is even), whereas 6 is an odd multiple (2 × 3 = 6, and 3 is odd).</li>
 </ul>
 <p>Several pairs of modes behave the same as each other, but are both included for consistency with <code>Temporal.Duration.round()</code>, where they are not the same.</p>
